@@ -1,6 +1,6 @@
 # PyPortal Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# 2021-04-23 v04 Cedar Grove Studios
+# 2021-10-03 v05 Cedar Grove Studios
 
 # import load_cell_calibrator  # uncomment to run calibration method
 
@@ -8,19 +8,20 @@ import board
 import time
 import displayio
 
-from adafruit_bitmapsaver import save_pixels
+#from adafruit_bitmapsaver import save_pixels
 
-from simpleio import map_range
+from simpleio import map_range, tone
 from adafruit_display_shapes.circle import Circle
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.triangle import Triangle
 from adafruit_display_text.label import Label
 from adafruit_bitmap_font import bitmap_font
-from adafruit_pyportal import PyPortal
+#from adafruit_pyportal import PyPortal
+import adafruit_touchscreen
 from adafruit_button import Button
 from cedargrove_nau7802 import NAU7802
-from scale_setup import Defaults as default
-from scale_setup import ScalePalette as color
+from scale_config import Defaults as default
+from scale_config import ScalePalette as color
 
 # Determine display size and calculate plot offsets
 WIDTH = board.DISPLAY.width
@@ -30,8 +31,17 @@ DISP_Y_OFFSET = (HEIGHT - 240) // 2
 BKG_X_OFFSET = (WIDTH - 480) // 2
 BKG_Y_OFFSET = DISP_Y_OFFSET
 
+ts = adafruit_touchscreen.Touchscreen(
+    board.TOUCH_XL,
+    board.TOUCH_XR,
+    board.TOUCH_YD,
+    board.TOUCH_YU,
+    calibration=((5200, 59000), (5800, 57000)),
+    size=(WIDTH, HEIGHT),
+    )
+
 # Instantiate PyPortal platform and load sensor ADC
-pyportal = PyPortal()
+#pyportal = PyPortal()
 nau7802 = NAU7802(board.I2C(), address=0x2A, active_channels=2)
 
 # Instantiate display and fonts
@@ -112,114 +122,108 @@ scale_group.append(down_button)
 buttons.append(down_button)
 
 # -- DISPLAY ELEMENTS -- #
-chan_1_label = Label(FONT_1, text=default.CHAN_1_LABEL, color=color.CYAN,
-                     max_glyphs=10)
+chan_1_label = Label(FONT_1, text=default.CHAN_1_LABEL, color=color.CYAN)
 chan_1_label.anchor_point = (0.5, 0.5)
 chan_1_label.anchored_position = (40+DISP_X_OFFSET, 75+DISP_Y_OFFSET)
 scale_group.append(chan_1_label)
 
-chan_2_label = Label(FONT_1, text=default.CHAN_2_LABEL, color=color.CYAN,
-                     max_glyphs=10)
+chan_2_label = Label(FONT_1, text=default.CHAN_2_LABEL, color=color.CYAN)
 chan_2_label.anchor_point = (0.5, 0.5)
 chan_2_label.anchored_position = (199+DISP_X_OFFSET, 75+DISP_Y_OFFSET)
 scale_group.append(chan_2_label)
 
-zero_value = Label(FONT_2, text='0', color=color.CYAN, max_glyphs=1)
+zero_value = Label(FONT_2, text='0', color=color.CYAN)
 zero_value.anchor_point = (1.0, 0.5)
 zero_value.anchored_position = (97+DISP_X_OFFSET, 200+DISP_Y_OFFSET)
 scale_group.append(zero_value)
 
-min_value = Label(FONT_2, text=str(default.MIN_GR), color=color.CYAN, max_glyphs=6)
+min_value = Label(FONT_2, text=str(default.MIN_GR), color=color.CYAN)
 min_value.anchor_point = (1.0, 1.0)
 min_value.anchored_position = (99+DISP_X_OFFSET, 239+DISP_Y_OFFSET)
 scale_group.append(min_value)
 
-max_value = Label(FONT_2, text=str(default.MAX_GR), color=color.CYAN, max_glyphs=6)
+max_value = Label(FONT_2, text=str(default.MAX_GR), color=color.CYAN)
 max_value.anchor_point = (1.0, 0)
 max_value.anchored_position = (99+DISP_X_OFFSET, 0+DISP_Y_OFFSET)
 scale_group.append(max_value)
 
-plus_1_value = Label(FONT_2, text=str(1 * (default.MAX_GR // 5)), color=color.CYAN,
-                     max_glyphs=6)
+plus_1_value = Label(FONT_2, text=str(1 * (default.MAX_GR // 5)), color=color.CYAN)
 plus_1_value.anchor_point = (1.0, 0.5)
 plus_1_value.anchored_position = (99+DISP_X_OFFSET, 160+DISP_Y_OFFSET)
 scale_group.append(plus_1_value)
 
-plus_2_value = Label(FONT_2, text=str(2 * (default.MAX_GR // 5)), color=color.CYAN,
-                     max_glyphs=6)
+plus_2_value = Label(FONT_2, text=str(2 * (default.MAX_GR // 5)), color=color.CYAN)
 plus_2_value.anchor_point = (1.0, 0.5)
 plus_2_value.anchored_position = (99+DISP_X_OFFSET, 120+DISP_Y_OFFSET)
 scale_group.append(plus_2_value)
 
-plus_3_value = Label(FONT_2, text=str(3 * (default.MAX_GR // 5)), color=color.CYAN,
-                     max_glyphs=6)
+plus_3_value = Label(FONT_2, text=str(3 * (default.MAX_GR // 5)), color=color.CYAN)
 plus_3_value.anchor_point = (1.0, 0.5)
 plus_3_value.anchored_position = (99+DISP_X_OFFSET, 80+DISP_Y_OFFSET)
 scale_group.append(plus_3_value)
 
-plus_4_value = Label(FONT_2, text=str(4 * (default.MAX_GR // 5)), color=color.CYAN,
-                     max_glyphs=6)
+plus_4_value = Label(FONT_2, text=str(4 * (default.MAX_GR // 5)), color=color.CYAN)
 plus_4_value.anchor_point = (1.0, 0.5)
 plus_4_value.anchored_position = (99+DISP_X_OFFSET, 40+DISP_Y_OFFSET)
 scale_group.append(plus_4_value)
 
-chan_1_label = Label(FONT_0, text='grams', color=color.BLUE, max_glyphs=6)
+chan_1_label = Label(FONT_0, text='grams', color=color.BLUE)
 chan_1_label.anchor_point = (1.0, 0)
 chan_1_label.anchored_position = (80+DISP_X_OFFSET, 216+DISP_Y_OFFSET)
 scale_group.append(chan_1_label)
 
-chan_2_label = Label(FONT_0, text='grams', color=color.BLUE, max_glyphs=6)
+chan_2_label = Label(FONT_0, text='grams', color=color.BLUE)
 chan_2_label.anchor_point = (1.0, 0)
 chan_2_label.anchored_position = (230+DISP_X_OFFSET, 216+DISP_Y_OFFSET)
 scale_group.append(chan_2_label)
 
-chan_1_value = Label(FONT_0, text='0.0', color=color.WHITE, max_glyphs=10)
+chan_1_value = Label(FONT_0, text='0.0', color=color.WHITE)
 chan_1_value.anchor_point = (1.0, 0.5)
 chan_1_value.anchored_position = (80+DISP_X_OFFSET, 200+DISP_Y_OFFSET)
 scale_group.append(chan_1_value)
 
-chan_2_value = Label(FONT_0, text='0.0', color=color.WHITE, max_glyphs=10)
+chan_2_value = Label(FONT_0, text='0.0', color=color.WHITE)
 chan_2_value.anchor_point = (1.0, 0.5)
 chan_2_value.anchored_position = (230+DISP_X_OFFSET, 200+DISP_Y_OFFSET)
 scale_group.append(chan_2_value)
 
-tare_1_label = Label(FONT_2, text='TARE', color=color.GRAY, max_glyphs=4)
+tare_1_label = Label(FONT_2, text='TARE', color=color.GRAY)
 tare_1_label.anchor_point = (1.0, 0)
 tare_1_label.anchored_position = (80+DISP_X_OFFSET, 166+DISP_Y_OFFSET)
 scale_group.append(tare_1_label)
 
-tare_2_label = Label(FONT_2, text='TARE', color=color.GRAY, max_glyphs=4)
+tare_2_label = Label(FONT_2, text='TARE', color=color.GRAY)
 tare_2_label.anchor_point = (1.0, 0)
 tare_2_label.anchored_position = (230+DISP_X_OFFSET, 166+DISP_Y_OFFSET)
 scale_group.append(tare_2_label)
 
-tare_1_value = Label(FONT_1, text='0.0', color=color.GRAY, max_glyphs=10)
+tare_1_value = Label(FONT_1, text='0.0', color=color.GRAY)
 tare_1_value.anchor_point = (1.0, 0.5)
 tare_1_value.anchored_position = (80+DISP_X_OFFSET, 150+DISP_Y_OFFSET)
 scale_group.append(tare_1_value)
 
-tare_2_value = Label(FONT_1, text='0.0', color=color.GRAY, max_glyphs=10)
+tare_2_value = Label(FONT_1, text='0.0', color=color.GRAY)
 tare_2_value.anchor_point = (1.0, 0.5)
 tare_2_value.anchored_position = (230+DISP_X_OFFSET, 150+DISP_Y_OFFSET)
 scale_group.append(tare_2_value)
 
 
-alarm_1_label = Label(FONT_2, text='ALARM', color=color.GRAY, max_glyphs=4)
+alarm_1_label = Label(FONT_2, text='ALARM', color=color.GRAY)
 alarm_1_label.anchor_point = (1.0, 0)
 alarm_1_label.anchored_position = (80+DISP_X_OFFSET, 116+DISP_Y_OFFSET)
 scale_group.append(alarm_1_label)
 
-alarm_2_label = Label(FONT_2, text='ALARM', color=color.GRAY, max_glyphs=4)
+alarm_2_label = Label(FONT_2, text='ALARM', color=color.GRAY)
 alarm_2_label.anchor_point = (1.0, 0)
 alarm_2_label.anchored_position = (230+DISP_X_OFFSET, 116+DISP_Y_OFFSET)
 scale_group.append(alarm_2_label)
 
-alarm_1_value = Label(FONT_1, text='0.0', color=color.GRAY, max_glyphs=10)
+alarm_1_value = Label(FONT_1, text='0.0', color=color.GRAY)
 alarm_1_value.anchor_point = (1.0, 0.5)
 alarm_1_value.anchored_position = (80+DISP_X_OFFSET, 100+DISP_Y_OFFSET)
 scale_group.append(alarm_1_value)
 
-alarm_2_value = Label(FONT_1, text='0.0', color=color.GRAY, max_glyphs=10)
+alarm_2_value = Label(FONT_1, text='0.0', color=color.GRAY)
 alarm_2_value.anchor_point = (1.0, 0.5)
 alarm_2_value.anchored_position = (230+DISP_X_OFFSET, 100+DISP_Y_OFFSET)
 scale_group.append(alarm_2_value)
@@ -282,11 +286,11 @@ def read(samples=100):
             sum = sum + nau7802.read()
     return int(sum / samples)
 
-def play_tone(tone=None):
-    if tone == 'high':
-        pyportal.play_file('/tones/tone_high.wav', wait_to_finish=True)
-    elif tone == 'low':
-        pyportal.play_file('/tones/tone_low.wav', wait_to_finish=True)
+def play_tone(note=None):
+    if note == 'high':
+        tone(board.A0, 880, 0.1)
+    elif note == 'low':
+        tone(board.A0, 440, 0.1)
 
 # Instantiate and calibrate load cell inputs
 print('*** Instantiate and calibrate load cells')
@@ -361,14 +365,14 @@ while True:
 
     print('(%+5.1f, %+5.1f)' % (chan_1_mass_gr, chan_2_mass_gr))
 
-    if pyportal.sd_check():
+    """if pyportal.sd_check():
         if take_screenshot:
             print('Taking Screenshot...')
             save_pixels('/sd/screenshot.bmp')
             print('Screenshot taken')
-            take_screenshot = False
+            take_screenshot = False"""
 
-    touch = pyportal.touchscreen.touch_point
+    touch = ts.touch_point
     if touch:
         for button in buttons:
             if button.contains(touch):
@@ -386,7 +390,7 @@ while True:
                         chan_2_bubble.fill = color.RED
                         chan_2_zero = zero_channel()
 
-                    while pyportal.touchscreen.touch_point:
+                    while ts.touch_point:
                         time.sleep(0.5)
                     if channel == 1:
                         chan_1_bubble.fill = None
@@ -414,7 +418,7 @@ while True:
                             if str(tare_2_mass_gr) == '-0.0':  # Filter -0.0 value
                                 tare_2_mass_gr = 0.0
 
-                    while pyportal.touchscreen.touch_point:
+                    while ts.touch_point:
                         time.sleep(0.5)
                     play_tone('low')
 

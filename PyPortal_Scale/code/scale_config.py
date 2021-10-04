@@ -1,4 +1,4 @@
-# scale_setup.py
+# scale_config.py
 
 class Defaults:
     MAX_GR       = 100  # Maximum (full-scale) display range in grams
