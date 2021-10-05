@@ -1,18 +1,25 @@
 # PyPortal Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# 2021-10-03 v05 Cedar Grove Studios
+# 2021-10-04 v20 Cedar Grove Studios
 
 # import load_cell_calibrator  # uncomment to run calibration method
 
 import board
+import busio
 import time
+from math import cos, sin, pi
+import storage
+import digitalio
 import displayio
 
-#from adafruit_bitmapsaver import save_pixels
+import adafruit_sdcard
+from adafruit_bitmapsaver import save_pixels
 
 from simpleio import map_range, tone
+from adafruit_display_shapes.line import Line
 from adafruit_display_shapes.circle import Circle
 from adafruit_display_shapes.rect import Rect
+from adafruit_display_shapes.roundrect import RoundRect
 from adafruit_display_shapes.triangle import Triangle
 from adafruit_display_text.label import Label
 from adafruit_bitmap_font import bitmap_font
@@ -42,6 +49,13 @@ ts = adafruit_touchscreen.Touchscreen(
 # Instantiate load sensor ADC wing
 nau7802 = NAU7802(board.I2C(), address=0x2A, active_channels=2)
 
+# Instantiate SD card
+spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
+cs = digitalio.DigitalInOut(board.SD_CS)
+sdcard = adafruit_sdcard.SDCard(spi, cs)
+vfs = storage.VfsFat(sdcard)
+storage.mount(vfs, "/sd")
+
 # Instantiate display and fonts
 # print('*** Instantiate the display and fonts')
 display = board.DISPLAY
@@ -54,7 +68,7 @@ FONT_2 = bitmap_font.load_font('/fonts/OpenSans-9.bdf')
 
 # Define displayio background and group elements
 print('*** Define displayio background and group elements')
-# Bitmap background
+"""# Bitmap background
 _bkg = open('/scale_dual_chan_bkg.bmp', 'rb')
 bkg = displayio.OnDiskBitmap(_bkg)
 try:
@@ -65,11 +79,11 @@ except TypeError:
     _background = displayio.TileGrid(bkg,
                                      pixel_shader=displayio.ColorConverter(),
                                      x=0+BKG_X_OFFSET, y=0+BKG_Y_OFFSET)
-scale_group.append(_background)
+scale_group.append(_background)"""
 
 # -- BUTTONS -- #
 buttons = []
-zero_1_button = Button(x=0+DISP_X_OFFSET, y=180+DISP_Y_OFFSET, height=58,
+"""zero_1_button = Button(x=0+DISP_X_OFFSET, y=180+DISP_Y_OFFSET, height=58,
                        width=90, style=Button.ROUNDRECT, fill_color=None,
                        outline_color=color.BLACK, name='zero_1',
                        selected_fill=color.RED, selected_outline=color.RED)
@@ -102,25 +116,25 @@ up_button = Button(x=240+DISP_X_OFFSET, y=70+DISP_Y_OFFSET, height=40,
                        outline_color=color.BLACK, name='up',
                        selected_fill=color.GREEN, selected_outline=color.GREEN)
 scale_group.append(up_button)
-buttons.append(up_button)
+buttons.append(up_button)"""
 
-save_button = Button(x=240+DISP_X_OFFSET, y=115+DISP_Y_OFFSET, height=40,
+"""save_button = Button(x=240+DISP_X_OFFSET, y=115+DISP_Y_OFFSET, height=40,
                        width=40, style=Button.ROUNDRECT, fill_color=None,
                        outline_color=color.RED, name='save',
                        label='save', label_font=FONT_2, label_color=color.RED,
                        selected_fill=color.RED, selected_outline=color.RED)
 scale_group.append(save_button)
-buttons.append(save_button)
+buttons.append(save_button)"""
 
-down_button = Button(x=240+DISP_X_OFFSET, y=160+DISP_Y_OFFSET, height=40,
+"""down_button = Button(x=240+DISP_X_OFFSET, y=160+DISP_Y_OFFSET, height=40,
                        width=40, style=Button.ROUNDRECT, fill_color=None,
                        outline_color=color.BLACK, name='down',
                        selected_fill=color.GREEN, selected_outline=color.GREEN)
 scale_group.append(down_button)
-buttons.append(down_button)
+buttons.append(down_button)"""
 
 # -- DISPLAY ELEMENTS -- #
-chan_1_label = Label(FONT_1, text=default.CHAN_1_LABEL, color=color.CYAN)
+"""chan_1_label = Label(FONT_1, text=default.CHAN_1_LABEL, color=color.CYAN)
 chan_1_label.anchor_point = (0.5, 0.5)
 chan_1_label.anchored_position = (40+DISP_X_OFFSET, 75+DISP_Y_OFFSET)
 scale_group.append(chan_1_label)
@@ -163,29 +177,29 @@ scale_group.append(plus_3_value)
 plus_4_value = Label(FONT_2, text=str(4 * (default.MAX_GR // 5)), color=color.CYAN)
 plus_4_value.anchor_point = (1.0, 0.5)
 plus_4_value.anchored_position = (99+DISP_X_OFFSET, 40+DISP_Y_OFFSET)
-scale_group.append(plus_4_value)
+scale_group.append(plus_4_value)"""
 
 chan_1_label = Label(FONT_0, text='grams', color=color.BLUE)
 chan_1_label.anchor_point = (1.0, 0)
-chan_1_label.anchored_position = (80+DISP_X_OFFSET, 216+DISP_Y_OFFSET)
+chan_1_label.anchored_position = (int(WIDTH * 1/4), int(HEIGHT * 3/8))
 scale_group.append(chan_1_label)
 
 chan_2_label = Label(FONT_0, text='grams', color=color.BLUE)
 chan_2_label.anchor_point = (1.0, 0)
-chan_2_label.anchored_position = (230+DISP_X_OFFSET, 216+DISP_Y_OFFSET)
+chan_2_label.anchored_position = (int(WIDTH * 1), int(HEIGHT * 3/8))
 scale_group.append(chan_2_label)
 
 chan_1_value = Label(FONT_0, text='0.0', color=color.WHITE)
-chan_1_value.anchor_point = (1.0, 0.5)
-chan_1_value.anchored_position = (80+DISP_X_OFFSET, 200+DISP_Y_OFFSET)
+chan_1_value.anchor_point = (1.0, 1.0)
+chan_1_value.anchored_position = (int(WIDTH * 1/4), int(HEIGHT * 3/8))
 scale_group.append(chan_1_value)
 
 chan_2_value = Label(FONT_0, text='0.0', color=color.WHITE)
-chan_2_value.anchor_point = (1.0, 0.5)
-chan_2_value.anchored_position = (230+DISP_X_OFFSET, 200+DISP_Y_OFFSET)
+chan_2_value.anchor_point = (1.0, 1.0)
+chan_2_value.anchored_position = (int(WIDTH * 1), int(HEIGHT * 3/8))
 scale_group.append(chan_2_value)
 
-tare_1_label = Label(FONT_2, text='TARE', color=color.GRAY)
+"""tare_1_label = Label(FONT_2, text='TARE', color=color.GRAY)
 tare_1_label.anchor_point = (1.0, 0)
 tare_1_label.anchored_position = (80+DISP_X_OFFSET, 166+DISP_Y_OFFSET)
 scale_group.append(tare_1_label)
@@ -232,12 +246,12 @@ scale_group.append(up_graphic)
 
 down_graphic = Triangle(240+DISP_X_OFFSET, 160+DISP_Y_OFFSET, 260+DISP_X_OFFSET, 200+DISP_Y_OFFSET, 280+DISP_X_OFFSET, 160+DISP_Y_OFFSET,
                        fill=None, outline=color.GREEN)
-scale_group.append(down_graphic)
+scale_group.append(down_graphic)"""
 
 # Define moveable bubble
 indicator_group = displayio.Group()
 
-chan_1_alarm_anchor = (102, 100)
+"""chan_1_alarm_anchor = (102, 100)
 chan_1_alarm = Triangle(chan_1_alarm_anchor[0]+DISP_X_OFFSET, chan_1_alarm_anchor[1]+DISP_Y_OFFSET,
                         chan_1_alarm_anchor[0]+5+DISP_X_OFFSET, chan_1_alarm_anchor[1]-5+DISP_Y_OFFSET,
                         chan_1_alarm_anchor[0]+5+DISP_X_OFFSET, chan_1_alarm_anchor[1]+5+DISP_Y_OFFSET,
@@ -249,15 +263,45 @@ chan_2_alarm = Triangle(chan_2_alarm_anchor[0]+DISP_X_OFFSET, chan_2_alarm_ancho
                         chan_2_alarm_anchor[0]-5+DISP_X_OFFSET, chan_2_alarm_anchor[1]-5+DISP_Y_OFFSET,
                         chan_2_alarm_anchor[0]-5+DISP_X_OFFSET, chan_2_alarm_anchor[1]+5+DISP_Y_OFFSET,
                         fill=color.RED, outline=color.WHITE)
-indicator_group.append(chan_2_alarm)
+indicator_group.append(chan_2_alarm)"""
 
 chan_1_bubble = Circle(112+DISP_X_OFFSET, 200+DISP_Y_OFFSET, 8,
                        fill=color.YELLOW, outline=color.YELLOW, stroke=3)
 indicator_group.append(chan_1_bubble)
 
+"""chan_1_bubble = Line(x0=int(WIDTH * 1/4), y0=int(HEIGHT * 1/4),
+                     x1=int(WIDTH * 1/2), y1=int(HEIGHT * 1/2),
+                     color=color.YELLOW)
+indicator_group.append(chan_1_bubble)"""
+
 chan_2_bubble = Circle(131+DISP_X_OFFSET, 200+DISP_Y_OFFSET, 8,
                        fill=color.GREEN, outline=color.GREEN, stroke=3)
 indicator_group.append(chan_2_bubble)
+
+
+
+
+scale_riser = Rect(int(WIDTH * 1/2) - (int(WIDTH * 1/32)), int(HEIGHT * 5/32), width=int(WIDTH * 1/16), height=int(HEIGHT * 1/4),
+                        fill=color.GRAY, outline=color.BLACK)
+scale_group.append(scale_riser)
+
+scale_plate = RoundRect(int(WIDTH * 1/3), int(HEIGHT * 5/32), width=int(WIDTH * 1/3) + 2, height=int(HEIGHT * 1/16), r=5,
+                        fill=color.GRAY, outline=color.BLACK)
+scale_group.append(scale_plate)
+
+scale_base = Triangle(int(WIDTH * 1/2), int(HEIGHT * 1/2),
+                        int(WIDTH * 2/3), int(HEIGHT * 7/8),
+                        int(WIDTH * 1/3), int(HEIGHT * 7/8),
+                        fill=color.GRAY, outline=color.BLACK)
+scale_group.append(scale_base)
+
+scale_foot = RoundRect(int(WIDTH * 1/3), int(HEIGHT * 13/16), width=int(WIDTH * 1/3) + 2, height=int(HEIGHT * 1/16) + 2, r=5,
+                        fill=color.GRAY, outline=color.BLACK)
+scale_group.append(scale_foot)
+
+scale_dial = Circle(int(WIDTH * 1/2), int(HEIGHT * 1/2), int(HEIGHT * 1/4),
+                       fill=color.BLUE, outline=color.WHITE, stroke=1)
+scale_group.append(scale_dial)
 
 scale_group.append(indicator_group)
 display.show(scale_group)
@@ -290,6 +334,20 @@ def play_tone(note=None):
     elif note == 'low':
         tone(board.A0, 440, 0.1)
 
+def convert_polar_rect(degrees):
+    degrees = degrees - 90  # rotate axis counterclockwise
+    radians = (-2 * pi) * (degrees / 360)  # convert degrees to radians
+    center = (int(WIDTH * 1/2), int(HEIGHT * 1/2))  # center x,y tuple
+    radius = int(HEIGHT * 1/4) - int(16/2)
+    x_coord = int(center[0] + (cos(radians)*radius))
+    y_coord = int(center[1] - (sin(radians)*radius))
+    return x_coord, y_coord
+
+def take_screenshot():
+    print('Taking Screenshot...', end='')
+    save_pixels('/sd/screenshot.bmp')
+    print(' Screenshot taken')
+
 # Instantiate and calibrate load cell inputs
 print('*** Instantiate and calibrate load cells')
 print(' enable NAU7802 digital and analog power: %5s' % (nau7802.enable(True)))
@@ -312,10 +370,11 @@ if tare_1_mass_gr != 0:
 if tare_2_mass_gr != 0:
     tare_2_enable = True  # use default tare value on startup
 
-take_screenshot = True
+#take_screenshot()
+
 # -- Main loop: Read sample, move bubble, and display values
 while True:
-    if tare_1_enable:
+    """if tare_1_enable:
         tare_1_value.color = color.YELLOW
         tare_1_label.color = color.YELLOW
     else:
@@ -331,7 +390,7 @@ while True:
         tare_2_value.color = color.GRAY
         tare_2_label.color = color.GRAY
         tare_2_mass_gr = 0.0
-    tare_2_value.text=str(tare_2_mass_gr)
+    tare_2_value.text=str(tare_2_mass_gr)"""
 
     nau7802.channel = 1
     value = read(default.SAMPLE_AVG)
@@ -341,11 +400,21 @@ while True:
         chan_1_mass_gr = 0.0
     chan_1_value.text = '%5.1f' % (chan_1_mass_gr)
 
-    chan_1_bubble.y = int(map_range(chan_1_mass_gr, default.MIN_GR, default.MAX_GR, 239, 0)) - 8 + DISP_Y_OFFSET
+    x, y = convert_polar_rect(map_range(chan_1_mass_gr, -100, 100, -360, + 360))
+    chan_1_bubble.x, chan_1_bubble.y = x - int(14/2), y - int(14/2)
     if chan_1_mass_gr > default.MAX_GR or chan_1_mass_gr < default.MIN_GR:
         chan_1_bubble.fill = color.RED
     else:
         chan_1_bubble.fill = None
+
+    time.sleep(1.0)
+    for i in range(0, 1001):
+        x, y = convert_polar_rect(map_range(i/10, -100, 100, -360, + 360))
+        chan_1_bubble.x, chan_1_bubble.y = x - int(14/2), y - int(14/2)
+        x, y = convert_polar_rect(map_range(i/10, 100, -100, -360, + 360))
+        chan_2_bubble.x, chan_2_bubble.y = x - int(14/2), y - int(14/2)
+        time.sleep(0.003)
+
 
     nau7802.channel = 2
     value = read(default.SAMPLE_AVG)
@@ -355,7 +424,8 @@ while True:
         chan_2_mass_gr = 0.0
     chan_2_value.text      = '%5.1f' % (chan_2_mass_gr)
 
-    chan_2_bubble.y  = int(map_range(chan_2_mass_gr, default.MIN_GR, default.MAX_GR, 239, 0)) - 8 + DISP_Y_OFFSET
+    x, y = convert_polar_rect(map_range(chan_2_mass_gr, -100, 100, -360, + 360))
+    chan_2_bubble.x, chan_2_bubble.y = x - int(14/2), y - int(14/2)
     if chan_2_mass_gr > default.MAX_GR or chan_2_mass_gr < default.MIN_GR:
         chan_2_bubble.fill = color.RED
     else:
@@ -371,7 +441,7 @@ while True:
             take_screenshot = False"""
 
     touch = ts.touch_point
-    if touch:
+    """if touch:
         for button in buttons:
             if button.contains(touch):
                 button.selected = True
@@ -423,4 +493,4 @@ while True:
     zero_1_button.selected = False
     zero_2_button.selected = False
     tare_1_button.selected = False
-    tare_2_button.selected = False
+    tare_2_button.selected = False"""
