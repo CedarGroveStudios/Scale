@@ -1,8 +1,10 @@
 # PyPortal Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# 2021-10-04 v20 Cedar Grove Studios
+# 2021-10-05 v20 Cedar Grove Studios
 
-# import load_cell_calibrator  # uncomment to run calibration method
+# uncomment the following import line to run the calibration method
+# this will eventually be put into the setup process
+# import load_cell_calibrator
 
 import board
 import busio
@@ -29,13 +31,21 @@ from cedargrove_nau7802 import NAU7802
 from scale_config import Defaults as default
 from scale_config import ScalePalette as color
 
-# Determine display size and calculate plot offsets
+# Determine display and object sizes
 WIDTH = board.DISPLAY.width
 HEIGHT = board.DISPLAY.height
-DISP_X_OFFSET = (WIDTH - 240) // 2
-DISP_Y_OFFSET = (HEIGHT - 240) // 2
-BKG_X_OFFSET = (WIDTH - 480) // 2
-BKG_Y_OFFSET = DISP_Y_OFFSET
+
+class Dial:
+    RADIUS = int(HEIGHT * 1/4)
+dial = Dial
+
+class Pointer:
+    STROKE = 2
+    DIAMETER = int((HEIGHT * 1/32) + (2 * STROKE))
+    RADIUS = DIAMETER // 2
+    OUT_PATH_RADIUS = dial.RADIUS - DIAMETER
+    IN_PATH_RADIUS = dial.RADIUS - (2 * DIAMETER)
+point = Pointer
 
 ts = adafruit_touchscreen.Touchscreen(
     board.TOUCH_XL,
@@ -51,15 +61,78 @@ nau7802 = NAU7802(board.I2C(), address=0x2A, active_channels=2)
 
 # Instantiate SD card
 spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
-cs = digitalio.DigitalInOut(board.SD_CS)
-sdcard = adafruit_sdcard.SDCard(spi, cs)
-vfs = storage.VfsFat(sdcard)
-storage.mount(vfs, "/sd")
+sd_cs = digitalio.DigitalInOut(board.SD_CS)
+has_sd_card = False
+try:
+    sdcard = adafruit_sdcard.SDCard(spi, sd_cs)
+    vfs = storage.VfsFat(sdcard)
+    storage.mount(vfs, "/sd")
+    print('SD card found')
+    has_sd_card = True
+except OSError as error:
+    print("SD card NOT found:", error)
+
+def zero_channel():
+    """Initiate internal calibration for current channel. Returns raw zero
+    offset value. Use when scale is started, a new channel is selected or
+    to adjust for measurement drift. Remove weight and tare from load cell
+    before executing."""
+    print('channel %1d calibrate.INTERNAL: %5s'
+          % (nau7802.channel, nau7802.calibrate('INTERNAL')))
+    print('channel %1d calibrate.OFFSET:   %5s'
+          % (nau7802.channel, nau7802.calibrate('OFFSET')))
+    zero_offset = read(100)  # Average of 100 samples to establish zero offset
+    print('...channel zeroed')
+    return zero_offset
+
+def read(samples=100):
+    """Read and average consecutive raw sample values; return average
+    raw value."""
+    sum = 0
+    for i in range(0, samples):
+        if nau7802.available:
+            sum = sum + nau7802.read()
+    return int(sum / samples)
+
+def play_tone(note=None):
+    if note == 'high':
+        tone(board.A0, 880, 0.1)
+    elif note == 'low':
+        tone(board.A0, 440, 0.1)
+
+def scale_to_coordinates(scale, center=(WIDTH//2, HEIGHT//2), radius=dial.RADIUS):
+    """Convert normalized scale value input (-1.0 to 1.0) to a rectangular pixel
+    position on the circumference of a circle with center (x,y pixels) and
+    radius (pixels)."""
+    radians = (-2 * pi) * (scale)  # convert scale value to radians
+    radians = radians + (pi / 2)  # rotate axis counterclockwise
+    x = int(center[0] + (cos(radians)*radius))
+    y = int(center[1] - (sin(radians)*radius))
+    return x, y
+
+
+def take_screenshot():
+    print('Taking Screenshot...', end='')
+    save_pixels('/sd/screenshot.bmp')
+    print(' Screenshot taken')
+
+
+def plot_needles(scale_1, scale_2):
+    x, y = scale_to_coordinates(scale_1, radius=point.IN_PATH_RADIUS)
+    needle_1 = Line(WIDTH//2, HEIGHT//2, x, y, color.YELLOW)
+    indicator_group.append(needle_1)
+    x, y = scale_to_coordinates(scale_2, radius=point.OUT_PATH_RADIUS)
+    needle_2 = Line(WIDTH//2,HEIGHT//2, x, y, color.GREEN)
+    indicator_group.append(needle_2)
+
+def erase_needles():
+    indicator_group.remove(indicator_group[2])
+    indicator_group.remove(indicator_group[2])
+
 
 # Instantiate display and fonts
 # print('*** Instantiate the display and fonts')
 display = board.DISPLAY
-#scale_group = displayio.Group(max_size=19)
 scale_group = displayio.Group()
 
 FONT_0 = bitmap_font.load_font('/fonts/Helvetica-Bold-24.bdf')
@@ -69,16 +142,16 @@ FONT_2 = bitmap_font.load_font('/fonts/OpenSans-9.bdf')
 # Define displayio background and group elements
 print('*** Define displayio background and group elements')
 """# Bitmap background
-_bkg = open('/scale_dual_chan_bkg.bmp', 'rb')
+_bkg = open('/sd/screenshot.bmp', 'rb')
 bkg = displayio.OnDiskBitmap(_bkg)
 try:
     _background = displayio.TileGrid(bkg,
                                      pixel_shader=displayio.ColorConverter(),
-                                     x=0+BKG_X_OFFSET, y=0+BKG_Y_OFFSET)
+                                     x=0, y=0)
 except TypeError:
     _background = displayio.TileGrid(bkg,
                                      pixel_shader=displayio.ColorConverter(),
-                                     x=0+BKG_X_OFFSET, y=0+BKG_Y_OFFSET)
+                                     x=0, y=0)
 scale_group.append(_background)"""
 
 # -- BUTTONS -- #
@@ -134,153 +207,58 @@ scale_group.append(down_button)
 buttons.append(down_button)"""
 
 # -- DISPLAY ELEMENTS -- #
-"""chan_1_label = Label(FONT_1, text=default.CHAN_1_LABEL, color=color.CYAN)
-chan_1_label.anchor_point = (0.5, 0.5)
-chan_1_label.anchored_position = (40+DISP_X_OFFSET, 75+DISP_Y_OFFSET)
-scale_group.append(chan_1_label)
+chan_1_name = Label(FONT_1, text=default.CHAN_1_NAME, color=color.YELLOW)
+chan_1_name.anchor_point = (1.0, 0)
+chan_1_name.anchored_position = (int(WIDTH * 9/32), int(HEIGHT * 1/8))
+scale_group.append(chan_1_name)
 
-chan_2_label = Label(FONT_1, text=default.CHAN_2_LABEL, color=color.CYAN)
-chan_2_label.anchor_point = (0.5, 0.5)
-chan_2_label.anchored_position = (199+DISP_X_OFFSET, 75+DISP_Y_OFFSET)
-scale_group.append(chan_2_label)
+chan_2_name = Label(FONT_1, text=default.CHAN_2_NAME, color=color.GREEN)
+chan_2_name.anchor_point = (1.0, 0)
+chan_2_name.anchored_position = (int(WIDTH * 31/32), int(HEIGHT * 1/8))
+scale_group.append(chan_2_name)
 
-zero_value = Label(FONT_2, text='0', color=color.CYAN)
-zero_value.anchor_point = (1.0, 0.5)
-zero_value.anchored_position = (97+DISP_X_OFFSET, 200+DISP_Y_OFFSET)
-scale_group.append(zero_value)
-
-min_value = Label(FONT_2, text=str(default.MIN_GR), color=color.CYAN)
-min_value.anchor_point = (1.0, 1.0)
-min_value.anchored_position = (99+DISP_X_OFFSET, 239+DISP_Y_OFFSET)
-scale_group.append(min_value)
-
-max_value = Label(FONT_2, text=str(default.MAX_GR), color=color.CYAN)
-max_value.anchor_point = (1.0, 0)
-max_value.anchored_position = (99+DISP_X_OFFSET, 0+DISP_Y_OFFSET)
-scale_group.append(max_value)
-
-plus_1_value = Label(FONT_2, text=str(1 * (default.MAX_GR // 5)), color=color.CYAN)
-plus_1_value.anchor_point = (1.0, 0.5)
-plus_1_value.anchored_position = (99+DISP_X_OFFSET, 160+DISP_Y_OFFSET)
-scale_group.append(plus_1_value)
-
-plus_2_value = Label(FONT_2, text=str(2 * (default.MAX_GR // 5)), color=color.CYAN)
-plus_2_value.anchor_point = (1.0, 0.5)
-plus_2_value.anchored_position = (99+DISP_X_OFFSET, 120+DISP_Y_OFFSET)
-scale_group.append(plus_2_value)
-
-plus_3_value = Label(FONT_2, text=str(3 * (default.MAX_GR // 5)), color=color.CYAN)
-plus_3_value.anchor_point = (1.0, 0.5)
-plus_3_value.anchored_position = (99+DISP_X_OFFSET, 80+DISP_Y_OFFSET)
-scale_group.append(plus_3_value)
-
-plus_4_value = Label(FONT_2, text=str(4 * (default.MAX_GR // 5)), color=color.CYAN)
-plus_4_value.anchor_point = (1.0, 0.5)
-plus_4_value.anchored_position = (99+DISP_X_OFFSET, 40+DISP_Y_OFFSET)
-scale_group.append(plus_4_value)"""
 
 chan_1_label = Label(FONT_0, text='grams', color=color.BLUE)
 chan_1_label.anchor_point = (1.0, 0)
-chan_1_label.anchored_position = (int(WIDTH * 1/4), int(HEIGHT * 3/8))
+chan_1_label.anchored_position = (int(WIDTH * 9/32), int(HEIGHT * 3/8))
 scale_group.append(chan_1_label)
 
 chan_2_label = Label(FONT_0, text='grams', color=color.BLUE)
 chan_2_label.anchor_point = (1.0, 0)
-chan_2_label.anchored_position = (int(WIDTH * 1), int(HEIGHT * 3/8))
+chan_2_label.anchored_position = (int(WIDTH * 31/32), int(HEIGHT * 3/8))
 scale_group.append(chan_2_label)
 
 chan_1_value = Label(FONT_0, text='0.0', color=color.WHITE)
 chan_1_value.anchor_point = (1.0, 1.0)
-chan_1_value.anchored_position = (int(WIDTH * 1/4), int(HEIGHT * 3/8))
+chan_1_value.anchored_position = (int(WIDTH * 9/32), int(HEIGHT * 3/8))
 scale_group.append(chan_1_value)
 
 chan_2_value = Label(FONT_0, text='0.0', color=color.WHITE)
 chan_2_value.anchor_point = (1.0, 1.0)
-chan_2_value.anchored_position = (int(WIDTH * 1), int(HEIGHT * 3/8))
+chan_2_value.anchored_position = (int(WIDTH * 31/32), int(HEIGHT * 3/8))
 scale_group.append(chan_2_value)
 
-"""tare_1_label = Label(FONT_2, text='TARE', color=color.GRAY)
-tare_1_label.anchor_point = (1.0, 0)
-tare_1_label.anchored_position = (80+DISP_X_OFFSET, 166+DISP_Y_OFFSET)
-scale_group.append(tare_1_label)
-
-tare_2_label = Label(FONT_2, text='TARE', color=color.GRAY)
-tare_2_label.anchor_point = (1.0, 0)
-tare_2_label.anchored_position = (230+DISP_X_OFFSET, 166+DISP_Y_OFFSET)
-scale_group.append(tare_2_label)
-
-tare_1_value = Label(FONT_1, text='0.0', color=color.GRAY)
+tare_1_value = Label(FONT_2, text='0.0', color=color.GRAY)
 tare_1_value.anchor_point = (1.0, 0.5)
-tare_1_value.anchored_position = (80+DISP_X_OFFSET, 150+DISP_Y_OFFSET)
+tare_1_value.anchored_position = (int(WIDTH * 9/32), int(HEIGHT * 9/16))
 scale_group.append(tare_1_value)
 
-tare_2_value = Label(FONT_1, text='0.0', color=color.GRAY)
-tare_2_value.anchor_point = (1.0, 0.5)
-tare_2_value.anchored_position = (230+DISP_X_OFFSET, 150+DISP_Y_OFFSET)
+tare_2_value = Label(FONT_2, text='0.0', color=color.GRAY)
+tare_2_value.anchor_point = (0.0, 0.5)
+tare_2_value.anchored_position = (int(WIDTH * 3/4), int(HEIGHT * 9/16))
 scale_group.append(tare_2_value)
 
-
-alarm_1_label = Label(FONT_2, text='ALARM', color=color.GRAY)
-alarm_1_label.anchor_point = (1.0, 0)
-alarm_1_label.anchored_position = (80+DISP_X_OFFSET, 116+DISP_Y_OFFSET)
-scale_group.append(alarm_1_label)
-
-alarm_2_label = Label(FONT_2, text='ALARM', color=color.GRAY)
-alarm_2_label.anchor_point = (1.0, 0)
-alarm_2_label.anchored_position = (230+DISP_X_OFFSET, 116+DISP_Y_OFFSET)
-scale_group.append(alarm_2_label)
-
-alarm_1_value = Label(FONT_1, text='0.0', color=color.GRAY)
+alarm_1_value = Label(FONT_2, text='0.0', color=color.GRAY)
 alarm_1_value.anchor_point = (1.0, 0.5)
-alarm_1_value.anchored_position = (80+DISP_X_OFFSET, 100+DISP_Y_OFFSET)
+alarm_1_value.anchored_position = (int(WIDTH * 9/32), int(HEIGHT * 6/8))
 scale_group.append(alarm_1_value)
 
-alarm_2_value = Label(FONT_1, text='0.0', color=color.GRAY)
-alarm_2_value.anchor_point = (1.0, 0.5)
-alarm_2_value.anchored_position = (230+DISP_X_OFFSET, 100+DISP_Y_OFFSET)
+alarm_2_value = Label(FONT_2, text='0.0', color=color.GRAY)
+alarm_2_value.anchor_point = (0.0, 0.5)
+alarm_2_value.anchored_position = (int(WIDTH * 3/4), int(HEIGHT * 6/8))
 scale_group.append(alarm_2_value)
 
-up_graphic = Triangle(240+DISP_X_OFFSET, 110+DISP_Y_OFFSET, 260+DISP_X_OFFSET, 70+DISP_Y_OFFSET, 280+DISP_X_OFFSET, 110+DISP_Y_OFFSET,
-                       fill=None, outline=color.GREEN)
-scale_group.append(up_graphic)
-
-down_graphic = Triangle(240+DISP_X_OFFSET, 160+DISP_Y_OFFSET, 260+DISP_X_OFFSET, 200+DISP_Y_OFFSET, 280+DISP_X_OFFSET, 160+DISP_Y_OFFSET,
-                       fill=None, outline=color.GREEN)
-scale_group.append(down_graphic)"""
-
-# Define moveable bubble
-indicator_group = displayio.Group()
-
-"""chan_1_alarm_anchor = (102, 100)
-chan_1_alarm = Triangle(chan_1_alarm_anchor[0]+DISP_X_OFFSET, chan_1_alarm_anchor[1]+DISP_Y_OFFSET,
-                        chan_1_alarm_anchor[0]+5+DISP_X_OFFSET, chan_1_alarm_anchor[1]-5+DISP_Y_OFFSET,
-                        chan_1_alarm_anchor[0]+5+DISP_X_OFFSET, chan_1_alarm_anchor[1]+5+DISP_Y_OFFSET,
-                        fill=color.RED, outline=color.WHITE)
-indicator_group.append(chan_1_alarm)
-
-chan_2_alarm_anchor = (139, 140)
-chan_2_alarm = Triangle(chan_2_alarm_anchor[0]+DISP_X_OFFSET, chan_2_alarm_anchor[1]+DISP_Y_OFFSET,
-                        chan_2_alarm_anchor[0]-5+DISP_X_OFFSET, chan_2_alarm_anchor[1]-5+DISP_Y_OFFSET,
-                        chan_2_alarm_anchor[0]-5+DISP_X_OFFSET, chan_2_alarm_anchor[1]+5+DISP_Y_OFFSET,
-                        fill=color.RED, outline=color.WHITE)
-indicator_group.append(chan_2_alarm)"""
-
-chan_1_bubble = Circle(112+DISP_X_OFFSET, 200+DISP_Y_OFFSET, 8,
-                       fill=color.YELLOW, outline=color.YELLOW, stroke=3)
-indicator_group.append(chan_1_bubble)
-
-"""chan_1_bubble = Line(x0=int(WIDTH * 1/4), y0=int(HEIGHT * 1/4),
-                     x1=int(WIDTH * 1/2), y1=int(HEIGHT * 1/2),
-                     color=color.YELLOW)
-indicator_group.append(chan_1_bubble)"""
-
-chan_2_bubble = Circle(131+DISP_X_OFFSET, 200+DISP_Y_OFFSET, 8,
-                       fill=color.GREEN, outline=color.GREEN, stroke=3)
-indicator_group.append(chan_2_bubble)
-
-
-
-
+# Define scale graphic
 scale_riser = Rect(int(WIDTH * 1/2) - (int(WIDTH * 1/32)), int(HEIGHT * 5/32), width=int(WIDTH * 1/16), height=int(HEIGHT * 1/4),
                         fill=color.GRAY, outline=color.BLACK)
 scale_group.append(scale_riser)
@@ -300,53 +278,54 @@ scale_foot = RoundRect(int(WIDTH * 1/3), int(HEIGHT * 13/16), width=int(WIDTH * 
 scale_group.append(scale_foot)
 
 scale_dial = Circle(int(WIDTH * 1/2), int(HEIGHT * 1/2), int(HEIGHT * 1/4),
-                       fill=color.BLUE, outline=color.WHITE, stroke=1)
+                       fill=color.BLUE_DK, outline=color.WHITE, stroke=1)
 scale_group.append(scale_dial)
 
+for i in range(0, default.MAX_GR, default.MAX_GR//10):
+    hash_value = Label(FONT_2, text=str(i), color=color.CYAN)
+    hash_value.anchor_point = (0.5, 0.5)
+    hash_value.anchored_position = (scale_to_coordinates(i/default.MAX_GR, radius=point.IN_PATH_RADIUS))
+    scale_group.append(hash_value)
+
+    x0, y0 = scale_to_coordinates(i/default.MAX_GR, radius=point.OUT_PATH_RADIUS)
+    x1, y1 = scale_to_coordinates(i/default.MAX_GR, radius=dial.RADIUS)
+    hash_mark_a = Line(x0, y0, x1, y1, color.CYAN)
+    scale_group.append(hash_mark_a)
+
+    x0, y0 = scale_to_coordinates((i+default.MAX_GR/20)/default.MAX_GR, radius=point.OUT_PATH_RADIUS+point.RADIUS)
+    x1, y1 = scale_to_coordinates((i+default.MAX_GR/20)/default.MAX_GR, radius=dial.RADIUS)
+    hash_mark_b = Line(x0, y0, x1, y1, color.CYAN)
+    scale_group.append(hash_mark_b)
+
+# Define moveable bubble and alarm pointers in the indicator group
+indicator_group = displayio.Group()
+
+"""chan_1_alarm_anchor = (102, 100)
+chan_1_alarm = Triangle(chan_1_alarm_anchor[0]+DISP_X_OFFSET, chan_1_alarm_anchor[1]+DISP_Y_OFFSET,
+                        chan_1_alarm_anchor[0]+5+DISP_X_OFFSET, chan_1_alarm_anchor[1]-5+DISP_Y_OFFSET,
+                        chan_1_alarm_anchor[0]+5+DISP_X_OFFSET, chan_1_alarm_anchor[1]+5+DISP_Y_OFFSET,
+                        fill=color.RED, outline=color.WHITE)
+indicator_group.append(chan_1_alarm)
+
+chan_2_alarm_anchor = (139, 140)
+chan_2_alarm = Triangle(chan_2_alarm_anchor[0]+DISP_X_OFFSET, chan_2_alarm_anchor[1]+DISP_Y_OFFSET,
+                        chan_2_alarm_anchor[0]-5+DISP_X_OFFSET, chan_2_alarm_anchor[1]-5+DISP_Y_OFFSET,
+                        chan_2_alarm_anchor[0]-5+DISP_X_OFFSET, chan_2_alarm_anchor[1]+5+DISP_Y_OFFSET,
+                        fill=color.RED, outline=color.WHITE)
+indicator_group.append(chan_2_alarm)"""
+
+chan_1_bubble = Circle(-50, -50, point.RADIUS, fill=color.YELLOW, outline=color.YELLOW, stroke=point.STROKE)
+indicator_group.append(chan_1_bubble)
+
+chan_2_bubble = Circle(-50, -50, point.RADIUS, fill=color.GREEN, outline=color.GREEN, stroke=point.STROKE)
+indicator_group.append(chan_2_bubble)
+
+# Place the indicators into the scale group
 scale_group.append(indicator_group)
 display.show(scale_group)
 
-def zero_channel():
-    # Initiate internal calibration for current channel
-    # Returns raw zero offset value
-    # Use when scale is started, a new channel is selected or
-    # to adjust for measurement drift
-    # Remove weight and tare from load cell before executing
-    print('channel %1d calibrate.INTERNAL: %5s'
-          % (nau7802.channel, nau7802.calibrate('INTERNAL')))
-    print('channel %1d calibrate.OFFSET:   %5s'
-          % (nau7802.channel, nau7802.calibrate('OFFSET')))
-    zero_offset = read(100)  # Average of 100 samples to establish zero offset
-    print('...channel zeroed')
-    return zero_offset
 
-def read(samples=100):
-    # Read and average consecutive raw sample values; return average raw value
-    sum = 0
-    for i in range(0, samples):
-        if nau7802.available:
-            sum = sum + nau7802.read()
-    return int(sum / samples)
 
-def play_tone(note=None):
-    if note == 'high':
-        tone(board.A0, 880, 0.1)
-    elif note == 'low':
-        tone(board.A0, 440, 0.1)
-
-def convert_polar_rect(degrees):
-    degrees = degrees - 90  # rotate axis counterclockwise
-    radians = (-2 * pi) * (degrees / 360)  # convert degrees to radians
-    center = (int(WIDTH * 1/2), int(HEIGHT * 1/2))  # center x,y tuple
-    radius = int(HEIGHT * 1/4) - int(16/2)
-    x_coord = int(center[0] + (cos(radians)*radius))
-    y_coord = int(center[1] - (sin(radians)*radius))
-    return x_coord, y_coord
-
-def take_screenshot():
-    print('Taking Screenshot...', end='')
-    save_pixels('/sd/screenshot.bmp')
-    print(' Screenshot taken')
 
 # Instantiate and calibrate load cell inputs
 print('*** Instantiate and calibrate load cells')
@@ -354,9 +333,10 @@ print(' enable NAU7802 digital and analog power: %5s' % (nau7802.enable(True)))
 
 nau7802.gain = default.PGA_GAIN  # Use default gain
 nau7802.channel = 1        # Set to second channel
-chan_1_zero = zero_channel()  # Re-calibrate and get raw zero offset value
+chan_1_zero = chan_2_zero = 0
+#chan_1_zero = zero_channel()  # Re-calibrate and get raw zero offset value
 nau7802.channel = 2  # Set to first channel
-chan_2_zero = zero_channel()  # Re-calibrate and get raw zero offset value
+#chan_2_zero = zero_channel()  # Re-calibrate and get raw zero offset value
 
 play_tone('high')
 play_tone('low')
@@ -372,25 +352,23 @@ if tare_2_mass_gr != 0:
 
 #take_screenshot()
 
+plot_needles(0, 0)
+
 # -- Main loop: Read sample, move bubble, and display values
 while True:
-    """if tare_1_enable:
+    if tare_1_enable:
         tare_1_value.color = color.YELLOW
-        tare_1_label.color = color.YELLOW
     else:
         tare_1_value.color = color.GRAY
-        tare_1_label.color = color.GRAY
         tare_1_mass_gr = 0.0
     tare_1_value.text=str(tare_1_mass_gr)
 
     if tare_2_enable:
-        tare_2_value.color = color.YELLOW
-        tare_2_label.color = color.YELLOW
+        tare_2_value.color = color.GREEN
     else:
         tare_2_value.color = color.GRAY
-        tare_2_label.color = color.GRAY
         tare_2_mass_gr = 0.0
-    tare_2_value.text=str(tare_2_mass_gr)"""
+    tare_2_value.text=str(tare_2_mass_gr)
 
     nau7802.channel = 1
     value = read(default.SAMPLE_AVG)
@@ -400,22 +378,6 @@ while True:
         chan_1_mass_gr = 0.0
     chan_1_value.text = '%5.1f' % (chan_1_mass_gr)
 
-    x, y = convert_polar_rect(map_range(chan_1_mass_gr, -100, 100, -360, + 360))
-    chan_1_bubble.x, chan_1_bubble.y = x - int(14/2), y - int(14/2)
-    if chan_1_mass_gr > default.MAX_GR or chan_1_mass_gr < default.MIN_GR:
-        chan_1_bubble.fill = color.RED
-    else:
-        chan_1_bubble.fill = None
-
-    time.sleep(1.0)
-    for i in range(0, 1001):
-        x, y = convert_polar_rect(map_range(i/10, -100, 100, -360, + 360))
-        chan_1_bubble.x, chan_1_bubble.y = x - int(14/2), y - int(14/2)
-        x, y = convert_polar_rect(map_range(i/10, 100, -100, -360, + 360))
-        chan_2_bubble.x, chan_2_bubble.y = x - int(14/2), y - int(14/2)
-        time.sleep(0.003)
-
-
     nau7802.channel = 2
     value = read(default.SAMPLE_AVG)
     chan_2_mass_gr = round((value - chan_2_zero) * default.CALIB_RATIO_2, 1) - tare_2_mass_gr
@@ -424,21 +386,33 @@ while True:
         chan_2_mass_gr = 0.0
     chan_2_value.text      = '%5.1f' % (chan_2_mass_gr)
 
-    x, y = convert_polar_rect(map_range(chan_2_mass_gr, -100, 100, -360, + 360))
-    chan_2_bubble.x, chan_2_bubble.y = x - int(14/2), y - int(14/2)
+    chan_1_bubble.x0, chan_1_bubble.y0 = scale_to_coordinates(chan_1_mass_gr/100, radius=point.IN_PATH_RADIUS+point.RADIUS)
+    if chan_1_mass_gr > default.MAX_GR or chan_1_mass_gr < default.MIN_GR:
+        chan_1_bubble.fill = color.RED
+    else:
+        chan_1_bubble.fill = None
+
+    chan_2_bubble.x0, chan_2_bubble.y0 = scale_to_coordinates(chan_2_mass_gr/100, radius=point.OUT_PATH_RADIUS+point.RADIUS)
     if chan_2_mass_gr > default.MAX_GR or chan_2_mass_gr < default.MIN_GR:
         chan_2_bubble.fill = color.RED
     else:
         chan_2_bubble.fill = None
 
+    erase_needles()
+    plot_needles(chan_1_mass_gr/100, chan_2_mass_gr/100)
+
     print('(%+5.1f, %+5.1f)' % (chan_1_mass_gr, chan_2_mass_gr))
 
-    """if pyportal.sd_check():
-        if take_screenshot:
-            print('Taking Screenshot...')
-            save_pixels('/sd/screenshot.bmp')
-            print('Screenshot taken')
-            take_screenshot = False"""
+
+    time.sleep(1.0)
+    for i in range(0, 101):
+        chan_1_bubble.x0, chan_1_bubble.y0 = scale_to_coordinates(i/100, radius=point.IN_PATH_RADIUS+point.RADIUS)
+        chan_2_bubble.x0, chan_2_bubble.y0 = scale_to_coordinates((100-i)/100, radius=point.OUT_PATH_RADIUS+point.RADIUS)
+        erase_needles()
+        plot_needles(i/100, (100-i)/100)
+        time.sleep(0.03)
+
+
 
     touch = ts.touch_point
     """if touch:
