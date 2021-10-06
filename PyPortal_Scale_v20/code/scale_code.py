@@ -1,6 +1,6 @@
 # PyPortal Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# 2021-10-05 v20 Cedar Grove Studios
+# 2021-10-06 v20 Cedar Grove Studios
 
 # uncomment the following import line to run the calibration method
 # this will eventually be put into the setup process
@@ -37,6 +37,7 @@ HEIGHT = board.DISPLAY.height
 
 class Dial:
     RADIUS = int(HEIGHT * 1/4)
+    CENTER = (WIDTH // 2, HEIGHT // 2)
 dial = Dial
 
 class Pointer:
@@ -100,7 +101,7 @@ def play_tone(note=None):
     elif note == 'low':
         tone(board.A0, 440, 0.1)
 
-def scale_to_coordinates(scale, center=(WIDTH//2, HEIGHT//2), radius=dial.RADIUS):
+def scale_to_coordinates(scale, center=dial.CENTER, radius=dial.RADIUS):
     """Convert normalized scale value input (-1.0 to 1.0) to a rectangular pixel
     position on the circumference of a circle with center (x,y pixels) and
     radius (pixels)."""
@@ -117,17 +118,29 @@ def take_screenshot():
     print(' Screenshot taken')
 
 
-def plot_needles(scale_1, scale_2):
-    x, y = scale_to_coordinates(scale_1, radius=point.IN_PATH_RADIUS)
-    needle_1 = Line(WIDTH//2, HEIGHT//2, x, y, color.YELLOW)
-    indicator_group.append(needle_1)
-    x, y = scale_to_coordinates(scale_2, radius=point.OUT_PATH_RADIUS)
-    needle_2 = Line(WIDTH//2,HEIGHT//2, x, y, color.GREEN)
-    indicator_group.append(needle_2)
+def plot_needles(scale_1=0, scale_2=0, hand_1_outline=color.ORANGE, hand_2_outline=color.GREEN):
+    base = dial.RADIUS // 10
+
+    x0, y0 = scale_to_coordinates(scale_2, radius=dial.RADIUS)
+    x1, y1 = scale_to_coordinates(scale_2 - 0.25, radius=base//2)
+    x2, y2 = scale_to_coordinates(scale_2 + 0.25, radius=base//2)
+    hand_2 = Triangle(x0, y0, x1, y1, x2, y2, fill=color.GREEN, outline=hand_2_outline)
+    indicator_group.append(hand_2)
+
+    x0, y0 = scale_to_coordinates(scale_1, radius=dial.RADIUS)
+    x1, y1 = scale_to_coordinates(scale_1 - 0.25, radius=base//2)
+    x2, y2 = scale_to_coordinates(scale_1 + 0.25, radius=base//2)
+    hand_1 = Triangle(x0, y0, x1, y1, x2, y2, fill=color.ORANGE, outline=hand_1_outline)
+    indicator_group.append(hand_1)
+
+    x0, y0 = dial.CENTER
+    pivot = Circle(x0, y0, base//2, fill=color.WHITE)
+    indicator_group.append(pivot)
 
 def erase_needles():
-    indicator_group.remove(indicator_group[2])
-    indicator_group.remove(indicator_group[2])
+    indicator_group.remove(indicator_group[len(indicator_group) - 1])
+    indicator_group.remove(indicator_group[len(indicator_group) - 1])
+    indicator_group.remove(indicator_group[len(indicator_group) - 1])
 
 
 # Instantiate display and fonts
@@ -207,7 +220,7 @@ scale_group.append(down_button)
 buttons.append(down_button)"""
 
 # -- DISPLAY ELEMENTS -- #
-chan_1_name = Label(FONT_1, text=default.CHAN_1_NAME, color=color.YELLOW)
+chan_1_name = Label(FONT_1, text=default.CHAN_1_NAME, color=color.ORANGE)
 chan_1_name.anchor_point = (1.0, 0)
 chan_1_name.anchored_position = (int(WIDTH * 9/32), int(HEIGHT * 1/8))
 scale_group.append(chan_1_name)
@@ -300,25 +313,11 @@ for i in range(0, default.MAX_GR, default.MAX_GR//10):
 # Define moveable bubble and alarm pointers in the indicator group
 indicator_group = displayio.Group()
 
-"""chan_1_alarm_anchor = (102, 100)
-chan_1_alarm = Triangle(chan_1_alarm_anchor[0]+DISP_X_OFFSET, chan_1_alarm_anchor[1]+DISP_Y_OFFSET,
-                        chan_1_alarm_anchor[0]+5+DISP_X_OFFSET, chan_1_alarm_anchor[1]-5+DISP_Y_OFFSET,
-                        chan_1_alarm_anchor[0]+5+DISP_X_OFFSET, chan_1_alarm_anchor[1]+5+DISP_Y_OFFSET,
-                        fill=color.RED, outline=color.WHITE)
+chan_1_alarm = Circle(-50, -50, point.RADIUS, fill=color.ORANGE, outline=color.ORANGE, stroke=point.STROKE)
 indicator_group.append(chan_1_alarm)
 
-chan_2_alarm_anchor = (139, 140)
-chan_2_alarm = Triangle(chan_2_alarm_anchor[0]+DISP_X_OFFSET, chan_2_alarm_anchor[1]+DISP_Y_OFFSET,
-                        chan_2_alarm_anchor[0]-5+DISP_X_OFFSET, chan_2_alarm_anchor[1]-5+DISP_Y_OFFSET,
-                        chan_2_alarm_anchor[0]-5+DISP_X_OFFSET, chan_2_alarm_anchor[1]+5+DISP_Y_OFFSET,
-                        fill=color.RED, outline=color.WHITE)
-indicator_group.append(chan_2_alarm)"""
-
-chan_1_bubble = Circle(-50, -50, point.RADIUS, fill=color.YELLOW, outline=color.YELLOW, stroke=point.STROKE)
-indicator_group.append(chan_1_bubble)
-
-chan_2_bubble = Circle(-50, -50, point.RADIUS, fill=color.GREEN, outline=color.GREEN, stroke=point.STROKE)
-indicator_group.append(chan_2_bubble)
+chan_2_alarm = Circle(-50, -50, point.RADIUS, fill=color.GREEN, outline=color.GREEN, stroke=point.STROKE)
+indicator_group.append(chan_2_alarm)
 
 # Place the indicators into the scale group
 scale_group.append(indicator_group)
@@ -357,7 +356,7 @@ plot_needles(0, 0)
 # -- Main loop: Read sample, move bubble, and display values
 while True:
     if tare_1_enable:
-        tare_1_value.color = color.YELLOW
+        tare_1_value.color = color.ORANGE
     else:
         tare_1_value.color = color.GRAY
         tare_1_mass_gr = 0.0
@@ -386,32 +385,27 @@ while True:
         chan_2_mass_gr = 0.0
     chan_2_value.text      = '%5.1f' % (chan_2_mass_gr)
 
-    chan_1_bubble.x0, chan_1_bubble.y0 = scale_to_coordinates(chan_1_mass_gr/100, radius=point.IN_PATH_RADIUS+point.RADIUS)
     if chan_1_mass_gr > default.MAX_GR or chan_1_mass_gr < default.MIN_GR:
-        chan_1_bubble.fill = color.RED
+        chan_1_outline = color.RED
     else:
-        chan_1_bubble.fill = None
+        chan_1_outline = color.ORANGE
 
-    chan_2_bubble.x0, chan_2_bubble.y0 = scale_to_coordinates(chan_2_mass_gr/100, radius=point.OUT_PATH_RADIUS+point.RADIUS)
     if chan_2_mass_gr > default.MAX_GR or chan_2_mass_gr < default.MIN_GR:
-        chan_2_bubble.fill = color.RED
+        chan_2_outline = color.RED
     else:
-        chan_2_bubble.fill = None
+        chan_2_outline = color.GREEN
 
     erase_needles()
-    plot_needles(chan_1_mass_gr/100, chan_2_mass_gr/100)
+    plot_needles(chan_1_mass_gr/100, chan_2_mass_gr/100, chan_1_outline, chan_2_outline)
 
     print('(%+5.1f, %+5.1f)' % (chan_1_mass_gr, chan_2_mass_gr))
 
 
     time.sleep(1.0)
-    for i in range(0, 101):
-        chan_1_bubble.x0, chan_1_bubble.y0 = scale_to_coordinates(i/100, radius=point.IN_PATH_RADIUS+point.RADIUS)
-        chan_2_bubble.x0, chan_2_bubble.y0 = scale_to_coordinates((100-i)/100, radius=point.OUT_PATH_RADIUS+point.RADIUS)
+    for i in range(0, 51):
         erase_needles()
-        plot_needles(i/100, (100-i)/100)
-        time.sleep(0.03)
-
+        plot_needles(i/50, (50-i)/50)
+        time.sleep(0.1)
 
 
     touch = ts.touch_point

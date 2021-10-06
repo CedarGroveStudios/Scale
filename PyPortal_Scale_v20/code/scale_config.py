@@ -27,16 +27,18 @@ class Defaults:
 
 
 class ScalePalette:
-    CYAN     = 0x00FFFF
-    RED      = 0xFF0000
-    MAGENTA  = 0xFF00FF
-    PURPLE   = 0x800008
-    TEAL     = 0x008080
-    BLUE     = 0x0000FF
-    BLUE_DK  = 0x000040
-    WHITE    = 0xFFFFFF
-    YELLOW   = 0xFFFF00
-    GREEN    = 0x00FF00
-    GREEN_DK = 0x004000
-    GRAY     = 0x606060
-    BLACK    = 0x000000
+    # Define a few colors (https://en.wikipedia.org/wiki/Web_colors)
+    BLACK     = 0x000000
+    RED       = 0xFF0000
+    RED_DK    = 0xA00000
+    YELLOW    = 0xFFFF00
+    YELLOW_DK = 0x202000
+    CYAN      = 0x00FFFF
+    BLUE      = 0x0000FF
+    BLUE_DK   = 0x000080
+    WHITE     = 0xFFFFFF
+    ORANGE    = 0xFFA500
+    GREEN     = 0x00FF00
+    GRAY      = 0x508080
+    PURPLE    = 0x800080
+    MAROON    = 0x800000
