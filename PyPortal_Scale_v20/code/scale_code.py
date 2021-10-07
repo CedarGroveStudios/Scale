@@ -101,7 +101,7 @@ def play_tone(note=None):
     elif note == 'low':
         tone(board.A0, 440, 0.1)
 
-def scale_to_coordinates(scale, center=dial.CENTER, radius=dial.RADIUS):
+def dial_to_rect(scale, center=dial.CENTER, radius=dial.RADIUS):
     """Convert normalized scale value input (-1.0 to 1.0) to a rectangular pixel
     position on the circumference of a circle with center (x,y pixels) and
     radius (pixels)."""
@@ -119,17 +119,19 @@ def take_screenshot():
 
 
 def plot_needles(scale_1=0, scale_2=0, hand_1_outline=color.ORANGE, hand_2_outline=color.GREEN):
-    base = dial.RADIUS // 10
+    scale_plate.y = int((HEIGHT * 5/32) + ((HEIGHT * 1/32) * min(2, max(-2, (scale_1 + scale_2)))))
+    scale_riser.y = int((HEIGHT * 5/32) + ((HEIGHT * 1/32) * min(2, max(-2, (scale_1 + scale_2)))))
 
-    x0, y0 = scale_to_coordinates(scale_2, radius=dial.RADIUS)
-    x1, y1 = scale_to_coordinates(scale_2 - 0.25, radius=base//2)
-    x2, y2 = scale_to_coordinates(scale_2 + 0.25, radius=base//2)
+    base = dial.RADIUS // 10
+    x0, y0 = dial_to_rect(scale_2, radius=dial.RADIUS)
+    x1, y1 = dial_to_rect(scale_2 - 0.25, radius=base//2)
+    x2, y2 = dial_to_rect(scale_2 + 0.25, radius=base//2)
     hand_2 = Triangle(x0, y0, x1, y1, x2, y2, fill=color.GREEN, outline=hand_2_outline)
     indicator_group.append(hand_2)
 
-    x0, y0 = scale_to_coordinates(scale_1, radius=dial.RADIUS)
-    x1, y1 = scale_to_coordinates(scale_1 - 0.25, radius=base//2)
-    x2, y2 = scale_to_coordinates(scale_1 + 0.25, radius=base//2)
+    x0, y0 = dial_to_rect(scale_1, radius=dial.RADIUS)
+    x1, y1 = dial_to_rect(scale_1 - 0.25, radius=base//2)
+    x2, y2 = dial_to_rect(scale_1 + 0.25, radius=base//2)
     hand_1 = Triangle(x0, y0, x1, y1, x2, y2, fill=color.ORANGE, outline=hand_1_outline)
     indicator_group.append(hand_1)
 
@@ -146,6 +148,7 @@ def erase_needles():
 # Instantiate display and fonts
 # print('*** Instantiate the display and fonts')
 display = board.DISPLAY
+display.brightness = 0.1
 scale_group = displayio.Group()
 
 FONT_0 = bitmap_font.load_font('/fonts/Helvetica-Bold-24.bdf')
@@ -297,16 +300,16 @@ scale_group.append(scale_dial)
 for i in range(0, default.MAX_GR, default.MAX_GR//10):
     hash_value = Label(FONT_2, text=str(i), color=color.CYAN)
     hash_value.anchor_point = (0.5, 0.5)
-    hash_value.anchored_position = (scale_to_coordinates(i/default.MAX_GR, radius=point.IN_PATH_RADIUS))
+    hash_value.anchored_position = (dial_to_rect(i/default.MAX_GR, radius=point.IN_PATH_RADIUS))
     scale_group.append(hash_value)
 
-    x0, y0 = scale_to_coordinates(i/default.MAX_GR, radius=point.OUT_PATH_RADIUS)
-    x1, y1 = scale_to_coordinates(i/default.MAX_GR, radius=dial.RADIUS)
+    x0, y0 = dial_to_rect(i/default.MAX_GR, radius=point.OUT_PATH_RADIUS)
+    x1, y1 = dial_to_rect(i/default.MAX_GR, radius=dial.RADIUS)
     hash_mark_a = Line(x0, y0, x1, y1, color.CYAN)
     scale_group.append(hash_mark_a)
 
-    x0, y0 = scale_to_coordinates((i+default.MAX_GR/20)/default.MAX_GR, radius=point.OUT_PATH_RADIUS+point.RADIUS)
-    x1, y1 = scale_to_coordinates((i+default.MAX_GR/20)/default.MAX_GR, radius=dial.RADIUS)
+    x0, y0 = dial_to_rect((i+default.MAX_GR/20)/default.MAX_GR, radius=point.OUT_PATH_RADIUS+point.RADIUS)
+    x1, y1 = dial_to_rect((i+default.MAX_GR/20)/default.MAX_GR, radius=dial.RADIUS)
     hash_mark_b = Line(x0, y0, x1, y1, color.CYAN)
     scale_group.append(hash_mark_b)
 
@@ -323,9 +326,6 @@ indicator_group.append(chan_2_alarm)
 scale_group.append(indicator_group)
 display.show(scale_group)
 
-
-
-
 # Instantiate and calibrate load cell inputs
 print('*** Instantiate and calibrate load cells')
 print(' enable NAU7802 digital and analog power: %5s' % (nau7802.enable(True)))
@@ -333,9 +333,9 @@ print(' enable NAU7802 digital and analog power: %5s' % (nau7802.enable(True)))
 nau7802.gain = default.PGA_GAIN  # Use default gain
 nau7802.channel = 1        # Set to second channel
 chan_1_zero = chan_2_zero = 0
-#chan_1_zero = zero_channel()  # Re-calibrate and get raw zero offset value
+chan_1_zero = zero_channel()  # Re-calibrate and get raw zero offset value
 nau7802.channel = 2  # Set to first channel
-#chan_2_zero = zero_channel()  # Re-calibrate and get raw zero offset value
+chan_2_zero = zero_channel()  # Re-calibrate and get raw zero offset value
 
 play_tone('high')
 play_tone('low')
@@ -385,27 +385,30 @@ while True:
         chan_2_mass_gr = 0.0
     chan_2_value.text      = '%5.1f' % (chan_2_mass_gr)
 
-    if chan_1_mass_gr > default.MAX_GR or chan_1_mass_gr < default.MIN_GR:
+    if chan_1_mass_gr != min(default.MAX_GR, max(chan_1_mass_gr, default.MIN_GR)):
         chan_1_outline = color.RED
     else:
         chan_1_outline = color.ORANGE
 
-    if chan_2_mass_gr > default.MAX_GR or chan_2_mass_gr < default.MIN_GR:
+    if chan_2_mass_gr != min(default.MAX_GR, max(chan_2_mass_gr, default.MIN_GR)):
         chan_2_outline = color.RED
     else:
         chan_2_outline = color.GREEN
 
+    chan_1_mass_gr_norm = chan_1_mass_gr / default.MAX_GR
+    chan_2_mass_gr_norm = chan_2_mass_gr / default.MAX_GR
+
     erase_needles()
-    plot_needles(chan_1_mass_gr/100, chan_2_mass_gr/100, chan_1_outline, chan_2_outline)
+    plot_needles(chan_1_mass_gr_norm, chan_2_mass_gr_norm, chan_1_outline, chan_2_outline)
 
     print('(%+5.1f, %+5.1f)' % (chan_1_mass_gr, chan_2_mass_gr))
 
 
-    time.sleep(1.0)
+    """time.sleep(1.0)
     for i in range(0, 51):
         erase_needles()
-        plot_needles(i/50, (50-i)/50)
-        time.sleep(0.1)
+        plot_needles(i/50, (50-i)/50, chan_1_outline, chan_2_outline)
+        time.sleep(0.1)"""
 
 
     touch = ts.touch_point
