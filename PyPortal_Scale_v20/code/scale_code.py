@@ -1,10 +1,10 @@
 # PyPortal Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# 2021-10-06 v20 Cedar Grove Studios
+# 2021-10-07 v20 Cedar Grove Studios
 
 # uncomment the following import line to run the calibration method
-# this will eventually be put into the setup process
-# import load_cell_calibrator
+# (this will eventually be put into the setup process)
+# import cedargrove_scale.load_cell_calibrator
 
 import board
 import busio
@@ -13,41 +13,35 @@ from math import cos, sin, pi
 import storage
 import digitalio
 import displayio
+from simpleio import tone
 
-import adafruit_sdcard
+import adafruit_imageload
 from adafruit_bitmapsaver import save_pixels
-
-from simpleio import map_range, tone
+from adafruit_bitmap_font import bitmap_font
+from adafruit_display_text.label import Label
 from adafruit_display_shapes.line import Line
 from adafruit_display_shapes.circle import Circle
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.roundrect import RoundRect
 from adafruit_display_shapes.triangle import Triangle
-from adafruit_display_text.label import Label
-from adafruit_bitmap_font import bitmap_font
+
+import adafruit_sdcard
 import adafruit_touchscreen
 from adafruit_button import Button
 from cedargrove_nau7802 import NAU7802
-from scale_config import Defaults as default
-from scale_config import ScalePalette as color
 
-# Determine display and object sizes
-WIDTH = board.DISPLAY.width
-HEIGHT = board.DISPLAY.height
+from scale_config import Configuration as config
+from cedargrove_scale.defaults import Defaults as default
+from cedargrove_scale.defaults import Palette as color
+from cedargrove_scale.defaults import Screen as screen
+from cedargrove_scale.defaults import Dial as dial
+from cedargrove_scale.defaults import Pointer as point
 
-class Dial:
-    RADIUS = int(HEIGHT * 1/4)
-    CENTER = (WIDTH // 2, HEIGHT // 2)
-dial = Dial
+# Determine screen size
+WIDTH  = screen.WIDTH
+HEIGHT = screen.HEIGHT
 
-class Pointer:
-    STROKE = 2
-    DIAMETER = int((HEIGHT * 1/32) + (2 * STROKE))
-    RADIUS = DIAMETER // 2
-    OUT_PATH_RADIUS = dial.RADIUS - DIAMETER
-    IN_PATH_RADIUS = dial.RADIUS - (2 * DIAMETER)
-point = Pointer
-
+# Instantiate touch screen
 ts = adafruit_touchscreen.Touchscreen(
     board.TOUCH_XL,
     board.TOUCH_XR,
@@ -74,8 +68,8 @@ except OSError as error:
     print("SD card NOT found:", error)
 
 def zero_channel():
-    """Initiate internal calibration for current channel. Returns raw zero
-    offset value. Use when scale is started, a new channel is selected or
+    """Initiate internal calibration for current channel, return raw zero
+    offset value. Use when scale is started, a new channel is selected, or
     to adjust for measurement drift. Remove weight and tare from load cell
     before executing."""
     print('channel %1d calibrate.INTERNAL: %5s'
@@ -86,9 +80,9 @@ def zero_channel():
     print('...channel zeroed')
     return zero_offset
 
-def read(samples=100):
-    """Read and average consecutive raw sample values; return average
-    raw value."""
+def read(samples=default.SAMPLE_AVG):
+    """Read and average consecutive raw sample values for currently selected
+    channel. Returns the average raw value."""
     sum = 0
     for i in range(0, samples):
         if nau7802.available:
@@ -100,6 +94,7 @@ def play_tone(note=None):
         tone(board.A0, 880, 0.1)
     elif note == 'low':
         tone(board.A0, 440, 0.1)
+    return
 
 def dial_to_rect(scale, center=dial.CENTER, radius=dial.RADIUS):
     """Convert normalized scale value input (-1.0 to 1.0) to a rectangular pixel
@@ -116,6 +111,7 @@ def take_screenshot():
     print('Taking Screenshot...', end='')
     save_pixels('/sd/screenshot.bmp')
     print(' Screenshot taken')
+    return
 
 
 def plot_needles(scale_1=0, scale_2=0, hand_1_outline=color.ORANGE, hand_2_outline=color.GREEN):
@@ -138,17 +134,19 @@ def plot_needles(scale_1=0, scale_2=0, hand_1_outline=color.ORANGE, hand_2_outli
     x0, y0 = dial.CENTER
     pivot = Circle(x0, y0, base//2, fill=color.WHITE)
     indicator_group.append(pivot)
+    return
 
 def erase_needles():
     indicator_group.remove(indicator_group[len(indicator_group) - 1])
     indicator_group.remove(indicator_group[len(indicator_group) - 1])
     indicator_group.remove(indicator_group[len(indicator_group) - 1])
+    return
 
 
 # Instantiate display and fonts
 # print('*** Instantiate the display and fonts')
 display = board.DISPLAY
-display.brightness = 0.1
+display.brightness = config.BRIGHTNESS
 scale_group = displayio.Group()
 
 FONT_0 = bitmap_font.load_font('/fonts/Helvetica-Bold-24.bdf')
@@ -157,8 +155,9 @@ FONT_2 = bitmap_font.load_font('/fonts/OpenSans-9.bdf')
 
 # Define displayio background and group elements
 print('*** Define displayio background and group elements')
-"""# Bitmap background
-_bkg = open('/sd/screenshot.bmp', 'rb')
+
+# Bitmap background
+"""_bkg = open('/sd/screenshot.bmp', 'rb')
 bkg = displayio.OnDiskBitmap(_bkg)
 try:
     _background = displayio.TileGrid(bkg,
@@ -223,12 +222,12 @@ scale_group.append(down_button)
 buttons.append(down_button)"""
 
 # -- DISPLAY ELEMENTS -- #
-chan_1_name = Label(FONT_1, text=default.CHAN_1_NAME, color=color.ORANGE)
+chan_1_name = Label(FONT_1, text=config.CHAN_1_NAME, color=color.ORANGE)
 chan_1_name.anchor_point = (1.0, 0)
 chan_1_name.anchored_position = (int(WIDTH * 9/32), int(HEIGHT * 1/8))
 scale_group.append(chan_1_name)
 
-chan_2_name = Label(FONT_1, text=default.CHAN_2_NAME, color=color.GREEN)
+chan_2_name = Label(FONT_1, text=config.CHAN_2_NAME, color=color.GREEN)
 chan_2_name.anchor_point = (1.0, 0)
 chan_2_name.anchored_position = (int(WIDTH * 31/32), int(HEIGHT * 1/8))
 scale_group.append(chan_2_name)
@@ -297,19 +296,19 @@ scale_dial = Circle(int(WIDTH * 1/2), int(HEIGHT * 1/2), int(HEIGHT * 1/4),
                        fill=color.BLUE_DK, outline=color.WHITE, stroke=1)
 scale_group.append(scale_dial)
 
-for i in range(0, default.MAX_GR, default.MAX_GR//10):
+for i in range(0, config.MAX_GR, config.MAX_GR//10):
     hash_value = Label(FONT_2, text=str(i), color=color.CYAN)
     hash_value.anchor_point = (0.5, 0.5)
-    hash_value.anchored_position = (dial_to_rect(i/default.MAX_GR, radius=point.IN_PATH_RADIUS))
+    hash_value.anchored_position = (dial_to_rect(i/config.MAX_GR, radius=point.IN_PATH_RADIUS))
     scale_group.append(hash_value)
 
-    x0, y0 = dial_to_rect(i/default.MAX_GR, radius=point.OUT_PATH_RADIUS)
-    x1, y1 = dial_to_rect(i/default.MAX_GR, radius=dial.RADIUS)
+    x0, y0 = dial_to_rect(i/config.MAX_GR, radius=point.OUT_PATH_RADIUS)
+    x1, y1 = dial_to_rect(i/config.MAX_GR, radius=dial.RADIUS)
     hash_mark_a = Line(x0, y0, x1, y1, color.CYAN)
     scale_group.append(hash_mark_a)
 
-    x0, y0 = dial_to_rect((i+default.MAX_GR/20)/default.MAX_GR, radius=point.OUT_PATH_RADIUS+point.RADIUS)
-    x1, y1 = dial_to_rect((i+default.MAX_GR/20)/default.MAX_GR, radius=dial.RADIUS)
+    x0, y0 = dial_to_rect((i+config.MAX_GR/20)/config.MAX_GR, radius=point.OUT_PATH_RADIUS+point.RADIUS)
+    x1, y1 = dial_to_rect((i+config.MAX_GR/20)/config.MAX_GR, radius=dial.RADIUS)
     hash_mark_b = Line(x0, y0, x1, y1, color.CYAN)
     scale_group.append(hash_mark_b)
 
@@ -340,8 +339,8 @@ chan_2_zero = zero_channel()  # Re-calibrate and get raw zero offset value
 play_tone('high')
 play_tone('low')
 
-tare_1_mass_gr = round(default.TARE_1_MASS_GR, 1)
-tare_2_mass_gr = round(default.TARE_2_MASS_GR, 1)
+tare_1_mass_gr = round(config.TARE_1_MASS_GR, 1)
+tare_2_mass_gr = round(config.TARE_2_MASS_GR, 1)
 tare_1_enable = tare_2_enable = False
 
 if tare_1_mass_gr != 0:
@@ -370,7 +369,7 @@ while True:
     tare_2_value.text=str(tare_2_mass_gr)
 
     nau7802.channel = 1
-    value = read(default.SAMPLE_AVG)
+    value = read()
     chan_1_mass_gr = round((value - chan_1_zero) * default.CALIB_RATIO_1, 1) - tare_1_mass_gr
     chan_1_mass_oz = round(chan_1_mass_gr * 0.03527, 2)
     if str(chan_1_mass_gr) == '-0.0':  # Filter -0.0 value
@@ -378,25 +377,25 @@ while True:
     chan_1_value.text = '%5.1f' % (chan_1_mass_gr)
 
     nau7802.channel = 2
-    value = read(default.SAMPLE_AVG)
+    value = read()
     chan_2_mass_gr = round((value - chan_2_zero) * default.CALIB_RATIO_2, 1) - tare_2_mass_gr
     chan_2_mass_oz = round(chan_2_mass_gr * 0.03527, 2)
     if str(chan_2_mass_gr) == '-0.0':  # Filter -0.0 value
         chan_2_mass_gr = 0.0
     chan_2_value.text      = '%5.1f' % (chan_2_mass_gr)
 
-    if chan_1_mass_gr != min(default.MAX_GR, max(chan_1_mass_gr, default.MIN_GR)):
+    if chan_1_mass_gr != min(config.MAX_GR, max(chan_1_mass_gr, config.MIN_GR)):
         chan_1_outline = color.RED
     else:
         chan_1_outline = color.ORANGE
 
-    if chan_2_mass_gr != min(default.MAX_GR, max(chan_2_mass_gr, default.MIN_GR)):
+    if chan_2_mass_gr != min(config.MAX_GR, max(chan_2_mass_gr, config.MIN_GR)):
         chan_2_outline = color.RED
     else:
         chan_2_outline = color.GREEN
 
-    chan_1_mass_gr_norm = chan_1_mass_gr / default.MAX_GR
-    chan_2_mass_gr_norm = chan_2_mass_gr / default.MAX_GR
+    chan_1_mass_gr_norm = chan_1_mass_gr / config.MAX_GR
+    chan_2_mass_gr_norm = chan_2_mass_gr / config.MAX_GR
 
     erase_needles()
     plot_needles(chan_1_mass_gr_norm, chan_2_mass_gr_norm, chan_1_outline, chan_2_outline)
@@ -442,7 +441,7 @@ while True:
                     channel = int(button.name[5])
                     play_tone('high')
                     nau7802.channel = channel
-                    value = read(default.SAMPLE_AVG)
+                    value = read()
 
                     if channel == 1:
                         tare_1_enable = not tare_1_enable  # toggle tare 1 state
