@@ -1,6 +1,6 @@
 # PyPortal Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# 2021-10-07 v20 Cedar Grove Studios
+# 2021-10-08 v20 Cedar Grove Studios
 
 # uncomment the following import line to run the calibration method
 # (this will eventually be put into the setup process)
@@ -31,11 +31,18 @@ from adafruit_button import Button
 from cedargrove_nau7802 import NAU7802
 
 from scale_config import Configuration as config
-from cedargrove_scale.defaults import Defaults as default
-from cedargrove_scale.defaults import Palette as color
-from cedargrove_scale.defaults import Screen as screen
-from cedargrove_scale.defaults import Dial as dial
-from cedargrove_scale.defaults import Pointer as point
+from cedargrove_scale.defaults import (
+    Defaults as default,
+    Dial as dial,
+    Palette as color,
+    Pointer as point,
+    Screen as screen,
+)
+
+debug = False
+
+data_store_1 = []
+sum = 0
 
 # Determine screen size
 WIDTH  = screen.WIDTH
@@ -115,10 +122,12 @@ def take_screenshot():
 
 
 def plot_needles(scale_1=0, scale_2=0, hand_1_outline=color.ORANGE, hand_2_outline=color.GREEN):
+
+    base = dial.RADIUS // 10
+
     scale_plate.y = int((HEIGHT * 5/32) + ((HEIGHT * 1/32) * min(2, max(-2, (scale_1 + scale_2)))))
     scale_riser.y = int((HEIGHT * 5/32) + ((HEIGHT * 1/32) * min(2, max(-2, (scale_1 + scale_2)))))
 
-    base = dial.RADIUS // 10
     x0, y0 = dial_to_rect(scale_2, radius=dial.RADIUS)
     x1, y1 = dial_to_rect(scale_2 - 0.25, radius=base//2)
     x2, y2 = dial_to_rect(scale_2 + 0.25, radius=base//2)
@@ -134,7 +143,8 @@ def plot_needles(scale_1=0, scale_2=0, hand_1_outline=color.ORANGE, hand_2_outli
     x0, y0 = dial.CENTER
     pivot = Circle(x0, y0, base//2, fill=color.WHITE)
     indicator_group.append(pivot)
-    return
+
+    return scale_1, scale_2
 
 def erase_needles():
     indicator_group.remove(indicator_group[len(indicator_group) - 1])
@@ -155,6 +165,18 @@ FONT_2 = bitmap_font.load_font('/fonts/OpenSans-9.bdf')
 
 # Define displayio background and group elements
 print('*** Define displayio background and group elements')
+
+"""# Battery indicator tile grid; image_group[1]
+self._sprite_sheet, self._palette = adafruit_imageload.load("/cedargrove_clock_builder/batt_sprite_sheet.bmp",
+                                                            bitmap=displayio.Bitmap,
+                                                            palette=displayio.Palette)
+self._batt_icon = displayio.TileGrid(self._sprite_sheet,
+                                     pixel_shader=self._palette,
+                                     width = 1, height = 1,
+                                     tile_width = 16, tile_height = 16)
+self._batt_icon.x = WIDTH - 16
+self._batt_icon.y = 1
+self._image_group.append(self._batt_icon)"""
 
 # Bitmap background
 """_bkg = open('/sd/screenshot.bmp', 'rb')
@@ -332,9 +354,9 @@ print(' enable NAU7802 digital and analog power: %5s' % (nau7802.enable(True)))
 nau7802.gain = default.PGA_GAIN  # Use default gain
 nau7802.channel = 1        # Set to second channel
 chan_1_zero = chan_2_zero = 0
-chan_1_zero = zero_channel()  # Re-calibrate and get raw zero offset value
+if not debug: chan_1_zero = zero_channel()  # Re-calibrate and get raw zero offset value
 nau7802.channel = 2  # Set to first channel
-chan_2_zero = zero_channel()  # Re-calibrate and get raw zero offset value
+if not debug: chan_2_zero = zero_channel()  # Re-calibrate and get raw zero offset value
 
 play_tone('high')
 play_tone('low')
