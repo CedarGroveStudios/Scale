@@ -10,9 +10,9 @@ class Configuration:
     CHAN_1_NAME = 'CELL_A'  # 6 characters maximum
     CHAN_2_NAME = 'CELL_B'  # 6 characters maximum
 
-    TARE_1_MASS_GR  = 6.4  # Channel 1 startup tare value
-    TARE_2_MASS_GR  = 0.0  # Channel 2 startup tare value
-    ALARM_1_MASS_GR = 0.0  # Channel 1 startup alarm value
-    ALARM_2_MASS_GR = 0.0  # Channel 1 startup alarm value
+    TARE_1_MASS_GR  =   6.4  # Channel 1 startup tare value; zero to disable
+    TARE_2_MASS_GR  =   0.0  # Channel 2 startup tare value; zero to disable
+    ALARM_1_MASS_GR =   0.0  # Channel 1 startup alarm value; zero to disable
+    ALARM_2_MASS_GR =  50.0  # Channel 1 startup alarm value; zero to disable
 
     MASS_UNITS = 'GRAMS'  # Mass units of either GRAMS or OUNCE; limited to 5 char

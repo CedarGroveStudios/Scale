@@ -68,23 +68,26 @@ has_sd_card = False
 try:
     sdcard = adafruit_sdcard.SDCard(spi, sd_cs)
     vfs = storage.VfsFat(sdcard)
-    storage.mount(vfs, "/sd")
+    storage.mount(vfs, '/sd')
     print('SD card found')
     has_sd_card = True
 except OSError as error:
-    print("SD card NOT found:", error)
+    print('SD card NOT found:', error)
 
 def zero_channel():
     """Initiate internal calibration for current channel, return raw zero
     offset value. Use when scale is started, a new channel is selected, or
     to adjust for measurement drift. Remove weight and tare from load cell
     before executing."""
+    status_label.text = 'ZERO LOAD CELL '+str(nau7802.channel)
+    status_label.color = color.YELLOW
     print('channel %1d calibrate.INTERNAL: %5s'
           % (nau7802.channel, nau7802.calibrate('INTERNAL')))
     print('channel %1d calibrate.OFFSET:   %5s'
           % (nau7802.channel, nau7802.calibrate('OFFSET')))
     zero_offset = read(100)  # Average of 100 samples to establish zero offset
     print('...channel zeroed')
+    status_label.text = ''
     return zero_offset
 
 def read(samples=default.SAMPLE_AVG):
@@ -113,15 +116,34 @@ def dial_to_rect(scale, center=dial.CENTER, radius=dial.RADIUS):
     y = int(center[1] - (sin(radians)*radius))
     return x, y
 
-
 def take_screenshot():
     print('Taking Screenshot...', end='')
     save_pixels('/sd/screenshot.bmp')
     print(' Screenshot taken')
     return
 
+def flash_status(text="", duration=0.05):
+    """Flash a status message once."""
+    status_label.text = text
+    status_label.color = color.WHITE
+    time.sleep(duration)
+    status_label.color = color.BLACK
+    time.sleep(duration)
+    status_label.text = ''
+    return
 
-def plot_needles(scale_1=0, scale_2=0, hand_1_outline=color.ORANGE, hand_2_outline=color.GREEN):
+def plot_needles(scale_1=0, scale_2=0):
+    """ Display channel 1 and 2 indicator needles. Input is normalized for
+    0.0 to 1.0 (minimum and maximum range), but accepts any floating point value."""
+    if scale_1 != min(1.0, max(scale_1, 0.0)):
+        hand_1_outline = color.RED
+    else:
+        hand_1_outline = color.ORANGE
+
+    if scale_2 != min(1.0, max(scale_2, 0.0)):
+        hand_2_outline = color.RED
+    else:
+        hand_2_outline = color.GREEN
 
     base = dial.RADIUS // 10
 
@@ -166,17 +188,50 @@ FONT_2 = bitmap_font.load_font('/fonts/OpenSans-9.bdf')
 # Define displayio background and group elements
 print('*** Define displayio background and group elements')
 
-"""# Battery indicator tile grid; image_group[1]
-self._sprite_sheet, self._palette = adafruit_imageload.load("/cedargrove_clock_builder/batt_sprite_sheet.bmp",
+# Tare and alarm tile grid
+sprite_sheet, palette = adafruit_imageload.load("/cedargrove_scale/scale_sprite_sheet.bmp",
                                                             bitmap=displayio.Bitmap,
                                                             palette=displayio.Palette)
-self._batt_icon = displayio.TileGrid(self._sprite_sheet,
-                                     pixel_shader=self._palette,
+palette.make_transparent(3)
+
+tare_1_icon = displayio.TileGrid(sprite_sheet,
+                                     pixel_shader=palette,
                                      width = 1, height = 1,
-                                     tile_width = 16, tile_height = 16)
-self._batt_icon.x = WIDTH - 16
-self._batt_icon.y = 1
-self._image_group.append(self._batt_icon)"""
+                                     tile_width = 32, tile_height = 48)
+tare_1_icon.x = int(WIDTH * 3 / 32)
+tare_1_icon.y = int(HEIGHT * 8 / 16)
+tare_1_icon[0] = 3
+scale_group.append(tare_1_icon)
+
+alarm_1_icon = displayio.TileGrid(sprite_sheet,
+                                     pixel_shader=palette,
+                                     width = 1, height = 1,
+                                     tile_width = 32, tile_height = 48)
+alarm_1_icon.x = int(WIDTH * 3 / 32)
+alarm_1_icon.y = int(HEIGHT * 11 / 16)
+alarm_1_icon[0] = 2
+scale_group.append(alarm_1_icon)
+
+
+tare_2_icon = displayio.TileGrid(sprite_sheet,
+                                     pixel_shader=palette,
+                                     width = 1, height = 1,
+                                     tile_width = 32, tile_height = 48)
+
+tare_2_icon.x = int(WIDTH * 27 / 32)
+tare_2_icon.y = int(HEIGHT * 8 / 16)
+tare_2_icon[0] = 7
+scale_group.append(tare_2_icon)
+
+alarm_2_icon = displayio.TileGrid(sprite_sheet,
+                                     pixel_shader=palette,
+                                     width = 1, height = 1,
+                                     tile_width = 32, tile_height = 48)
+alarm_2_icon.x = int(WIDTH * 27 / 32)
+alarm_2_icon.y = int(HEIGHT * 11 / 16)
+alarm_2_icon[0] = 6
+scale_group.append(alarm_2_icon)
+
 
 # Bitmap background
 """_bkg = open('/sd/screenshot.bmp', 'rb')
@@ -334,6 +389,11 @@ for i in range(0, config.MAX_GR, config.MAX_GR//10):
     hash_mark_b = Line(x0, y0, x1, y1, color.CYAN)
     scale_group.append(hash_mark_b)
 
+status_label = Label(FONT_2, text=" ", color=None)
+status_label.anchor_point = (0.5, 0.5)
+status_label.anchored_position = (WIDTH // 2 , int(HEIGHT * 15/16))
+scale_group.append(status_label)
+
 # Define moveable bubble and alarm pointers in the indicator group
 indicator_group = displayio.Group()
 
@@ -347,6 +407,11 @@ indicator_group.append(chan_2_alarm)
 scale_group.append(indicator_group)
 display.show(scale_group)
 
+if has_sd_card:
+    flash_status('SD CARD FOUND', 0.5)
+else:
+    flash_status('NO SD CARD', 0.5)
+
 # Instantiate and calibrate load cell inputs
 print('*** Instantiate and calibrate load cells')
 print(' enable NAU7802 digital and analog power: %5s' % (nau7802.enable(True)))
@@ -358,37 +423,55 @@ if not debug: chan_1_zero = zero_channel()  # Re-calibrate and get raw zero offs
 nau7802.channel = 2  # Set to first channel
 if not debug: chan_2_zero = zero_channel()  # Re-calibrate and get raw zero offset value
 
-play_tone('high')
-play_tone('low')
-
 tare_1_mass_gr = round(config.TARE_1_MASS_GR, 1)
 tare_2_mass_gr = round(config.TARE_2_MASS_GR, 1)
-tare_1_enable = tare_2_enable = False
-
-if tare_1_mass_gr != 0:
-    tare_1_enable = True  # use default tare value on startup
-if tare_2_mass_gr != 0:
-    tare_2_enable = True  # use default tare value on startup
-
-#take_screenshot()
+alarm_1_mass_gr = round(config.ALARM_1_MASS_GR, 1)
+alarm_2_mass_gr = round(config.ALARM_2_MASS_GR, 1)
 
 plot_needles(0, 0)
 
+#take_screenshot()
+flash_status('READY', 0.5)
+play_tone('high')
+play_tone('low')
+
 # -- Main loop: Read sample, move bubble, and display values
 while True:
-    if tare_1_enable:
+    if tare_1_mass_gr != 0:
         tare_1_value.color = color.ORANGE
+        tare_1_icon[0] = 1
     else:
         tare_1_value.color = color.GRAY
         tare_1_mass_gr = 0.0
+        tare_1_icon[0] = 3
     tare_1_value.text=str(tare_1_mass_gr)
 
-    if tare_2_enable:
+    if tare_2_mass_gr != 0:
         tare_2_value.color = color.GREEN
+        tare_2_icon[0] = 5
     else:
         tare_2_value.color = color.GRAY
         tare_2_mass_gr = 0.0
+        tare_2_icon[0] = 7
     tare_2_value.text=str(tare_2_mass_gr)
+
+    if alarm_1_mass_gr != 0:
+        alarm_1_value.color = color.ORANGE
+        alarm_1_icon[0] = 0
+    else:
+        alarm_1_value.color = color.GRAY
+        alarm_1_mass_gr = 0.0
+        alarm_1_icon[0] = 2
+    alarm_1_value.text=str(alarm_1_mass_gr)
+
+    if alarm_2_mass_gr != 0:
+        alarm_2_value.color = color.GREEN
+        alarm_2_icon[0] = 4
+    else:
+        alarm_2_value.color = color.GRAY
+        alarm_2_mass_gr = 0.0
+        alarm_2_icon[0] = 6
+    alarm_2_value.text=str(alarm_2_mass_gr)
 
     nau7802.channel = 1
     value = read()
@@ -406,31 +489,13 @@ while True:
         chan_2_mass_gr = 0.0
     chan_2_value.text      = '%5.1f' % (chan_2_mass_gr)
 
-    if chan_1_mass_gr != min(config.MAX_GR, max(chan_1_mass_gr, config.MIN_GR)):
-        chan_1_outline = color.RED
-    else:
-        chan_1_outline = color.ORANGE
-
-    if chan_2_mass_gr != min(config.MAX_GR, max(chan_2_mass_gr, config.MIN_GR)):
-        chan_2_outline = color.RED
-    else:
-        chan_2_outline = color.GREEN
-
     chan_1_mass_gr_norm = chan_1_mass_gr / config.MAX_GR
     chan_2_mass_gr_norm = chan_2_mass_gr / config.MAX_GR
 
     erase_needles()
-    plot_needles(chan_1_mass_gr_norm, chan_2_mass_gr_norm, chan_1_outline, chan_2_outline)
+    plot_needles(chan_1_mass_gr_norm, chan_2_mass_gr_norm)
 
     print('(%+5.1f, %+5.1f)' % (chan_1_mass_gr, chan_2_mass_gr))
-
-
-    """time.sleep(1.0)
-    for i in range(0, 51):
-        erase_needles()
-        plot_needles(i/50, (50-i)/50, chan_1_outline, chan_2_outline)
-        time.sleep(0.1)"""
-
 
     touch = ts.touch_point
     """if touch:
