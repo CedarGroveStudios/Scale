@@ -117,9 +117,14 @@ def dial_to_rect(scale, center=dial.CENTER, radius=dial.RADIUS):
     return x, y
 
 def take_screenshot():
-    print('Taking Screenshot...', end='')
-    save_pixels('/sd/screenshot.bmp')
-    print(' Screenshot taken')
+    if has_sd_card:
+        print('Taking Screenshot...', end='')
+        flash_status('SCREENSHOT...', 0.8)
+        save_pixels('/sd/screenshot.bmp')
+        print(' Screenshot stored')
+        flash_status('... STORED', 0.8)
+    else:
+        flash_status('SCREENSHOT: NO SD CARD', 1.0)
     return
 
 def flash_status(text="", duration=0.05):
@@ -299,23 +304,23 @@ scale_group.append(down_button)
 buttons.append(down_button)"""
 
 # -- DISPLAY ELEMENTS -- #
-chan_1_name = Label(FONT_1, text=config.CHAN_1_NAME, color=color.ORANGE)
+chan_1_name = Label(FONT_0, text=config.CHAN_1_NAME, color=color.ORANGE)
 chan_1_name.anchor_point = (1.0, 0)
 chan_1_name.anchored_position = (int(WIDTH * 9/32), int(HEIGHT * 1/8))
 scale_group.append(chan_1_name)
 
-chan_2_name = Label(FONT_1, text=config.CHAN_2_NAME, color=color.GREEN)
+chan_2_name = Label(FONT_0, text=config.CHAN_2_NAME, color=color.GREEN)
 chan_2_name.anchor_point = (1.0, 0)
 chan_2_name.anchored_position = (int(WIDTH * 31/32), int(HEIGHT * 1/8))
 scale_group.append(chan_2_name)
 
 
-chan_1_label = Label(FONT_0, text='grams', color=color.BLUE)
+chan_1_label = Label(FONT_0, text=config.MASS_UNITS.lower(), color=color.BLUE)
 chan_1_label.anchor_point = (1.0, 0)
 chan_1_label.anchored_position = (int(WIDTH * 9/32), int(HEIGHT * 3/8))
 scale_group.append(chan_1_label)
 
-chan_2_label = Label(FONT_0, text='grams', color=color.BLUE)
+chan_2_label = Label(FONT_0, text=config.MASS_UNITS.lower(), color=color.BLUE)
 chan_2_label.anchor_point = (1.0, 0)
 chan_2_label.anchored_position = (int(WIDTH * 31/32), int(HEIGHT * 3/8))
 scale_group.append(chan_2_label)
@@ -407,6 +412,8 @@ indicator_group.append(chan_2_alarm)
 scale_group.append(indicator_group)
 display.show(scale_group)
 
+plot_needles(0, 0)
+
 if has_sd_card:
     flash_status('SD CARD FOUND', 0.5)
 else:
@@ -428,51 +435,50 @@ tare_2_mass_gr = round(config.TARE_2_MASS_GR, 1)
 alarm_1_mass_gr = round(config.ALARM_1_MASS_GR, 1)
 alarm_2_mass_gr = round(config.ALARM_2_MASS_GR, 1)
 
-plot_needles(0, 0)
+if tare_1_mass_gr != 0:
+    tare_1_value.color = color.ORANGE
+    tare_1_icon[0] = 1
+else:
+    tare_1_value.color = color.GRAY
+    tare_1_mass_gr = 0.0
+    tare_1_icon[0] = 3
+tare_1_value.text=str(tare_1_mass_gr)
+
+if tare_2_mass_gr != 0:
+    tare_2_value.color = color.GREEN
+    tare_2_icon[0] = 5
+else:
+    tare_2_value.color = color.GRAY
+    tare_2_mass_gr = 0.0
+    tare_2_icon[0] = 7
+tare_2_value.text=str(tare_2_mass_gr)
+
+if alarm_1_mass_gr != 0:
+    alarm_1_value.color = color.ORANGE
+    alarm_1_icon[0] = 0
+else:
+    alarm_1_value.color = color.GRAY
+    alarm_1_mass_gr = 0.0
+    alarm_1_icon[0] = 2
+alarm_1_value.text=str(alarm_1_mass_gr)
+
+if alarm_2_mass_gr != 0:
+    alarm_2_value.color = color.GREEN
+    alarm_2_icon[0] = 4
+else:
+    alarm_2_value.color = color.GRAY
+    alarm_2_mass_gr = 0.0
+    alarm_2_icon[0] = 6
+alarm_2_value.text=str(alarm_2_mass_gr)
 
 #take_screenshot()
+
 flash_status('READY', 0.5)
 play_tone('high')
 play_tone('low')
 
 # -- Main loop: Read sample, move bubble, and display values
 while True:
-    if tare_1_mass_gr != 0:
-        tare_1_value.color = color.ORANGE
-        tare_1_icon[0] = 1
-    else:
-        tare_1_value.color = color.GRAY
-        tare_1_mass_gr = 0.0
-        tare_1_icon[0] = 3
-    tare_1_value.text=str(tare_1_mass_gr)
-
-    if tare_2_mass_gr != 0:
-        tare_2_value.color = color.GREEN
-        tare_2_icon[0] = 5
-    else:
-        tare_2_value.color = color.GRAY
-        tare_2_mass_gr = 0.0
-        tare_2_icon[0] = 7
-    tare_2_value.text=str(tare_2_mass_gr)
-
-    if alarm_1_mass_gr != 0:
-        alarm_1_value.color = color.ORANGE
-        alarm_1_icon[0] = 0
-    else:
-        alarm_1_value.color = color.GRAY
-        alarm_1_mass_gr = 0.0
-        alarm_1_icon[0] = 2
-    alarm_1_value.text=str(alarm_1_mass_gr)
-
-    if alarm_2_mass_gr != 0:
-        alarm_2_value.color = color.GREEN
-        alarm_2_icon[0] = 4
-    else:
-        alarm_2_value.color = color.GRAY
-        alarm_2_mass_gr = 0.0
-        alarm_2_icon[0] = 6
-    alarm_2_value.text=str(alarm_2_mass_gr)
-
     nau7802.channel = 1
     value = read()
     chan_1_mass_gr = round((value - chan_1_zero) * default.CALIB_RATIO_1, 1) - tare_1_mass_gr

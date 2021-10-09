@@ -2,7 +2,7 @@
 import board
 
 class Defaults:
-    SAMPLE_AVG = 100  # Number of samples to average per measurement
+    SAMPLE_AVG = 25  # Number of samples to average per measurement
 
     PGA_GAIN   = 128  # Default gain for internal PGA
 

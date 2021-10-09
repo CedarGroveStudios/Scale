@@ -7,8 +7,8 @@ class Configuration:
     MAX_GR       = 100  # Maximum (full-scale) display range in grams
     MIN_GR       =   0  # Miminum of display range in grams
 
-    CHAN_1_NAME = 'CELL_A'  # 6 characters maximum
-    CHAN_2_NAME = 'CELL_B'  # 6 characters maximum
+    CHAN_1_NAME = 'beans'  # 6 characters maximum
+    CHAN_2_NAME = 'shots'  # 6 characters maximum
 
     TARE_1_MASS_GR  =   6.4  # Channel 1 startup tare value; zero to disable
     TARE_2_MASS_GR  =   0.0  # Channel 2 startup tare value; zero to disable
