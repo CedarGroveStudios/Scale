@@ -1,6 +1,6 @@
 # PyPortal Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# 2021-10-09 v20 Cedar Grove Studios
+# 2021-10-10 v20 Cedar Grove Studios
 
 # uncomment the following import line to run the calibration method
 # (this will eventually be put into the setup process)
@@ -111,19 +111,17 @@ def play_tone(note=None):
     return
 
 
-def width_to_x(width_factor):
-    return int(WIDTH * width_factor)
+def screen_to_rect(width_factor=0, height_factor=0):
+    """Convert normalized screen position input (0.0 to 1.0) to the display's
+    rectangular pixel position."""
+    return int(WIDTH * width_factor), int(HEIGHT * height_factor)
 
 
-def height_to_y(height_factor):
-    return int(HEIGHT * height_factor)
-
-
-def dial_to_rect(scale, center=dial.CENTER, radius=dial.RADIUS):
-    """Convert normalized scale value input (-1.0 to 1.0) to a rectangular pixel
+def dial_to_rect(scale_factor, center=dial.CENTER, radius=dial.RADIUS):
+    """Convert normalized scale_factor input (-1.0 to 1.0) to a rectangular pixel
     position on the circumference of a circle with center (x,y pixels) and
     radius (pixels)."""
-    radians = (-2 * pi) * (scale)  # convert scale value to radians
+    radians = (-2 * pi) * (scale_factor)  # convert scale_factor to radians
     radians = radians + (pi / 2)  # rotate axis counterclockwise
     x = int(center[0] + (cos(radians) * radius))
     y = int(center[1] - (sin(radians) * radius))
@@ -167,9 +165,10 @@ def plot_needles(scale_1=0, scale_2=0):
         hand_2_outline = color.GREEN
 
     base = dial.RADIUS // 10
-
+    sx0, sy0 = screen_to_rect(0.00, 0.16)
+    sx1, sy1 = screen_to_rect(0.00, 0.03)
     scale_plate.y = int(
-        height_to_y(0.16) + (height_to_y(0.03) * min(2, max(-2, (scale_1 + scale_2))))
+        sy0 + (sy1 * min(2, max(-2, (scale_1 + scale_2))))
     )
     scale_riser.y = scale_plate.y
 
@@ -235,11 +234,10 @@ scale_group.append(_background)"""
 
 # -- BUTTONS -- #
 buttons = []
+sx, sy = screen_to_rect(0.01, 0.02)
+sw, sh = screen_to_rect(0.30, 0.20)
 setup_1_button = Button(
-    x=width_to_x(0.01),
-    y=height_to_y(0.02),
-    height=height_to_y(0.20),
-    width=width_to_x(0.30),
+    x=sx, y=sy, height=sh, width=sw,
     style=Button.ROUNDRECT,
     fill_color=None,
     outline_color=color.GRAY,
@@ -250,11 +248,10 @@ setup_1_button = Button(
 scale_group.append(setup_1_button)
 buttons.append(setup_1_button)
 
+sx, sy = screen_to_rect(0.70, 0.02)
+sw, sh = screen_to_rect(0.30, 0.20)
 setup_2_button = Button(
-    x=width_to_x(0.70),
-    y=height_to_y(0.02),
-    height=height_to_y(0.20),
-    width=width_to_x(0.30),
+    x=sx, y=sy, height=sh, width=sw,
     style=Button.ROUNDRECT,
     fill_color=None,
     outline_color=color.GRAY,
@@ -265,11 +262,10 @@ setup_2_button = Button(
 scale_group.append(setup_2_button)
 buttons.append(setup_2_button)
 
+sx, sy = screen_to_rect(0.01, 0.25)
+sw, sh = screen_to_rect(0.30, 0.20)
 zero_1_button = Button(
-    x=width_to_x(0.01),
-    y=height_to_y(0.25),
-    height=height_to_y(0.20),
-    width=width_to_x(0.30),
+    x=sx, y=sy, height=sh, width=sw,
     style=Button.ROUNDRECT,
     fill_color=None,
     outline_color=color.GRAY,
@@ -280,11 +276,10 @@ zero_1_button = Button(
 scale_group.append(zero_1_button)
 buttons.append(zero_1_button)
 
+sx, sy = screen_to_rect(0.70, 0.25)
+sw, sh = screen_to_rect(0.30, 0.20)
 zero_2_button = Button(
-    x=width_to_x(0.70),
-    y=height_to_y(0.25),
-    height=height_to_y(0.20),
-    width=width_to_x(0.30),
+    x=sx, y=sy, height=sh, width=sw,
     style=Button.ROUNDRECT,
     fill_color=None,
     outline_color=color.GRAY,
@@ -295,11 +290,10 @@ zero_2_button = Button(
 scale_group.append(zero_2_button)
 buttons.append(zero_2_button)
 
+sx, sy = screen_to_rect(0.01, 0.50)
+sw, sh = screen_to_rect(0.30, 0.19)
 tare_1_button = Button(
-    x=width_to_x(0.01),
-    y=height_to_y(0.50),
-    height=height_to_y(0.19),
-    width=width_to_x(0.30),
+    x=sx, y=sy, height=sh, width=sw,
     style=Button.ROUNDRECT,
     fill_color=None,
     outline_color=color.GRAY,
@@ -310,11 +304,10 @@ tare_1_button = Button(
 scale_group.append(tare_1_button)
 buttons.append(tare_1_button)
 
+sx, sy = screen_to_rect(0.70, 0.50)
+sw, sh = screen_to_rect(0.30, 0.19)
 tare_2_button = Button(
-    x=width_to_x(0.70),
-    y=height_to_y(0.50),
-    height=height_to_y(0.19),
-    width=width_to_x(0.30),
+    x=sx, y=sy, height=sh, width=sw,
     style=Button.ROUNDRECT,
     fill_color=None,
     outline_color=color.GRAY,
@@ -325,11 +318,10 @@ tare_2_button = Button(
 scale_group.append(tare_2_button)
 buttons.append(tare_2_button)
 
+sx, sy = screen_to_rect(0.01, 0.70)
+sw, sh = screen_to_rect(0.30, 0.20)
 alarm_1_button = Button(
-    x=width_to_x(0.01),
-    y=height_to_y(0.70),
-    height=height_to_y(0.20),
-    width=width_to_x(0.30),
+    x=sx, y=sy, height=sh, width=sw,
     style=Button.ROUNDRECT,
     fill_color=None,
     outline_color=color.GRAY,
@@ -340,11 +332,10 @@ alarm_1_button = Button(
 scale_group.append(alarm_1_button)
 buttons.append(alarm_1_button)
 
+sx, sy = screen_to_rect(0.70, 0.70)
+sw, sh = screen_to_rect(0.30, 0.20)
 alarm_2_button = Button(
-    x=width_to_x(0.70),
-    y=height_to_y(0.70),
-    height=height_to_y(0.20),
-    width=width_to_x(0.30),
+    x=sx, y=sy, height=sh, width=sw,
     style=Button.ROUNDRECT,
     fill_color=None,
     outline_color=color.GRAY,
@@ -358,16 +349,18 @@ buttons.append(alarm_2_button)
 tare_1_icon = displayio.TileGrid(
     sprite_sheet, pixel_shader=palette, width=1, height=1, tile_width=32, tile_height=48
 )
-tare_1_icon.x = width_to_x(0.08)
-tare_1_icon.y = height_to_y(0.50)
+sx, sy = screen_to_rect(0.08, 0.50)
+tare_1_icon.x = sx
+tare_1_icon.y = sy
 tare_1_icon[0] = 3
 scale_group.append(tare_1_icon)
 
 alarm_1_icon = displayio.TileGrid(
     sprite_sheet, pixel_shader=palette, width=1, height=1, tile_width=32, tile_height=48
 )
-alarm_1_icon.x = width_to_x(0.08)
-alarm_1_icon.y = height_to_y(0.70)
+sx, sy = screen_to_rect(0.08, 0.70)
+alarm_1_icon.x = sx
+alarm_1_icon.y = sy
 alarm_1_icon[0] = 2
 scale_group.append(alarm_1_icon)
 
@@ -375,121 +368,117 @@ scale_group.append(alarm_1_icon)
 tare_2_icon = displayio.TileGrid(
     sprite_sheet, pixel_shader=palette, width=1, height=1, tile_width=32, tile_height=48
 )
-
-tare_2_icon.x = width_to_x(0.85)
-tare_2_icon.y = height_to_y(0.50)
+sx, sy = screen_to_rect(0.85, 0.50)
+tare_2_icon.x = sx
+tare_2_icon.y = sy
 tare_2_icon[0] = 7
 scale_group.append(tare_2_icon)
 
 alarm_2_icon = displayio.TileGrid(
     sprite_sheet, pixel_shader=palette, width=1, height=1, tile_width=32, tile_height=48
 )
-alarm_2_icon.x = width_to_x(0.85)
-alarm_2_icon.y = height_to_y(0.70)
+sx, sy = screen_to_rect(0.85, 0.70)
+alarm_2_icon.x = sx
+alarm_2_icon.y = sy
 alarm_2_icon[0] = 6
 scale_group.append(alarm_2_icon)
 
 # -- DISPLAY ELEMENTS -- #
 chan_1_name = Label(FONT_0, text=config.CHAN_1_NAME, color=color.ORANGE)
 chan_1_name.anchor_point = (1.0, 0)
-chan_1_name.anchored_position = (width_to_x(0.28), height_to_y(0.10))
+chan_1_name.anchored_position = (screen_to_rect(0.28, 0.10))
 scale_group.append(chan_1_name)
 
 chan_2_name = Label(FONT_0, text=config.CHAN_2_NAME, color=color.GREEN)
 chan_2_name.anchor_point = (1.0, 0)
-chan_2_name.anchored_position = (width_to_x(0.97), height_to_y(0.10))
+chan_2_name.anchored_position = (screen_to_rect(0.97, 0.10))
 scale_group.append(chan_2_name)
 
 
 chan_1_label = Label(FONT_0, text=config.MASS_UNITS.lower(), color=color.BLUE)
 chan_1_label.anchor_point = (1.0, 0)
-chan_1_label.anchored_position = (width_to_x(0.28), height_to_y(0.38))
+chan_1_label.anchored_position = (screen_to_rect(0.28, 0.38))
 scale_group.append(chan_1_label)
 
 chan_2_label = Label(FONT_0, text=config.MASS_UNITS.lower(), color=color.BLUE)
 chan_2_label.anchor_point = (1.0, 0)
-chan_2_label.anchored_position = (width_to_x(0.97), height_to_y(0.38))
+chan_2_label.anchored_position = (screen_to_rect(0.97, 0.38))
 scale_group.append(chan_2_label)
 
 chan_1_value = Label(FONT_0, text="0.0", color=color.WHITE)
 chan_1_value.anchor_point = (1.0, 1.0)
-chan_1_value.anchored_position = (width_to_x(0.28), height_to_y(0.38))
+chan_1_value.anchored_position = (screen_to_rect(0.28, 0.38))
 scale_group.append(chan_1_value)
 
 chan_2_value = Label(FONT_0, text="0.0", color=color.WHITE)
 chan_2_value.anchor_point = (1.0, 1.0)
-chan_2_value.anchored_position = (width_to_x(0.97), height_to_y(0.38))
+chan_2_value.anchored_position = (screen_to_rect(0.97, 0.38))
 scale_group.append(chan_2_value)
 
 tare_1_value = Label(FONT_2, text="0.0", color=color.GRAY)
 tare_1_value.anchor_point = (1.0, 0.5)
-tare_1_value.anchored_position = (width_to_x(0.28), height_to_y(0.56))
+tare_1_value.anchored_position = (screen_to_rect(0.28, 0.56))
 scale_group.append(tare_1_value)
 
 tare_2_value = Label(FONT_2, text="0.0", color=color.GRAY)
 tare_2_value.anchor_point = (0.0, 0.5)
-tare_2_value.anchored_position = (width_to_x(0.75), height_to_y(0.56))
+tare_2_value.anchored_position = (screen_to_rect(0.75, 0.56))
 scale_group.append(tare_2_value)
 
 alarm_1_value = Label(FONT_2, text="0.0", color=color.GRAY)
 alarm_1_value.anchor_point = (1.0, 0.5)
-alarm_1_value.anchored_position = (width_to_x(0.28), height_to_y(0.75))
+alarm_1_value.anchored_position = (screen_to_rect(0.28, 0.75))
 scale_group.append(alarm_1_value)
 
 alarm_2_value = Label(FONT_2, text="0.0", color=color.GRAY)
 alarm_2_value.anchor_point = (0.0, 0.5)
-alarm_2_value.anchored_position = (width_to_x(0.75), height_to_y(0.75))
+alarm_2_value.anchored_position = (screen_to_rect(0.75, 0.75))
 scale_group.append(alarm_2_value)
 
 # Define scale graphic
+sx, sy = screen_to_rect(0.46, 0.16)
+sw, sh = screen_to_rect(0.08, 0.25)
 scale_riser = Rect(
-    width_to_x(0.46),
-    height_to_y(0.16),
-    width=width_to_x(0.08),
-    height=height_to_y(0.25),
+    sx, sy, width=sw, height=sh,
     fill=color.GRAY,
     outline=color.BLACK,
 )
 scale_group.append(scale_riser)
 
+sx, sy = screen_to_rect(0.34, 0.16)
+sw, sh = screen_to_rect(0.32, 0.06)
 scale_plate = RoundRect(
-    width_to_x(0.34),
-    height_to_y(0.16),
-    width=width_to_x(0.32),
-    height=height_to_y(0.06),
+    sx, sy, width=sw, height=sh,
     r=5,
     fill=color.GRAY,
     outline=color.BLACK,
 )
 scale_group.append(scale_plate)
 
+sx0, sy0 = screen_to_rect(0.50, 0.50)
+sx1, sy1 = screen_to_rect(0.65, 0.80)
+sx2, sy2 = screen_to_rect(0.35, 0.80)
 scale_base = Triangle(
-    width_to_x(0.50),
-    height_to_y(0.50),
-    width_to_x(0.65),
-    height_to_y(0.80),
-    width_to_x(0.35),
-    height_to_y(0.80),
+    sx0, sy0, sx1, sy1, sx2, sy2,
     fill=color.GRAY,
     outline=color.BLACK,
 )
 scale_group.append(scale_base)
 
+sx, sy = screen_to_rect(0.34, 0.80)
+sw, sh = screen_to_rect(0.32, 0.06)
 scale_foot = RoundRect(
-    width_to_x(0.34),
-    height_to_y(0.80),
-    width=width_to_x(0.32),
-    height=height_to_y(0.06),
+    sx, sy, width=sw, height=sh,
     r=5,
     fill=color.GRAY,
     outline=color.BLACK,
 )
 scale_group.append(scale_foot)
 
+sx, sy = screen_to_rect(0.50, 0.50)
+ry, ry = screen_to_rect(0.00, 0.25)
 scale_dial = Circle(
-    width_to_x(0.50),
-    height_to_y(0.50),
-    height_to_y(0.25),
+    sx, sy, ry,
     fill=color.BLUE_DK,
     outline=color.WHITE,
     stroke=1,
@@ -519,7 +508,8 @@ for i in range(0, config.MAX_GR, config.MAX_GR // 10):
 
 status_label = Label(FONT_2, text=" ", color=None)
 status_label.anchor_point = (0.5, 0.5)
-status_label.anchored_position = (WIDTH // 2, height_to_y(15 / 16))
+sx, sy = screen_to_rect(WIDTH // 2, 0.94)
+status_label.anchored_position = (sx, sy)
 scale_group.append(status_label)
 
 # Define moveable bubble and alarm pointers in the indicator group
