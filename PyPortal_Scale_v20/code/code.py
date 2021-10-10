@@ -41,9 +41,6 @@ from cedargrove_scale.defaults import (
 
 debug = False
 
-data_store_1 = []
-sum = 0
-
 # Determine screen size
 WIDTH = screen.WIDTH
 HEIGHT = screen.HEIGHT
@@ -223,41 +220,6 @@ sprite_sheet, palette = adafruit_imageload.load(
 )
 palette.make_transparent(3)
 
-tare_1_icon = displayio.TileGrid(
-    sprite_sheet, pixel_shader=palette, width=1, height=1, tile_width=32, tile_height=48
-)
-tare_1_icon.x = width_to_x(0.08)
-tare_1_icon.y = height_to_y(0.50)
-tare_1_icon[0] = 3
-scale_group.append(tare_1_icon)
-
-alarm_1_icon = displayio.TileGrid(
-    sprite_sheet, pixel_shader=palette, width=1, height=1, tile_width=32, tile_height=48
-)
-alarm_1_icon.x = width_to_x(0.08)
-alarm_1_icon.y = height_to_y(0.70)
-alarm_1_icon[0] = 2
-scale_group.append(alarm_1_icon)
-
-
-tare_2_icon = displayio.TileGrid(
-    sprite_sheet, pixel_shader=palette, width=1, height=1, tile_width=32, tile_height=48
-)
-
-tare_2_icon.x = width_to_x(0.85)
-tare_2_icon.y = height_to_y(0.50)
-tare_2_icon[0] = 7
-scale_group.append(tare_2_icon)
-
-alarm_2_icon = displayio.TileGrid(
-    sprite_sheet, pixel_shader=palette, width=1, height=1, tile_width=32, tile_height=48
-)
-alarm_2_icon.x = width_to_x(0.85)
-alarm_2_icon.y = height_to_y(0.70)
-alarm_2_icon[0] = 6
-scale_group.append(alarm_2_icon)
-
-
 # Bitmap background
 """_bkg = open('/sd/screenshot.bmp', 'rb')
 bkg = displayio.OnDiskBitmap(_bkg)
@@ -392,6 +354,40 @@ alarm_2_button = Button(
 )
 scale_group.append(alarm_2_button)
 buttons.append(alarm_2_button)
+
+tare_1_icon = displayio.TileGrid(
+    sprite_sheet, pixel_shader=palette, width=1, height=1, tile_width=32, tile_height=48
+)
+tare_1_icon.x = width_to_x(0.08)
+tare_1_icon.y = height_to_y(0.50)
+tare_1_icon[0] = 3
+scale_group.append(tare_1_icon)
+
+alarm_1_icon = displayio.TileGrid(
+    sprite_sheet, pixel_shader=palette, width=1, height=1, tile_width=32, tile_height=48
+)
+alarm_1_icon.x = width_to_x(0.08)
+alarm_1_icon.y = height_to_y(0.70)
+alarm_1_icon[0] = 2
+scale_group.append(alarm_1_icon)
+
+
+tare_2_icon = displayio.TileGrid(
+    sprite_sheet, pixel_shader=palette, width=1, height=1, tile_width=32, tile_height=48
+)
+
+tare_2_icon.x = width_to_x(0.85)
+tare_2_icon.y = height_to_y(0.50)
+tare_2_icon[0] = 7
+scale_group.append(tare_2_icon)
+
+alarm_2_icon = displayio.TileGrid(
+    sprite_sheet, pixel_shader=palette, width=1, height=1, tile_width=32, tile_height=48
+)
+alarm_2_icon.x = width_to_x(0.85)
+alarm_2_icon.y = height_to_y(0.70)
+alarm_2_icon[0] = 6
+scale_group.append(alarm_2_icon)
 
 # -- DISPLAY ELEMENTS -- #
 chan_1_name = Label(FONT_0, text=config.CHAN_1_NAME, color=color.ORANGE)
@@ -569,36 +565,44 @@ alarm_1_mass_gr = round(config.ALARM_1_MASS_GR, 1)
 alarm_2_mass_gr = round(config.ALARM_2_MASS_GR, 1)
 
 if tare_1_mass_gr != 0:
+    tare_1_enable = True
     tare_1_value.color = color.ORANGE
     tare_1_icon[0] = 1
 else:
+    tare_1_enable = False
     tare_1_value.color = color.GRAY
     tare_1_mass_gr = 0.0
     tare_1_icon[0] = 3
 tare_1_value.text = str(tare_1_mass_gr)
 
 if tare_2_mass_gr != 0:
+    tare_2_enable = True
     tare_2_value.color = color.GREEN
     tare_2_icon[0] = 5
 else:
+    tare_2_enable = False
     tare_2_value.color = color.GRAY
     tare_2_mass_gr = 0.0
     tare_2_icon[0] = 7
 tare_2_value.text = str(tare_2_mass_gr)
 
 if alarm_1_mass_gr != 0:
+    alarm_1_enable = True
     alarm_1_value.color = color.ORANGE
     alarm_1_icon[0] = 0
 else:
+    alarm_1_enable = False
     alarm_1_value.color = color.GRAY
     alarm_1_mass_gr = 0.0
     alarm_1_icon[0] = 2
 alarm_1_value.text = str(alarm_1_mass_gr)
 
 if alarm_2_mass_gr != 0:
+    alarm_2_enable = True
     alarm_2_value.color = color.GREEN
     alarm_2_icon[0] = 4
 else:
+    alarm_2_enable = False
     alarm_2_value.color = color.GRAY
     alarm_2_mass_gr = 0.0
     alarm_2_icon[0] = 6
@@ -641,7 +645,7 @@ while True:
     print("(%+5.1f, %+5.1f)" % (chan_1_mass_gr, chan_2_mass_gr))
 
     touch = ts.touch_point
-    """if touch:
+    if touch:
         for button in buttons:
             if button.contains(touch):
                 button.selected = True
@@ -652,18 +656,12 @@ while True:
                     nau7802.channel = channel
 
                     if channel == 1:
-                        chan_1_bubble.fill = color.RED
                         chan_1_zero = zero_channel()
                     else:
-                        chan_2_bubble.fill = color.RED
                         chan_2_zero = zero_channel()
 
                     while ts.touch_point:
                         time.sleep(0.5)
-                    if channel == 1:
-                        chan_1_bubble.fill = None
-                    else:
-                        chan_2_bubble.fill = None
                     play_tone('low')
 
                 if button.name in ('tare_1', 'tare_2'):
@@ -676,15 +674,24 @@ while True:
                     if channel == 1:
                         tare_1_enable = not tare_1_enable  # toggle tare 1 state
                         if tare_1_enable:
+                            tare_1_icon[0] = 1
                             tare_1_mass_gr = round((value - chan_1_zero) * default.CALIB_RATIO_1, 1)
                             if str(tare_1_mass_gr) == '-0.0':  # Filter -0.0 value
                                 tare_1_mass_gr = 0.0
+                        else:
+                            tare_1_icon[0] = 3
                     else:
                         tare_2_enable = not tare_2_enable  # toggle tare 2 state
                         if tare_2_enable:
+                            tare_2_value.color = color.GREEN
+                            tare_2_icon[0] = 5
                             tare_2_mass_gr = round((value - chan_2_zero) * default.CALIB_RATIO_1, 1)
                             if str(tare_2_mass_gr) == '-0.0':  # Filter -0.0 value
                                 tare_2_mass_gr = 0.0
+                        else:
+                            tare_2_value.color = color.GRAY
+                            tare_2_mass_gr = 0.0
+                            tare_2_icon[0] = 7
 
                     while ts.touch_point:
                         time.sleep(0.5)
@@ -693,4 +700,4 @@ while True:
     zero_1_button.selected = False
     zero_2_button.selected = False
     tare_1_button.selected = False
-    tare_2_button.selected = False"""
+    tare_2_button.selected = False
