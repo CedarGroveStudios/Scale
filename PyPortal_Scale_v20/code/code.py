@@ -167,9 +167,7 @@ def plot_needles(scale_1=0, scale_2=0):
     base = dial.RADIUS // 10
     sx0, sy0 = screen_to_rect(0.00, 0.16)
     sx1, sy1 = screen_to_rect(0.00, 0.03)
-    scale_plate.y = int(
-        sy0 + (sy1 * min(2, max(-2, (scale_1 + scale_2))))
-    )
+    scale_plate.y = int(sy0 + (sy1 * min(2, max(-2, (scale_1 + scale_2)))))
     scale_riser.y = scale_plate.y
 
     x0, y0 = dial_to_rect(scale_2, radius=dial.RADIUS)
@@ -234,16 +232,22 @@ scale_group.append(_background)"""
 
 # -- BUTTONS -- #
 buttons = []
+outline = color.BLACK
+if debug:
+    outline = color.GRAY
 sx, sy = screen_to_rect(0.01, 0.02)
 sw, sh = screen_to_rect(0.30, 0.20)
 setup_1_button = Button(
-    x=sx, y=sy, height=sh, width=sw,
+    x=sx,
+    y=sy,
+    height=sh,
+    width=sw,
     style=Button.ROUNDRECT,
     fill_color=None,
-    outline_color=color.GRAY,
+    outline_color=outline,
     name="setup_1",
-    selected_fill=color.RED,
-    selected_outline=color.RED,
+    selected_fill=color.BLUE,
+    selected_outline=color.BLUE,
 )
 scale_group.append(setup_1_button)
 buttons.append(setup_1_button)
@@ -251,24 +255,30 @@ buttons.append(setup_1_button)
 sx, sy = screen_to_rect(0.70, 0.02)
 sw, sh = screen_to_rect(0.30, 0.20)
 setup_2_button = Button(
-    x=sx, y=sy, height=sh, width=sw,
+    x=sx,
+    y=sy,
+    height=sh,
+    width=sw,
     style=Button.ROUNDRECT,
     fill_color=None,
-    outline_color=color.GRAY,
+    outline_color=outline,
     name="setup_2",
-    selected_fill=color.RED,
-    selected_outline=color.RED,
+    selected_fill=color.BLUE,
+    selected_outline=color.BLUE,
 )
 scale_group.append(setup_2_button)
 buttons.append(setup_2_button)
 
-sx, sy = screen_to_rect(0.01, 0.25)
-sw, sh = screen_to_rect(0.30, 0.20)
+sx, sy = screen_to_rect(0.01, 0.28)
+sw, sh = screen_to_rect(0.30, 0.18)
 zero_1_button = Button(
-    x=sx, y=sy, height=sh, width=sw,
+    x=sx,
+    y=sy,
+    height=sh,
+    width=sw,
     style=Button.ROUNDRECT,
     fill_color=None,
-    outline_color=color.GRAY,
+    outline_color=outline,
     name="zero_1",
     selected_fill=color.RED,
     selected_outline=color.RED,
@@ -276,13 +286,16 @@ zero_1_button = Button(
 scale_group.append(zero_1_button)
 buttons.append(zero_1_button)
 
-sx, sy = screen_to_rect(0.70, 0.25)
-sw, sh = screen_to_rect(0.30, 0.20)
+sx, sy = screen_to_rect(0.70, 0.28)
+sw, sh = screen_to_rect(0.30, 0.18)
 zero_2_button = Button(
-    x=sx, y=sy, height=sh, width=sw,
+    x=sx,
+    y=sy,
+    height=sh,
+    width=sw,
     style=Button.ROUNDRECT,
     fill_color=None,
-    outline_color=color.GRAY,
+    outline_color=outline,
     name="zero_2",
     selected_fill=color.RED,
     selected_outline=color.RED,
@@ -293,10 +306,13 @@ buttons.append(zero_2_button)
 sx, sy = screen_to_rect(0.01, 0.50)
 sw, sh = screen_to_rect(0.30, 0.19)
 tare_1_button = Button(
-    x=sx, y=sy, height=sh, width=sw,
+    x=sx,
+    y=sy,
+    height=sh,
+    width=sw,
     style=Button.ROUNDRECT,
     fill_color=None,
-    outline_color=color.GRAY,
+    outline_color=outline,
     name="tare_1",
     selected_fill=color.BLUE,
     selected_outline=color.BLUE,
@@ -307,10 +323,13 @@ buttons.append(tare_1_button)
 sx, sy = screen_to_rect(0.70, 0.50)
 sw, sh = screen_to_rect(0.30, 0.19)
 tare_2_button = Button(
-    x=sx, y=sy, height=sh, width=sw,
+    x=sx,
+    y=sy,
+    height=sh,
+    width=sw,
     style=Button.ROUNDRECT,
     fill_color=None,
-    outline_color=color.GRAY,
+    outline_color=outline,
     name="tare_2",
     selected_fill=color.BLUE,
     selected_outline=color.BLUE,
@@ -321,10 +340,13 @@ buttons.append(tare_2_button)
 sx, sy = screen_to_rect(0.01, 0.70)
 sw, sh = screen_to_rect(0.30, 0.20)
 alarm_1_button = Button(
-    x=sx, y=sy, height=sh, width=sw,
+    x=sx,
+    y=sy,
+    height=sh,
+    width=sw,
     style=Button.ROUNDRECT,
     fill_color=None,
-    outline_color=color.GRAY,
+    outline_color=outline,
     name="alarm_1",
     selected_fill=color.BLUE,
     selected_outline=color.BLUE,
@@ -335,10 +357,13 @@ buttons.append(alarm_1_button)
 sx, sy = screen_to_rect(0.70, 0.70)
 sw, sh = screen_to_rect(0.30, 0.20)
 alarm_2_button = Button(
-    x=sx, y=sy, height=sh, width=sw,
+    x=sx,
+    y=sy,
+    height=sh,
+    width=sw,
     style=Button.ROUNDRECT,
     fill_color=None,
-    outline_color=color.GRAY,
+    outline_color=outline,
     name="alarm_2",
     selected_fill=color.BLUE,
     selected_outline=color.BLUE,
@@ -386,60 +411,63 @@ scale_group.append(alarm_2_icon)
 # -- DISPLAY ELEMENTS -- #
 chan_1_name = Label(FONT_0, text=config.CHAN_1_NAME, color=color.ORANGE)
 chan_1_name.anchor_point = (1.0, 0)
-chan_1_name.anchored_position = (screen_to_rect(0.28, 0.10))
+chan_1_name.anchored_position = screen_to_rect(0.28, 0.10)
 scale_group.append(chan_1_name)
 
 chan_2_name = Label(FONT_0, text=config.CHAN_2_NAME, color=color.GREEN)
 chan_2_name.anchor_point = (1.0, 0)
-chan_2_name.anchored_position = (screen_to_rect(0.97, 0.10))
+chan_2_name.anchored_position = screen_to_rect(0.97, 0.10)
 scale_group.append(chan_2_name)
 
 
 chan_1_label = Label(FONT_0, text=config.MASS_UNITS.lower(), color=color.BLUE)
 chan_1_label.anchor_point = (1.0, 0)
-chan_1_label.anchored_position = (screen_to_rect(0.28, 0.38))
+chan_1_label.anchored_position = screen_to_rect(0.28, 0.38)
 scale_group.append(chan_1_label)
 
 chan_2_label = Label(FONT_0, text=config.MASS_UNITS.lower(), color=color.BLUE)
 chan_2_label.anchor_point = (1.0, 0)
-chan_2_label.anchored_position = (screen_to_rect(0.97, 0.38))
+chan_2_label.anchored_position = screen_to_rect(0.97, 0.38)
 scale_group.append(chan_2_label)
 
 chan_1_value = Label(FONT_0, text="0.0", color=color.WHITE)
 chan_1_value.anchor_point = (1.0, 1.0)
-chan_1_value.anchored_position = (screen_to_rect(0.28, 0.38))
+chan_1_value.anchored_position = screen_to_rect(0.28, 0.38)
 scale_group.append(chan_1_value)
 
 chan_2_value = Label(FONT_0, text="0.0", color=color.WHITE)
 chan_2_value.anchor_point = (1.0, 1.0)
-chan_2_value.anchored_position = (screen_to_rect(0.97, 0.38))
+chan_2_value.anchored_position = screen_to_rect(0.97, 0.38)
 scale_group.append(chan_2_value)
 
 tare_1_value = Label(FONT_2, text="0.0", color=color.GRAY)
 tare_1_value.anchor_point = (1.0, 0.5)
-tare_1_value.anchored_position = (screen_to_rect(0.28, 0.56))
+tare_1_value.anchored_position = screen_to_rect(0.28, 0.56)
 scale_group.append(tare_1_value)
 
 tare_2_value = Label(FONT_2, text="0.0", color=color.GRAY)
 tare_2_value.anchor_point = (0.0, 0.5)
-tare_2_value.anchored_position = (screen_to_rect(0.75, 0.56))
+tare_2_value.anchored_position = screen_to_rect(0.75, 0.56)
 scale_group.append(tare_2_value)
 
 alarm_1_value = Label(FONT_2, text="0.0", color=color.GRAY)
 alarm_1_value.anchor_point = (1.0, 0.5)
-alarm_1_value.anchored_position = (screen_to_rect(0.28, 0.75))
+alarm_1_value.anchored_position = screen_to_rect(0.28, 0.75)
 scale_group.append(alarm_1_value)
 
 alarm_2_value = Label(FONT_2, text="0.0", color=color.GRAY)
 alarm_2_value.anchor_point = (0.0, 0.5)
-alarm_2_value.anchored_position = (screen_to_rect(0.75, 0.75))
+alarm_2_value.anchored_position = screen_to_rect(0.75, 0.75)
 scale_group.append(alarm_2_value)
 
 # Define scale graphic
 sx, sy = screen_to_rect(0.46, 0.16)
 sw, sh = screen_to_rect(0.08, 0.25)
 scale_riser = Rect(
-    sx, sy, width=sw, height=sh,
+    sx,
+    sy,
+    width=sw,
+    height=sh,
     fill=color.GRAY,
     outline=color.BLACK,
 )
@@ -448,7 +476,10 @@ scale_group.append(scale_riser)
 sx, sy = screen_to_rect(0.34, 0.16)
 sw, sh = screen_to_rect(0.32, 0.06)
 scale_plate = RoundRect(
-    sx, sy, width=sw, height=sh,
+    sx,
+    sy,
+    width=sw,
+    height=sh,
     r=5,
     fill=color.GRAY,
     outline=color.BLACK,
@@ -459,7 +490,12 @@ sx0, sy0 = screen_to_rect(0.50, 0.50)
 sx1, sy1 = screen_to_rect(0.65, 0.80)
 sx2, sy2 = screen_to_rect(0.35, 0.80)
 scale_base = Triangle(
-    sx0, sy0, sx1, sy1, sx2, sy2,
+    sx0,
+    sy0,
+    sx1,
+    sy1,
+    sx2,
+    sy2,
     fill=color.GRAY,
     outline=color.BLACK,
 )
@@ -468,7 +504,10 @@ scale_group.append(scale_base)
 sx, sy = screen_to_rect(0.34, 0.80)
 sw, sh = screen_to_rect(0.32, 0.06)
 scale_foot = RoundRect(
-    sx, sy, width=sw, height=sh,
+    sx,
+    sy,
+    width=sw,
+    height=sh,
     r=5,
     fill=color.GRAY,
     outline=color.BLACK,
@@ -478,7 +517,9 @@ scale_group.append(scale_foot)
 sx, sy = screen_to_rect(0.50, 0.50)
 ry, ry = screen_to_rect(0.00, 0.25)
 scale_dial = Circle(
-    sx, sy, ry,
+    sx,
+    sy,
+    ry,
     fill=color.BLUE_DK,
     outline=color.WHITE,
     stroke=1,
@@ -508,8 +549,7 @@ for i in range(0, config.MAX_GR, config.MAX_GR // 10):
 
 status_label = Label(FONT_2, text=" ", color=None)
 status_label.anchor_point = (0.5, 0.5)
-sx, sy = screen_to_rect(WIDTH // 2, 0.94)
-status_label.anchored_position = (sx, sy)
+status_label.anchored_position = screen_to_rect(0.50, 0.95)
 scale_group.append(status_label)
 
 # Define moveable bubble and alarm pointers in the indicator group
@@ -608,9 +648,11 @@ play_tone("low")
 while True:
     nau7802.channel = 1
     value = read()
-    chan_1_mass_gr = (
-        round((value - chan_1_zero) * default.CALIB_RATIO_1, 1) - tare_1_mass_gr
-    )
+    if tare_1_enable:
+        tare = tare_1_mass_gr
+    else:
+        tare = 0
+    chan_1_mass_gr = round((value - chan_1_zero) * default.CALIB_RATIO_1, 1) - tare
     chan_1_mass_oz = round(chan_1_mass_gr * 0.03527, 2)
     if str(chan_1_mass_gr) == "-0.0":  # Filter -0.0 value
         chan_1_mass_gr = 0.0
@@ -618,9 +660,11 @@ while True:
 
     nau7802.channel = 2
     value = read()
-    chan_2_mass_gr = (
-        round((value - chan_2_zero) * default.CALIB_RATIO_2, 1) - tare_2_mass_gr
-    )
+    if tare_2_enable:
+        tare = tare_2_mass_gr
+    else:
+        tare = 0
+    chan_2_mass_gr = round((value - chan_2_zero) * default.CALIB_RATIO_2, 1) - tare
     chan_2_mass_oz = round(chan_2_mass_gr * 0.03527, 2)
     if str(chan_2_mass_gr) == "-0.0":  # Filter -0.0 value
         chan_2_mass_gr = 0.0
@@ -639,10 +683,10 @@ while True:
         for button in buttons:
             if button.contains(touch):
                 button.selected = True
-                if button.name in ('zero_1', 'zero_2'):
+                if button.name in ("zero_1", "zero_2"):
                     # Zero and recalibrate channel
                     channel = int(button.name[5])
-                    play_tone('high')
+                    play_tone("high")
                     nau7802.channel = channel
 
                     if channel == 1:
@@ -650,44 +694,91 @@ while True:
                     else:
                         chan_2_zero = zero_channel()
 
-                    while ts.touch_point:
-                        time.sleep(0.5)
-                    play_tone('low')
-
-                if button.name in ('tare_1', 'tare_2'):
-                    # get tare value for channel
+                if button.name in ("tare_1", "tare_2"):
+                    # set and get tare value for channel
                     channel = int(button.name[5])
-                    play_tone('high')
+                    play_tone("high")
                     nau7802.channel = channel
                     value = read()
 
                     if channel == 1:
                         tare_1_enable = not tare_1_enable  # toggle tare 1 state
                         if tare_1_enable:
+                            flash_status("TARE 1 ENABLE", 0.5)
+                            tare_1_value.color = color.ORANGE
                             tare_1_icon[0] = 1
-                            tare_1_mass_gr = round((value - chan_1_zero) * default.CALIB_RATIO_1, 1)
-                            if str(tare_1_mass_gr) == '-0.0':  # Filter -0.0 value
+                            # THE FOLLOWING SETS THE TARE
+                            # tare_1_mass_gr = round((value - chan_1_zero) * default.CALIB_RATIO_1, 1)
+                            if str(tare_1_mass_gr) == "-0.0":  # Filter -0.0 value
                                 tare_1_mass_gr = 0.0
                         else:
+                            flash_status("TARE 1 DISABLE", 0.5)
+                            tare_1_value.color = color.GRAY
                             tare_1_icon[0] = 3
                     else:
                         tare_2_enable = not tare_2_enable  # toggle tare 2 state
                         if tare_2_enable:
+                            flash_status("TARE 2 ENABLE", 0.5)
                             tare_2_value.color = color.GREEN
                             tare_2_icon[0] = 5
-                            tare_2_mass_gr = round((value - chan_2_zero) * default.CALIB_RATIO_1, 1)
-                            if str(tare_2_mass_gr) == '-0.0':  # Filter -0.0 value
+                            # THE FOLLOWING SETS THE TARE
+                            # tare_2_mass_gr = round((value - chan_2_zero) * default.CALIB_RATIO_1, 1)
+                            if str(tare_2_mass_gr) == "-0.0":  # Filter -0.0 value
                                 tare_2_mass_gr = 0.0
                         else:
+                            flash_status("TARE 2 DISABLE", 0.5)
                             tare_2_value.color = color.GRAY
-                            tare_2_mass_gr = 0.0
                             tare_2_icon[0] = 7
 
-                    while ts.touch_point:
-                        time.sleep(0.5)
-                    play_tone('low')
+                if button.name in ("alarm_1", "alarm_2"):
+                    # get alarm value for channel
+                    channel = int(button.name[6])
+                    play_tone("high")
+
+                    if channel == 1:
+                        alarm_1_enable = not alarm_1_enable  # toggle alarm 1 state
+                        if alarm_1_enable:
+                            flash_status("ALARM 1 ENABLE", 0.5)
+                            alarm_1_value.color = color.ORANGE
+                            alarm_1_icon[0] = 0
+                            # alarm_1_mass_gr =     SET ALARM VALUE HERE
+                        else:
+                            flash_status("ALARM 1 DISABLE", 0.5)
+                            alarm_1_value.color = color.GRAY
+                            alarm_1_icon[0] = 2
+                    else:
+                        alarm_2_enable = not alarm_2_enable  # toggle alarm 1 state
+                        if alarm_2_enable:
+                            flash_status("ALARM 2 ENABLE", 0.5)
+                            alarm_2_value.color = color.GREEN
+                            alarm_2_icon[0] = 4
+                            # alarm_2_mass_gr =     SET ALARM VALUE HERE
+                        else:
+                            flash_status("ALARM 2 DISABLE", 0.5)
+                            alarm_2_value.color = color.GRAY
+                            alarm_2_icon[0] = 6
+
+                if button.name in ("setup_1", "setup_2"):
+                    # Initiate the setup process for a channel
+                    channel = int(button.name[6])
+                    play_tone("high")
+
+                    if channel == 1:
+                        flash_status("SETUP 1", 0.5)
+                        pass
+                    else:
+                        flash_status("SETUP 2", 0.5)
+                        pass
+
+                while ts.touch_point:
+                    time.sleep(0.5)
+                play_tone("low")
 
     zero_1_button.selected = False
     zero_2_button.selected = False
     tare_1_button.selected = False
     tare_2_button.selected = False
+    alarm_1_button.selected = False
+    alarm_2_button.selected = False
+    setup_1_button.selected = False
+    setup_2_button.selected = False
