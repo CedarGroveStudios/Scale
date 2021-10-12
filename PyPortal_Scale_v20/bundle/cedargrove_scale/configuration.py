@@ -1,7 +1,7 @@
-# cedargrove_scale\defaults.py
+# cedargrove_scale\configuration.py
 import board
 
-class Defaults:
+class Configuration:
     SAMPLE_AVG = 100  # Number of samples to average per measurement
 
     PGA_GAIN   = 128  # Default gain for internal PGA

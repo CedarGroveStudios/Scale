@@ -1,0 +1,2 @@
+Adafruit CircuitPython 7.0.0 on 2021-09-20; Adafruit PyPortal with samd51j20
+Board ID:pyportal
