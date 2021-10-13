@@ -1,5 +1,24 @@
 # cedargrove_scale\configuration.py
 import board
+import busio
+import digitalio
+from math import cos, sin, pi
+import adafruit_sdcard
+from simpleio import tone
+
+class SDcard:
+    # Instantiate SD card
+    spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
+    sd_cs = digitalio.DigitalInOut(board.SD_CS)
+    has_card = False
+    try:
+        sdcard = adafruit_sdcard.SDCard(spi, sd_cs)
+        vfs = storage.VfsFat(sdcard)
+        storage.mount(vfs, '/sd')
+        print('SD card found')
+        has_card = True
+    except OSError as error:
+        print('SD card NOT found:', error)
 
 class Configuration:
     SAMPLE_AVG = 100  # Number of samples to average per measurement
@@ -49,3 +68,28 @@ class Palette:
     YELLOW    = 0xFFFF00
     YELLOW_DK = 0x202000
     WHITE     = 0xFFFFFF
+
+
+def play_tone(note=None):
+    if note == 'high':
+        tone(board.A0, 880, 0.1)
+    elif note == 'low':
+        tone(board.A0, 440, 0.1)
+    return
+
+
+def screen_to_rect(width_factor=0, height_factor=0):
+    """Convert normalized screen position input (0.0 to 1.0) to the display's
+    rectangular pixel position."""
+    return int(Screen.WIDTH * width_factor), int(Screen.HEIGHT * height_factor)
+
+
+def dial_to_rect(scale_factor, center=Dial.CENTER, radius=Dial.RADIUS):
+    """Convert normalized scale_factor input (-1.0 to 1.0) to a rectangular pixel
+    position on the circumference of a circle with center (x,y pixels) and
+    radius (pixels)."""
+    radians = (-2 * pi) * (scale_factor)  # convert scale_factor to radians
+    radians = radians + (pi / 2)  # rotate axis counterclockwise
+    x = int(center[0] + (cos(radians) * radius))
+    y = int(center[1] - (sin(radians) * radius))
+    return x, y

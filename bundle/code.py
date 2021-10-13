@@ -1,20 +1,16 @@
 # PyPortal Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# 2021-10-11 v20 Cedar Grove Studios
+# 2021-10-13 v20 Cedar Grove Studios
 
 # uncomment the following import line to run the calibration method
 # (this will eventually be put into the setup process)
 # import cedargrove_scale.load_cell_calibrator
 
 import board
-import busio
 import time
-from math import cos, sin, pi
 import storage
-import digitalio
 import displayio
 from simpleio import tone
-
 import adafruit_imageload
 from adafruit_bitmapsaver import save_pixels
 from adafruit_bitmap_font import bitmap_font
@@ -25,18 +21,20 @@ from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.roundrect import RoundRect
 from adafruit_display_shapes.triangle import Triangle
 
-import adafruit_sdcard
+
 import adafruit_touchscreen
 from adafruit_button import Button
 from cedargrove_nau7802 import NAU7802
 
 from scale_defaults import Defaults as default
+from cedargrove_scale.configuration import play_tone, dial_to_rect, screen_to_rect
 from cedargrove_scale.configuration import (
     Configuration as config,
     Dial as dial,
     Palette as color,
     Pointer as point,
     Screen as screen,
+    SDcard as sd
 )
 
 debug = False
@@ -57,20 +55,6 @@ ts = adafruit_touchscreen.Touchscreen(
 
 # Instantiate load sensor ADC wing
 nau7802 = NAU7802(board.I2C(), address=0x2A, active_channels=2)
-
-# Instantiate SD card
-spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
-sd_cs = digitalio.DigitalInOut(board.SD_CS)
-has_sd_card = False
-try:
-    sdcard = adafruit_sdcard.SDCard(spi, sd_cs)
-    vfs = storage.VfsFat(sdcard)
-    storage.mount(vfs, '/sd')
-    print('SD card found')
-    has_sd_card = True
-except OSError as error:
-    print('SD card NOT found:', error)
-
 
 def zero_channel():
     """Initiate internal calibration for current channel, return raw zero
@@ -102,45 +86,6 @@ def read(samples=config.SAMPLE_AVG):
         if nau7802.available:
             sum = sum + nau7802.read()
     return int(sum / samples)
-
-
-def play_tone(note=None):
-    if note == 'high':
-        tone(board.A0, 880, 0.1)
-    elif note == 'low':
-        tone(board.A0, 440, 0.1)
-    return
-
-
-def screen_to_rect(width_factor=0, height_factor=0):
-    """Convert normalized screen position input (0.0 to 1.0) to the display's
-    rectangular pixel position."""
-    return int(WIDTH * width_factor), int(HEIGHT * height_factor)
-
-
-def dial_to_rect(scale_factor, center=dial.CENTER, radius=dial.RADIUS):
-    """Convert normalized scale_factor input (-1.0 to 1.0) to a rectangular pixel
-    position on the circumference of a circle with center (x,y pixels) and
-    radius (pixels)."""
-    radians = (-2 * pi) * (scale_factor)  # convert scale_factor to radians
-    radians = radians + (pi / 2)  # rotate axis counterclockwise
-    x = int(center[0] + (cos(radians) * radius))
-    y = int(center[1] - (sin(radians) * radius))
-    return x, y
-
-
-def take_screenshot():
-    if has_sd_card:
-        print('Taking Screenshot...', end='')
-        flash_status('SCREENSHOT...', 0.8)
-        status_label.text = default.NAME
-        status_label.color = color.CYAN
-        save_pixels('/sd/screenshot.bmp')
-        print(' Screenshot stored')
-        flash_status('... STORED', 0.8)
-    else:
-        flash_status('SCREENSHOT: NO SD CARD', 1.0)
-    return
 
 
 def flash_status(text='', duration=0.05):
@@ -562,7 +507,7 @@ indicator_group.append(chan_2_alarm)
 scale_group.append(indicator_group)
 display.show(scale_group)
 
-if has_sd_card:
+if sd.has_card:
     flash_status('SD CARD FOUND', 0.5)
 else:
     flash_status('NO SD CARD', 0.5)
@@ -598,7 +543,16 @@ plot_needles()
 plot_tares()
 plot_alarms()
 
-take_screenshot()
+if sd.has_card:
+    print('Taking Screenshot...', end='')
+    flash_status('SCREENSHOT...', 0.8)
+    status_label.text = default.NAME
+    status_label.color = color.CYAN
+    save_pixels('/sd/screenshot.bmp')
+    print(' Screenshot stored')
+    flash_status('... STORED', 0.8)
+else:
+    flash_status('SCREENSHOT: NO SD CARD', 1.0)
 
 flash_status('READY', 0.5)
 play_tone('high')
