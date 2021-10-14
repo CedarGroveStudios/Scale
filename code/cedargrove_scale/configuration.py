@@ -2,6 +2,7 @@
 import board
 import busio
 import digitalio
+import storage
 from math import cos, sin, pi
 import adafruit_sdcard
 from simpleio import tone

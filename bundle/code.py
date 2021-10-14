@@ -1,6 +1,6 @@
 # PyPortal Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# 2021-10-13 v20 Cedar Grove Studios
+# 2021-10-13 v21 Cedar Grove Studios
 
 # uncomment the following import line to run the calibration method
 # (this will eventually be put into the setup process)
@@ -8,10 +8,8 @@
 
 import board
 import time
-import storage
 import displayio
 from simpleio import tone
-import adafruit_imageload
 from adafruit_bitmapsaver import save_pixels
 from adafruit_bitmap_font import bitmap_font
 from adafruit_display_text.label import Label
@@ -21,9 +19,7 @@ from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.roundrect import RoundRect
 from adafruit_display_shapes.triangle import Triangle
 
-
-import adafruit_touchscreen
-from adafruit_button import Button
+from cedargrove_scale.buttons_pyportal import ScaleButtons
 from cedargrove_nau7802 import NAU7802
 
 from scale_defaults import Defaults as default
@@ -39,19 +35,11 @@ from cedargrove_scale.configuration import (
 
 debug = False
 
+panel = ScaleButtons(timeout=0.5)
+
 # Determine screen size
 WIDTH = screen.WIDTH
 HEIGHT = screen.HEIGHT
-
-# Instantiate touch screen
-ts = adafruit_touchscreen.Touchscreen(
-    board.TOUCH_XL,
-    board.TOUCH_XR,
-    board.TOUCH_YD,
-    board.TOUCH_YU,
-    calibration=((5200, 59000), (5800, 57000)),
-    size=(WIDTH, HEIGHT),
-)
 
 # Instantiate load sensor ADC wing
 nau7802 = NAU7802(board.I2C(), address=0x2A, active_channels=2)
@@ -148,38 +136,38 @@ def erase_needles():
 def plot_tares():
     if tare_1_enable:
         tare_1_value.color = color.ORANGE
-        tare_1_icon[0] = 1
+        panel.tare_1_icon[0] = 1
     else:
         tare_1_value.color = color.GRAY
-        tare_1_icon[0] = 3
+        panel.tare_1_icon[0] = 3
 
     if tare_2_enable:
         tare_2_value.color = color.GREEN
-        tare_2_icon[0] = 5
+        panel.tare_2_icon[0] = 5
     else:
         tare_2_value.color = color.GRAY
-        tare_2_icon[0] = 7
+        panel.tare_2_icon[0] = 7
 
 
 def plot_alarms():
     if alarm_1_enable:
         chan_1_alarm.x0, chan_1_alarm.y0 = dial_to_rect(alarm_1_mass_gr/default.MAX_GR, radius=dial.RADIUS)
         alarm_1_value.color = color.ORANGE
-        alarm_1_icon[0] = 0
+        panel.alarm_1_icon[0] = 0
     else:
         chan_1_alarm.x0, chan_1_alarm.y0 = (-50, -50)  # Make dot disappear
         alarm_1_value.color = color.GRAY
-        alarm_1_icon[0] = 2
+        panel.alarm_1_icon[0] = 2
 
     if alarm_2_enable:
         print(alarm_2_mass_gr, default.MAX_GR)
         chan_2_alarm.x0, chan_2_alarm.y0 = dial_to_rect(alarm_2_mass_gr/default.MAX_GR, radius=dial.RADIUS)
         alarm_2_value.color = color.GREEN
-        alarm_2_icon[0] = 4
+        panel.alarm_2_icon[0] = 4
     else:
         chan_2_alarm.x0, chan_2_alarm.y0 = (-50, -50)  # Make dot disappear
         alarm_2_value.color = color.GRAY
-        alarm_2_icon[0] = 6
+        panel.alarm_2_icon[0] = 6
 
 
 # Instantiate display and fonts
@@ -195,13 +183,13 @@ FONT_2 = bitmap_font.load_font('/fonts/OpenSans-9.bdf')
 # Define displayio background and group elements
 print('*** Define displayio background and group elements')
 
-# Tare and alarm tile grid
+"""# Tare and alarm tile grid
 sprite_sheet, palette = adafruit_imageload.load(
     '/cedargrove_scale/scale_sprite_sheet.bmp',
     bitmap=displayio.Bitmap,
     palette=displayio.Palette,
 )
-palette.make_transparent(3)
+palette.make_transparent(3)"""
 
 # Bitmap background
 """_bkg = open('/sd/screenshot.bmp', 'rb')
@@ -216,153 +204,12 @@ except TypeError:
                                      x=0, y=0)
 scale_group.append(_background)"""
 
-# -- BUTTONS -- #
-buttons = []
-outline = color.BLACK
-if debug:
-    outline = color.GRAY
-"""sx, sy = screen_to_rect(0.01, 0.02)
-sw, sh = screen_to_rect(0.30, 0.20)
-setup_1_button = Button(
-    x=sx, y=sy, height=sh, width=sw,
-    style=Button.ROUNDRECT,
-    fill_color=None,
-    outline_color=outline,
-    name='setup_1',
-    selected_fill=color.BLUE,
-    selected_outline=color.BLUE,
-)
-scale_group.append(setup_1_button)
-buttons.append(setup_1_button)
-
-sx, sy = screen_to_rect(0.70, 0.02)
-sw, sh = screen_to_rect(0.30, 0.20)
-setup_2_button = Button(
-    x=sx, y=sy, height=sh, width=sw,
-    style=Button.ROUNDRECT,
-    fill_color=None,
-    outline_color=outline,
-    name='setup_2',
-    selected_fill=color.BLUE,
-    selected_outline=color.BLUE,
-)
-scale_group.append(setup_2_button)
-buttons.append(setup_2_button)"""
-
-sx, sy = screen_to_rect(0.01, 0.28)
-sw, sh = screen_to_rect(0.30, 0.18)
-zero_1_button = Button(
-    x=sx, y=sy, height=sh, width=sw,
-    style=Button.ROUNDRECT,
-    fill_color=None,
-    outline_color=outline,
-    name='zero_1',
-    selected_fill=color.RED,
-    selected_outline=color.RED,
-)
-scale_group.append(zero_1_button)
-buttons.append(zero_1_button)
-
-sx, sy = screen_to_rect(0.70, 0.28)
-sw, sh = screen_to_rect(0.30, 0.18)
-zero_2_button = Button(
-    x=sx, y=sy, height=sh, width=sw,
-    style=Button.ROUNDRECT,
-    fill_color=None,
-    outline_color=outline,
-    name='zero_2',
-    selected_fill=color.RED,
-    selected_outline=color.RED,
-)
-scale_group.append(zero_2_button)
-buttons.append(zero_2_button)
-
-sx, sy = screen_to_rect(0.01, 0.50)
-sw, sh = screen_to_rect(0.30, 0.19)
-tare_1_button = Button(
-    x=sx, y=sy, height=sh, width=sw,
-    style=Button.ROUNDRECT,
-    fill_color=None,
-    outline_color=outline,
-    name='tare_1',
-    selected_fill=color.BLUE,
-    selected_outline=color.BLUE,
-)
-scale_group.append(tare_1_button)
-buttons.append(tare_1_button)
-
-sx, sy = screen_to_rect(0.70, 0.50)
-sw, sh = screen_to_rect(0.30, 0.19)
-tare_2_button = Button(
-    x=sx, y=sy, height=sh, width=sw,
-    style=Button.ROUNDRECT,
-    fill_color=None,
-    outline_color=outline,
-    name='tare_2',
-    selected_fill=color.BLUE,
-    selected_outline=color.BLUE,
-)
-scale_group.append(tare_2_button)
-buttons.append(tare_2_button)
-
-sx, sy = screen_to_rect(0.01, 0.70)
-sw, sh = screen_to_rect(0.30, 0.20)
-alarm_1_button = Button(
-    x=sx, y=sy, height=sh, width=sw,
-    style=Button.ROUNDRECT,
-    fill_color=None,
-    outline_color=outline,
-    name='alarm_1',
-    selected_fill=color.BLUE,
-    selected_outline=color.BLUE,
-)
-scale_group.append(alarm_1_button)
-buttons.append(alarm_1_button)
-
-sx, sy = screen_to_rect(0.70, 0.70)
-sw, sh = screen_to_rect(0.30, 0.20)
-alarm_2_button = Button(
-    x=sx, y=sy, height=sh, width=sw,
-    style=Button.ROUNDRECT,
-    fill_color=None,
-    outline_color=outline,
-    name='alarm_2',
-    selected_fill=color.BLUE,
-    selected_outline=color.BLUE,
-)
-scale_group.append(alarm_2_button)
-buttons.append(alarm_2_button)
-
-tare_1_icon = displayio.TileGrid(
-    sprite_sheet, pixel_shader=palette, width=1, height=1, tile_width=32, tile_height=48
-)
-tare_1_icon.x, tare_1_icon.y = screen_to_rect(0.08, 0.50)
-tare_1_icon[0] = 3
-scale_group.append(tare_1_icon)
-
-alarm_1_icon = displayio.TileGrid(
-    sprite_sheet, pixel_shader=palette, width=1, height=1, tile_width=32, tile_height=48
-)
-alarm_1_icon.x, alarm_1_icon.y = screen_to_rect(0.08, 0.70)
-alarm_1_icon[0] = 2
-scale_group.append(alarm_1_icon)
-
-
-tare_2_icon = displayio.TileGrid(
-    sprite_sheet, pixel_shader=palette, width=1, height=1, tile_width=32, tile_height=48
-)
-tare_2_icon.x, tare_2_icon.y = screen_to_rect(0.85, 0.50)
-tare_2_icon[0] = 7
-scale_group.append(tare_2_icon)
-
-alarm_2_icon = displayio.TileGrid(
-    sprite_sheet, pixel_shader=palette, width=1, height=1, tile_width=32, tile_height=48
-)
-alarm_2_icon.x, alarm_2_icon.y = screen_to_rect(0.85, 0.70)
-alarm_2_icon[0] = 6
-scale_group.append(alarm_2_icon)
 
 # -- DISPLAY ELEMENTS -- #
+# Add panel class group
+if panel.button_display_group:
+    scale_group.append(panel.button_display_group)
+
 chan_1_name = Label(FONT_0, text=default.CHAN_1_NAME, color=color.ORANGE)
 chan_1_name.anchor_point = (1.0, 0)
 chan_1_name.anchored_position = screen_to_rect(0.28, 0.10)
@@ -622,97 +469,85 @@ while True:
         #status_label.color = color.RED
     alarm = a1 or a2
 
-    touch = ts.touch_point
-    if touch:
-        for button in buttons:
-            if button.contains(touch):
-                button.selected = True
-                if button.name in ('zero_1', 'zero_2'):
-                    # Zero and recalibrate channel
-                    channel = int(button.name[5])
-                    play_tone('high')
-                    nau7802.channel = channel
+    button_pressed, hold_time = panel.read_buttons()
+    if button_pressed in ('zero_1', 'zero_2'):
+        # Zero and recalibrate channel
+        channel = int(button_pressed[5])
+        play_tone('high')
+        nau7802.channel = channel
 
-                    if channel == 1:
-                        chan_1_zero = zero_channel()
-                    else:
-                        chan_2_zero = zero_channel()
+        if channel == 1:
+            chan_1_zero = zero_channel()
+        else:
+            chan_2_zero = zero_channel()
 
-                if button.name in ('tare_1', 'tare_2'):
-                    # Enable/disable tares
-                    channel = int(button.name[5])
-                    play_tone('high')
-                    nau7802.channel = channel
-                    value = read()
+    if button_pressed in ('tare_1', 'tare_2'):
+        # Enable/disable tares
+        channel = int(button_pressed[5])
+        play_tone('high')
+        nau7802.channel = channel
 
-                    if channel == 1:
-                        tare_1_enable = not tare_1_enable  # toggle tare 1 state
-                        if tare_1_enable:
-                            flash_status('TARE 1 ENABLE', 0.5)
-                            if str(tare_1_mass_gr) == '-0.0':  # Filter -0.0 value
-                                tare_1_mass_gr = 0.0
-                        else:
-                            flash_status('TARE 1 DISABLE', 0.5)
-                    else:
-                        tare_2_enable = not tare_2_enable  # toggle tare 2 state
-                        if tare_2_enable:
-                            flash_status('TARE 2 ENABLE', 0.5)
-                            if str(tare_2_mass_gr) == '-0.0':  # Filter -0.0 value
-                                tare_2_mass_gr = 0.0
-                        else:
-                            flash_status('TARE 2 DISABLE', 0.5)
-                            tare_2_value.color = color.GRAY
-                            tare_2_icon[0] = 7
-                    plot_tares()
+        if channel == 1:
+            tare_1_enable = not tare_1_enable  # toggle tare 1 state
+            if tare_1_enable:
+                flash_status('TARE 1 ENABLE', 0.5)
+                if str(tare_1_mass_gr) == '-0.0':  # Filter -0.0 value
+                    tare_1_mass_gr = 0.0
+                tare_1_value.color = color.ORANGE
+                panel.tare_1_icon[0] = 1
+            else:
+                flash_status('TARE 1 DISABLE', 0.5)
+                tare_1_value.color = color.GRAY
+                panel.tare_2_icon[0] = 3
+        else:
+            tare_2_enable = not tare_2_enable  # toggle tare 2 state
+            if tare_2_enable:
+                flash_status('TARE 2 ENABLE', 0.5)
+                if str(tare_2_mass_gr) == '-0.0':  # Filter -0.0 value
+                    tare_2_mass_gr = 0.0
+                tare_1_value.color = color.ORANGE
+                panel.tare_1_icon[0] = 5
+            else:
+                flash_status('TARE 2 DISABLE', 0.5)
+                tare_2_value.color = color.GRAY
+                panel.tare_2_icon[0] = 7
+        plot_tares()
 
-                if button.name in ('alarm_1', 'alarm_2'):
-                    # Enable/disable alarms
-                    channel = int(button.name[6])
-                    play_tone('high')
+    if button_pressed in ('alarm_1', 'alarm_2'):
+        # Enable/disable alarms
+        channel = int(button_pressed[6])
+        play_tone('high')
 
-                    if channel == 1:
-                        alarm_1_enable = not alarm_1_enable  # toggle alarm 1 state
-                        if alarm_1_enable:
-                            flash_status('ALARM 1 ENABLE', 0.5)
-                            alarm_1_value.color = color.ORANGE
-                            alarm_1_icon[0] = 0
-                        else:
-                            flash_status('ALARM 1 DISABLE', 0.5)
-                            alarm_1_value.color = color.GRAY
-                            alarm_1_icon[0] = 2
-                    else:
-                        alarm_2_enable = not alarm_2_enable  # toggle alarm 1 state
-                        if alarm_2_enable:
-                            flash_status('ALARM 2 ENABLE', 0.5)
-                            alarm_2_value.color = color.GREEN
-                            alarm_2_icon[0] = 4
-                        else:
-                            flash_status('ALARM 2 DISABLE', 0.5)
-                            alarm_2_value.color = color.GRAY
-                            alarm_2_icon[0] = 6
-                    plot_alarms()
+        if channel == 1:
+            alarm_1_enable = not alarm_1_enable  # toggle alarm 1 state
+            if alarm_1_enable:
+                flash_status('ALARM 1 ENABLE', 0.5)
+                alarm_1_value.color = color.ORANGE
+                panel.alarm_1_icon[0] = 0
+            else:
+                flash_status('ALARM 1 DISABLE', 0.5)
+                alarm_1_value.color = color.GRAY
+                panel.alarm_1_icon[0] = 2
+        else:
+            alarm_2_enable = not alarm_2_enable  # toggle alarm 1 state
+            if alarm_2_enable:
+                flash_status('ALARM 2 ENABLE', 0.5)
+                alarm_2_value.color = color.GREEN
+                panel.alarm_2_icon[0] = 4
+            else:
+                flash_status('ALARM 2 DISABLE', 0.5)
+                alarm_2_value.color = color.GRAY
+                panel.alarm_2_icon[0] = 6
+        plot_alarms()
 
-                """if button.name in ('setup_1', 'setup_2'):
-                    # Initiate the setup process for a channel
-                    channel = int(button.name[6])
-                    play_tone('high')
+    """if button.name in ('setup_1', 'setup_2'):
+        # Initiate the setup process for a channel
+        channel = int(button.name[6])
+        play_tone('high')
 
-                    if channel == 1:
-                        flash_status('SETUP 1', 0.5)
-                        pass
-                    else:
-                        flash_status('SETUP 2', 0.5)
-                        pass"""
-
-                while ts.touch_point:
-                    time.sleep(0.5)
-                play_tone('low')
-
-    zero_1_button.selected = False
-    zero_2_button.selected = False
-    tare_1_button.selected = False
-    tare_2_button.selected = False
-    alarm_1_button.selected = False
-    alarm_2_button.selected = False
-    """setup_1_button.selected = False
-    setup_2_button.selected = False"""
+        if channel == 1:
+            flash_status('SETUP 1', 0.5)
+            pass
+        else:
+            flash_status('SETUP 2', 0.5)
+            pass"""
