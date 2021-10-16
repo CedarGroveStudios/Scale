@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
 # SPDX-License-Identifier: MIT
 
-# scale.py
+# display_graphics.py
 # 2021-10-15 v1.0
 
 import displayio
@@ -13,13 +13,14 @@ from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.roundrect import RoundRect
 from adafruit_display_shapes.triangle import Triangle
 
-from cedargrove_scale.configuration import Palette, Screen, Pointer
+from cedargrove_scale.configuration import Palette, Screen
 from cedargrove_scale.configuration import dial_to_rect, screen_to_rect
 from scale_defaults import Defaults
 
-FONT_0 = bitmap_font.load_font('/fonts/Helvetica-Bold-24.bdf')
-FONT_1 = bitmap_font.load_font('/fonts/OpenSans-16.bdf')
-FONT_2 = bitmap_font.load_font('/fonts/OpenSans-9.bdf')
+FONT_0 = bitmap_font.load_font("/fonts/Helvetica-Bold-24.bdf")
+FONT_1 = bitmap_font.load_font("/fonts/OpenSans-16.bdf")
+FONT_2 = bitmap_font.load_font("/fonts/OpenSans-9.bdf")
+
 
 class Case:
     def __init__(self, debug=False):
@@ -33,7 +34,12 @@ class Case:
         self._sx1, self._sy1 = screen_to_rect(0.65, 0.80)
         self._sx2, self._sy2 = screen_to_rect(0.35, 0.80)
         self._scale_base = Triangle(
-            self._sx0, self._sy0, self._sx1, self._sy1, self._sx2, self._sy2,
+            self._sx0,
+            self._sy0,
+            self._sx1,
+            self._sy1,
+            self._sx2,
+            self._sy2,
             fill=Palette.GRAY,
             outline=Palette.BLACK,
         )
@@ -42,7 +48,10 @@ class Case:
         self._sx, self._sy = screen_to_rect(0.34, 0.80)
         self._sw, self._sh = screen_to_rect(0.32, 0.06)
         self._scale_foot = RoundRect(
-            self._sx, self._sy, width=self._sw, height=self._sh,
+            self._sx,
+            self._sy,
+            width=self._sw,
+            height=self._sh,
             r=5,
             fill=Palette.GRAY,
             outline=Palette.BLACK,
@@ -55,19 +64,26 @@ class Case:
         """Displayio case group."""
         return self._case_group
 
+
 class Dial:
     def __init__(self, center=(0.50, 0.50), radius=0.25, debug=False):
         """Instantiate the dial graphic for PyPortal devices.
         Builds a displayio dial group."""
         self._debug = debug
 
-        # Normalized screen values
+        # Dial normalized screen values
         self._center_norm = center
         self._radius_norm = radius
 
-        # Pixel screen values
+        # Dial pixel screen values
         self.CENTER = int(center[0] * Screen.WIDTH), int(center[1] * Screen.HEIGHT)
         self.RADIUS = int(radius * min(Screen.WIDTH, Screen.HEIGHT))
+
+        self._point_stroke = 2
+        self._point_diameter = int((Screen.HEIGHT * 0.03) + (2 * self._point_stroke))
+        self._point_radius = self._point_diameter // 2
+        self._outside_radius = self.RADIUS - self._point_diameter
+        self._inside_radius = self.RADIUS - (2 * self._point_diameter)
 
         self._dial_group = displayio.Group()
 
@@ -75,7 +91,9 @@ class Dial:
         self._sx, self._sy = screen_to_rect(self._center_norm[0], self._center_norm[1])
         self._ry, self._ry = screen_to_rect(0.00, self._radius_norm)
         self.scale_dial = Circle(
-            self._sx, self._sy, self._ry,
+            self._sx,
+            self._sy,
+            self._ry,
             fill=Palette.BLUE_DK,
             outline=Palette.WHITE,
             stroke=1,
@@ -87,24 +105,51 @@ class Dial:
             self._hash_value = Label(FONT_2, text=str(i), color=Palette.CYAN)
             self._hash_value.anchor_point = (0.5, 0.5)
             self._hash_value.anchored_position = dial_to_rect(
-                i / Defaults.MAX_GR, radius=Pointer.IN_PATH_RADIUS
+                i / Defaults.MAX_GR, radius=self._inside_radius
             )
             self._dial_group.append(self._hash_value)
 
-            self._x0, self._y0 = dial_to_rect(i / Defaults.MAX_GR, radius=Pointer.OUT_PATH_RADIUS)
+            self._x0, self._y0 = dial_to_rect(
+                i / Defaults.MAX_GR, radius=self._outside_radius
+            )
             self._x1, self._y1 = dial_to_rect(i / Defaults.MAX_GR, radius=self.RADIUS)
-            self._hash_mark_a = Line(self._x0, self._y0, self._x1, self._y1, Palette.CYAN)
+            self._hash_mark_a = Line(
+                self._x0, self._y0, self._x1, self._y1, Palette.CYAN
+            )
             self._dial_group.append(self._hash_mark_a)
 
             self._x0, self._y0 = dial_to_rect(
                 (i + Defaults.MAX_GR / 20) / Defaults.MAX_GR,
-                radius=Pointer.OUT_PATH_RADIUS + Pointer.RADIUS,
+                radius=self._outside_radius + self._point_radius,
             )
-            self._x1, self._y1 = dial_to_rect((i + Defaults.MAX_GR / 20) / Defaults.MAX_GR, radius=self.RADIUS)
-            self._hash_mark_b = Line(self._x0, self._y0, self._x1, self._y1, Palette.CYAN)
+            self._x1, self._y1 = dial_to_rect(
+                (i + Defaults.MAX_GR / 20) / Defaults.MAX_GR, radius=self.RADIUS
+            )
+            self._hash_mark_b = Line(
+                self._x0, self._y0, self._x1, self._y1, Palette.CYAN
+            )
             self._dial_group.append(self._hash_mark_b)
-        return
 
+        self.chan_1_alarm = Circle(
+            -50,
+            -50,
+            self._point_radius,
+            fill=Palette.ORANGE,
+            outline=Palette.ORANGE,
+            stroke=self._point_stroke,
+        )
+        self._dial_group.append(self.chan_1_alarm)
+
+        self.chan_2_alarm = Circle(
+            -50,
+            -50,
+            self._point_radius,
+            fill=Palette.GREEN,
+            outline=Palette.GREEN,
+            stroke=self._point_stroke,
+        )
+        self._dial_group.append(self.chan_2_alarm)
+        return
 
     @property
     def display_group(self):
@@ -121,6 +166,7 @@ class Dial:
         """Dial radius normalized screen value."""
         return self._radius_norm
 
+
 class Labels:
     def __init__(self, debug=False):
         """Instantiate the labels and values objects.
@@ -129,7 +175,9 @@ class Labels:
 
         self._labels_group = displayio.Group()
 
-        self.chan_1_name = Label(FONT_0, text=Defaults.CHAN_1_NAME, color=Palette.ORANGE)
+        self.chan_1_name = Label(
+            FONT_0, text=Defaults.CHAN_1_NAME, color=Palette.ORANGE
+        )
         self.chan_1_name.anchor_point = (1.0, 0)
         self.chan_1_name.anchored_position = screen_to_rect(0.28, 0.10)
         self._labels_group.append(self.chan_1_name)
@@ -139,47 +187,51 @@ class Labels:
         self.chan_2_name.anchored_position = screen_to_rect(0.97, 0.10)
         self._labels_group.append(self.chan_2_name)
 
-        self.chan_1_label = Label(FONT_0, text=Defaults.MASS_UNITS.lower(), color=Palette.BLUE)
+        self.chan_1_label = Label(
+            FONT_0, text=Defaults.MASS_UNITS.lower(), color=Palette.BLUE
+        )
         self.chan_1_label.anchor_point = (1.0, 0)
         self.chan_1_label.anchored_position = screen_to_rect(0.28, 0.38)
         self._labels_group.append(self.chan_1_label)
 
-        self.chan_2_label = Label(FONT_0, text=Defaults.MASS_UNITS.lower(), color=Palette.BLUE)
+        self.chan_2_label = Label(
+            FONT_0, text=Defaults.MASS_UNITS.lower(), color=Palette.BLUE
+        )
         self.chan_2_label.anchor_point = (1.0, 0)
         self.chan_2_label.anchored_position = screen_to_rect(0.97, 0.38)
         self._labels_group.append(self.chan_2_label)
 
-        self.chan_1_value = Label(FONT_0, text='0.0', color=Palette.WHITE)
+        self.chan_1_value = Label(FONT_0, text="0.0", color=Palette.WHITE)
         self.chan_1_value.anchor_point = (1.0, 1.0)
         self.chan_1_value.anchored_position = screen_to_rect(0.28, 0.38)
         self._labels_group.append(self.chan_1_value)
 
-        self.chan_2_value = Label(FONT_0, text='0.0', color=Palette.WHITE)
+        self.chan_2_value = Label(FONT_0, text="0.0", color=Palette.WHITE)
         self.chan_2_value.anchor_point = (1.0, 1.0)
         self.chan_2_value.anchored_position = screen_to_rect(0.97, 0.38)
         self._labels_group.append(self.chan_2_value)
 
-        self.tare_1_value = Label(FONT_2, text='0.0', color=Palette.GRAY)
+        self.tare_1_value = Label(FONT_2, text="0.0", color=Palette.GRAY)
         self.tare_1_value.anchor_point = (1.0, 0.5)
         self.tare_1_value.anchored_position = screen_to_rect(0.28, 0.56)
         self._labels_group.append(self.tare_1_value)
 
-        self.tare_2_value = Label(FONT_2, text='0.0', color=Palette.GRAY)
+        self.tare_2_value = Label(FONT_2, text="0.0", color=Palette.GRAY)
         self.tare_2_value.anchor_point = (0.0, 0.5)
         self.tare_2_value.anchored_position = screen_to_rect(0.75, 0.56)
         self._labels_group.append(self.tare_2_value)
 
-        self.alarm_1_value = Label(FONT_2, text='0.0', color=Palette.GRAY)
+        self.alarm_1_value = Label(FONT_2, text="0.0", color=Palette.GRAY)
         self.alarm_1_value.anchor_point = (1.0, 0.5)
         self.alarm_1_value.anchored_position = screen_to_rect(0.28, 0.75)
         self._labels_group.append(self.alarm_1_value)
 
-        self.alarm_2_value = Label(FONT_2, text='0.0', color=Palette.GRAY)
+        self.alarm_2_value = Label(FONT_2, text="0.0", color=Palette.GRAY)
         self.alarm_2_value.anchor_point = (0.0, 0.5)
         self.alarm_2_value.anchored_position = screen_to_rect(0.75, 0.75)
         self._labels_group.append(self.alarm_2_value)
 
-        self.status_label = Label(FONT_2, text=' ', color=None)
+        self.status_label = Label(FONT_2, text=" ", color=None)
         self.status_label.anchor_point = (0.5, 0.5)
         self.status_label.anchored_position = screen_to_rect(0.50, 0.95)
         self._labels_group.append(self.status_label)
@@ -190,6 +242,7 @@ class Labels:
     def display_group(self):
         """Displayio labels group."""
         return self._labels_group
+
 
 class Plate:
     def __init__(self, debug=False):
@@ -202,7 +255,10 @@ class Plate:
         self._sx, self._sy = screen_to_rect(0.46, 0.16)
         self._sw, self._sh = screen_to_rect(0.08, 0.25)
         self.riser = Rect(
-            self._sx, self._sy, width=self._sw, height=self._sh,
+            self._sx,
+            self._sy,
+            width=self._sw,
+            height=self._sh,
             fill=Palette.GRAY,
             outline=Palette.BLACK,
         )
@@ -211,7 +267,10 @@ class Plate:
         self._sx, self._sy = screen_to_rect(0.34, 0.16)
         self._sw, self._sh = screen_to_rect(0.32, 0.06)
         self.plate = RoundRect(
-            self._sx, self._sy, width=self._sw, height=self._sh,
+            self._sx,
+            self._sy,
+            width=self._sw,
+            height=self._sh,
             r=5,
             fill=Palette.GRAY,
             outline=Palette.BLACK,

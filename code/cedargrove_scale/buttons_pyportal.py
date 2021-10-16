@@ -41,7 +41,7 @@ class ScaleButtons:
 
         # Tare and alarm tile grid
         self._sprite_sheet, self._palette = adafruit_imageload.load(
-            '/cedargrove_scale/scale_sprite_sheet.bmp',
+            "/cedargrove_scale/scale_sprite_sheet.bmp",
             bitmap=displayio.Bitmap,
             palette=displayio.Palette,
         )
@@ -82,11 +82,14 @@ class ScaleButtons:
         self._sx, self._sy = screen_to_rect(0.01, 0.28)
         self._sw, self._sh = screen_to_rect(0.30, 0.18)
         self.zero_1_button = Button(
-            x=self._sx, y=self._sy, height=self._sh, width=self._sw,
+            x=self._sx,
+            y=self._sy,
+            height=self._sh,
+            width=self._sw,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='zero_1',
+            name="zero_1",
             selected_fill=color.RED,
             selected_outline=color.RED,
         )
@@ -96,11 +99,14 @@ class ScaleButtons:
         self._sx, self._sy = screen_to_rect(0.70, 0.28)
         self._sw, self._sh = screen_to_rect(0.30, 0.18)
         self.zero_2_button = Button(
-            x=self._sx, y=self._sy, height=self._sh, width=self._sw,
+            x=self._sx,
+            y=self._sy,
+            height=self._sh,
+            width=self._sw,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='zero_2',
+            name="zero_2",
             selected_fill=color.RED,
             selected_outline=color.RED,
         )
@@ -110,11 +116,14 @@ class ScaleButtons:
         self._sx, self._sy = screen_to_rect(0.01, 0.50)
         self._sw, self._sh = screen_to_rect(0.30, 0.19)
         self.tare_1_button = Button(
-            x=self._sx, y=self._sy, height=self._sh, width=self._sw,
+            x=self._sx,
+            y=self._sy,
+            height=self._sh,
+            width=self._sw,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='tare_1',
+            name="tare_1",
             selected_fill=color.BLUE,
             selected_outline=color.BLUE,
         )
@@ -124,11 +133,14 @@ class ScaleButtons:
         self._sx, self._sy = screen_to_rect(0.70, 0.50)
         self._sw, self._sh = screen_to_rect(0.30, 0.19)
         self.tare_2_button = Button(
-            x=self._sx, y=self._sy, height=self._sh, width=self._sw,
+            x=self._sx,
+            y=self._sy,
+            height=self._sh,
+            width=self._sw,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='tare_2',
+            name="tare_2",
             selected_fill=color.BLUE,
             selected_outline=color.BLUE,
         )
@@ -138,11 +150,14 @@ class ScaleButtons:
         self._sx, self._sy = screen_to_rect(0.01, 0.70)
         self._sw, self._sh = screen_to_rect(0.30, 0.20)
         self.alarm_1_button = Button(
-            x=self._sx, y=self._sy, height=self._sh, width=self._sw,
+            x=self._sx,
+            y=self._sy,
+            height=self._sh,
+            width=self._sw,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='alarm_1',
+            name="alarm_1",
             selected_fill=color.BLUE,
             selected_outline=color.BLUE,
         )
@@ -152,11 +167,14 @@ class ScaleButtons:
         sx, sy = screen_to_rect(0.70, 0.70)
         sw, sh = screen_to_rect(0.30, 0.20)
         self.alarm_2_button = Button(
-            x=sx, y=sy, height=sh, width=sw,
+            x=sx,
+            y=sy,
+            height=sh,
+            width=sw,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='alarm_2',
+            name="alarm_2",
             selected_fill=color.BLUE,
             selected_outline=color.BLUE,
         )
@@ -164,36 +182,54 @@ class ScaleButtons:
         self._buttons.append(self.alarm_2_button)
 
         self.tare_1_icon = displayio.TileGrid(
-            self._sprite_sheet, pixel_shader=self._palette, width=1, height=1, tile_width=32, tile_height=48
+            self._sprite_sheet,
+            pixel_shader=self._palette,
+            width=1,
+            height=1,
+            tile_width=32,
+            tile_height=48,
         )
         self.tare_1_icon.x, self.tare_1_icon.y = screen_to_rect(0.08, 0.50)
         self.tare_1_icon[0] = 3
         self._button_group.append(self.tare_1_icon)
 
         self.alarm_1_icon = displayio.TileGrid(
-            self._sprite_sheet, pixel_shader=self._palette, width=1, height=1, tile_width=32, tile_height=48
+            self._sprite_sheet,
+            pixel_shader=self._palette,
+            width=1,
+            height=1,
+            tile_width=32,
+            tile_height=48,
         )
         self.alarm_1_icon.x, self.alarm_1_icon.y = screen_to_rect(0.08, 0.70)
         self.alarm_1_icon[0] = 2
         self._button_group.append(self.alarm_1_icon)
 
-
         self.tare_2_icon = displayio.TileGrid(
-            self._sprite_sheet, pixel_shader=self._palette, width=1, height=1, tile_width=32, tile_height=48
+            self._sprite_sheet,
+            pixel_shader=self._palette,
+            width=1,
+            height=1,
+            tile_width=32,
+            tile_height=48,
         )
         self.tare_2_icon.x, self.tare_2_icon.y = screen_to_rect(0.85, 0.50)
         self.tare_2_icon[0] = 7
         self._button_group.append(self.tare_2_icon)
 
         self.alarm_2_icon = displayio.TileGrid(
-            self._sprite_sheet, pixel_shader=self._palette, width=1, height=1, tile_width=32, tile_height=48
+            self._sprite_sheet,
+            pixel_shader=self._palette,
+            width=1,
+            height=1,
+            tile_width=32,
+            tile_height=48,
         )
         self.alarm_2_icon.x, self.alarm_2_icon.y = screen_to_rect(0.85, 0.70)
         self.alarm_2_icon[0] = 6
         self._button_group.append(self.alarm_2_icon)
 
         return
-
 
     @property
     def button_display_group(self):
