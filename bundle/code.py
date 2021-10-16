@@ -1,6 +1,6 @@
 # PyPortal Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# 2021-10-15 v21 Cedar Grove Studios
+# 2021-10-16 v21 Cedar Grove Studios
 
 # uncomment the following import line to run the calibration method
 # (this will eventually be put into the setup process)
@@ -11,12 +11,10 @@ import time
 import displayio
 from simpleio import tone
 from adafruit_bitmapsaver import save_pixels
-from adafruit_display_shapes.circle import Circle
-from adafruit_display_shapes.triangle import Triangle
-
-from cedargrove_scale.buttons_pyportal import ScaleButtons
 from cedargrove_nau7802 import NAU7802
 
+import cedargrove_scale.display_graphics
+import cedargrove_scale.buttons_pyportal
 from cedargrove_scale.configuration import play_tone, dial_to_rect, screen_to_rect
 from cedargrove_scale.configuration import (
     Configuration as config,
@@ -24,26 +22,25 @@ from cedargrove_scale.configuration import (
     Screen as screen,
     SDcard as sd,
 )
-from cedargrove_scale.display_graphics import Case, Dial, Labels, Plate
 from scale_defaults import Defaults as default
 
-debug = False
+DEBUG = False
 
-panel = ScaleButtons(timeout=0.5, debug=debug)
-dial = Dial(debug=debug)
-labels = Labels(debug=debug)
-case = Case(debug=debug)
-plate = Plate(debug=debug)
+# Instantiate display groups and graphics
+panel = cedargrove_scale.buttons_pyportal.ScaleButtons(timeout=0.5, debug=DEBUG)
+dial = cedargrove_scale.display_graphics.Dial()
+labels = cedargrove_scale.display_graphics.Labels()
+case = cedargrove_scale.display_graphics.Case()
 
-# Instantiate load sensor ADC wing
+# Instantiate load cell ADC FeatherWing
 nau7802 = NAU7802(board.I2C(), address=0x2A, active_channels=2)
 
 
 def zero_channel():
-    """Initiate internal calibration for current channel, return raw zero
-    offset value. Use when scale is started, a new channel is selected, or
-    to adjust for measurement drift. Remove weight and tare from load cell
-    before executing."""
+    """Initiate internal calibration for currently enabled channel. Returns
+    a raw zero offset value. Use when scale is started, a new channel is
+    selected, or to adjust for measurement drift. NOTE: Remove weight and tare
+    from load cell before executing."""
     labels.status_label.text = " "
     labels.status_label.text = "ZERO LOAD CELL " + str(nau7802.channel)
     labels.status_label.color = color.YELLOW
@@ -55,7 +52,7 @@ def zero_channel():
         "channel %1d calibrate.OFFSET:   %5s"
         % (nau7802.channel, nau7802.calibrate("OFFSET"))
     )
-    zero_offset = read(100)  # Average of 100 samples to establish zero offset
+    zero_offset = read(100)  # Average 100 samples to establish zero offset value
     print("...channel zeroed")
     labels.status_label.text = " "
     return zero_offset
@@ -69,63 +66,6 @@ def read(samples=config.SAMPLE_AVG):
         if nau7802.available:
             sum = sum + nau7802.read()
     return int(sum / samples)
-
-
-def flash_status(text="", duration=0.05):
-    """Flash a status message once."""
-    labels.status_label.text = " "
-    labels.status_label.text = text
-    labels.status_label.color = color.YELLOW
-    time.sleep(duration)
-    labels.status_label.color = color.BLACK
-    time.sleep(duration)
-    labels.status_label.text = " "
-    return
-
-
-def plot_needles(scale_1=0, scale_2=0):
-    """Display channel 1 and 2 indicator needles. Input is normalized for
-    0.0 to 1.0 (minimum and maximum range), but accepts any floating point value."""
-    if scale_1 != min(1.0, max(scale_1, 0.0)):
-        hand_1_outline = color.RED
-    else:
-        hand_1_outline = color.ORANGE
-
-    if scale_2 != min(1.0, max(scale_2, 0.0)):
-        hand_2_outline = color.RED
-    else:
-        hand_2_outline = color.GREEN
-
-    base = dial.RADIUS // 10
-    sx0, sy0 = screen_to_rect(0.00, 0.16)
-    sx1, sy1 = screen_to_rect(0.00, 0.03)
-    plate.plate.y = int(sy0 + (sy1 * min(2, max(-2, (scale_1 + scale_2)))))
-    plate.riser.y = plate.plate.y
-
-    x0, y0 = dial_to_rect(scale_2, radius=dial.RADIUS)
-    x1, y1 = dial_to_rect(scale_2 - 0.25, radius=base // 2)
-    x2, y2 = dial_to_rect(scale_2 + 0.25, radius=base // 2)
-    hand_2 = Triangle(x0, y0, x1, y1, x2, y2, fill=color.GREEN, outline=hand_2_outline)
-    needles_group.append(hand_2)
-
-    x0, y0 = dial_to_rect(scale_1, radius=dial.RADIUS)
-    x1, y1 = dial_to_rect(scale_1 - 0.25, radius=base // 2)
-    x2, y2 = dial_to_rect(scale_1 + 0.25, radius=base // 2)
-    hand_1 = Triangle(x0, y0, x1, y1, x2, y2, fill=color.ORANGE, outline=hand_1_outline)
-    needles_group.append(hand_1)
-
-    x0, y0 = screen_to_rect(dial.center[0], dial.center[1])
-    pivot = Circle(x0, y0, base // 2, fill=color.WHITE)
-    needles_group.append(pivot)
-
-    return scale_1, scale_2
-
-
-def erase_needles():
-    needles_group.remove(needles_group[len(needles_group) - 1])
-    needles_group.remove(needles_group[len(needles_group) - 1])
-    needles_group.remove(needles_group[len(needles_group) - 1])
-    return
 
 
 def plot_tares():
@@ -170,37 +110,36 @@ def plot_alarms():
     return
 
 
-# Instantiate display and fonts
-# print('*** Instantiate the display and fonts')
+# Instantiate display
 display = board.DISPLAY
 display.brightness = default.BRIGHTNESS
 scale_group = displayio.Group()
 
-# Define displayio background and group elements
-print("*** Define displayio background and group elements")
+# Define display background and displayio group elements
+print("*** Define display background and displayio group elements")
 
-"""# Bitmap background -- FUTURE FEATURE?
-_bkg = displayio.OnDiskBitmap("/sd/background.bmp")
+# Bitmap background -- FUTURE FEATURE?
+"""_bkg = displayio.OnDiskBitmap('/sd/background.bmp')
 background = displayio.TileGrid(_bkg, pixel_shader=displayio.ColorConverter(), x=0, y=0)
 scale_group.append(background)"""
 
 # -- DISPLAY ELEMENTS -- #
-scale_group.append(panel.button_display_group)
+scale_group.append(panel.button_group)
 scale_group.append(labels.display_group)
-scale_group.append(plate.display_group)
+scale_group.append(dial.plate_group)
 scale_group.append(case.display_group)
 scale_group.append(dial.display_group)
 
 # Create group for needle indicators
-needles_group = displayio.Group()
-scale_group.append(needles_group)
+# needles_group = displayio.Group()
+scale_group.append(dial.needles_group)
 
 display.show(scale_group)
 
 if sd.has_card:
-    flash_status("SD CARD FOUND", 0.5)
+    labels.flash_status("SD CARD FOUND", 0.5)
 else:
-    flash_status("NO SD CARD", 0.5)
+    labels.flash_status("NO SD CARD", 0.5)
 
 # Instantiate and calibrate load cell inputs
 print("*** Instantiate and calibrate load cells")
@@ -209,10 +148,10 @@ print(" enable NAU7802 digital and analog power: %5s" % (nau7802.enable(True)))
 nau7802.gain = config.PGA_GAIN  # Use default gain
 nau7802.channel = 1  # Set to second channel
 chan_1_zero = chan_2_zero = 0
-if not debug:
+if not DEBUG:
     chan_1_zero = zero_channel()  # Re-calibrate and get raw zero offset value
 nau7802.channel = 2  # Set to first channel
-if not debug:
+if not DEBUG:
     chan_2_zero = zero_channel()  # Re-calibrate and get raw zero offset value
 
 tare_1_mass_gr = round(default.TARE_1_MASS_GR, 1)
@@ -229,22 +168,22 @@ labels.alarm_2_value.text = str(alarm_2_mass_gr)
 alarm_2_enable = default.ALARM_2_ENABLE
 alarm = False
 
-plot_needles()
+dial.plot_needles()
 plot_tares()
 plot_alarms()
 
 if sd.has_card:
     print("Taking Screenshot...", end="")
-    flash_status("SCREENSHOT...", 0.8)
+    labels.flash_status("SCREENSHOT...", 0.8)
     labels.status_label.text = default.NAME
     labels.status_label.color = color.CYAN
     save_pixels("/sd/screenshot.bmp")
     print(" Screenshot stored")
-    flash_status("... STORED", 0.8)
+    labels.flash_status("... STORED", 0.8)
 else:
-    flash_status("SCREENSHOT: NO SD CARD", 1.0)
+    labels.flash_status("SCREENSHOT: NO SD CARD", 1.0)
 
-flash_status("READY", 0.5)
+labels.flash_status("READY", 0.5)
 play_tone("high")
 play_tone("low")
 
@@ -281,8 +220,8 @@ while True:
     chan_1_mass_gr_norm = chan_1_mass_gr / default.MAX_GR
     chan_2_mass_gr_norm = chan_2_mass_gr / default.MAX_GR
 
-    erase_needles()
-    plot_needles(chan_1_mass_gr_norm, chan_2_mass_gr_norm)
+    dial.erase_needles()
+    dial.plot_needles(chan_1_mass_gr_norm, chan_2_mass_gr_norm)
 
     print("(%+5.1f, %+5.1f)" % (chan_1_mass_gr, chan_2_mass_gr))
 
@@ -335,25 +274,25 @@ while True:
         if channel == 1:
             tare_1_enable = not tare_1_enable  # toggle tare 1 state
             if tare_1_enable:
-                # flash_status('TARE 1 ENABLE', 0.5)
+                # labels.flash_status('TARE 1 ENABLE', 0.5)
                 if str(tare_1_mass_gr) == "-0.0":  # Filter -0.0 value
                     tare_1_mass_gr = 0.0
                 labels.tare_1_value.color = color.ORANGE
                 panel.tare_1_icon[0] = 1
             else:
-                # flash_status('TARE 1 DISABLE', 0.5)
+                # labels.flash_status('TARE 1 DISABLE', 0.5)
                 labels.tare_1_value.color = color.GRAY
                 panel.tare_2_icon[0] = 3
         else:
             tare_2_enable = not tare_2_enable  # toggle tare 2 state
             if tare_2_enable:
-                # flash_status('TARE 2 ENABLE', 0.5)
+                # labels.flash_status('TARE 2 ENABLE', 0.5)
                 if str(tare_2_mass_gr) == "-0.0":  # Filter -0.0 value
                     tare_2_mass_gr = 0.0
                 labels.tare_1_value.color = color.ORANGE
                 panel.tare_1_icon[0] = 5
             else:
-                # flash_status('TARE 2 DISABLE', 0.5)
+                # labels.flash_status('TARE 2 DISABLE', 0.5)
                 labels.tare_2_value.color = color.GRAY
                 panel.tare_2_icon[0] = 7
         plot_tares()
@@ -366,21 +305,21 @@ while True:
         if channel == 1:
             alarm_1_enable = not alarm_1_enable  # toggle alarm 1 state
             if alarm_1_enable:
-                # flash_status('ALARM 1 ENABLE', 0.5)
+                # labels.flash_status('ALARM 1 ENABLE', 0.5)
                 labels.alarm_1_value.color = color.ORANGE
                 panel.alarm_1_icon[0] = 0
             else:
-                # flash_status('ALARM 1 DISABLE', 0.5)
+                # labels.flash_status('ALARM 1 DISABLE', 0.5)
                 labels.alarm_1_value.color = color.GRAY
                 panel.alarm_1_icon[0] = 2
         else:
             alarm_2_enable = not alarm_2_enable  # toggle alarm 1 state
             if alarm_2_enable:
-                # flash_status('ALARM 2 ENABLE', 0.5)
+                # labels.flash_status('ALARM 2 ENABLE', 0.5)
                 labels.alarm_2_value.color = color.GREEN
                 panel.alarm_2_icon[0] = 4
             else:
-                # flash_status('ALARM 2 DISABLE', 0.5)
+                # labels.flash_status('ALARM 2 DISABLE', 0.5)
                 labels.alarm_2_value.color = color.GRAY
                 panel.alarm_2_icon[0] = 6
         plot_alarms()
@@ -391,8 +330,8 @@ while True:
         play_tone('high')
 
         if channel == 1:
-            flash_status('SETUP 1', 0.5)
+            labels.flash_status('SETUP 1', 0.5)
             pass
         else:
-            flash_status('SETUP 2', 0.5)
+            labels.flash_status('SETUP 2', 0.5)
             pass"""

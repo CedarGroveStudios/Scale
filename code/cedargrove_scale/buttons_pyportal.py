@@ -232,7 +232,7 @@ class ScaleButtons:
         return
 
     @property
-    def button_display_group(self):
+    def button_group(self):
         """Displayio button group."""
         return self._button_group
 

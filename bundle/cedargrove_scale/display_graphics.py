@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: MIT
 
 # display_graphics.py
-# 2021-10-15 v1.0
+# 2021-10-16 v1.1
 
+import time
 import displayio
 from adafruit_bitmap_font import bitmap_font
 from adafruit_display_shapes.circle import Circle
@@ -13,8 +14,7 @@ from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.roundrect import RoundRect
 from adafruit_display_shapes.triangle import Triangle
 
-from cedargrove_scale.configuration import Palette, Screen
-from cedargrove_scale.configuration import dial_to_rect, screen_to_rect
+from cedargrove_scale.configuration import Palette, Screen, dial_to_rect, screen_to_rect
 from scale_defaults import Defaults
 
 FONT_0 = bitmap_font.load_font("/fonts/Helvetica-Bold-24.bdf")
@@ -23,11 +23,9 @@ FONT_2 = bitmap_font.load_font("/fonts/OpenSans-9.bdf")
 
 
 class Case:
-    def __init__(self, debug=False):
+    def __init__(self):
         """Instantiate the scale case graphic for PyPortal devices.
         Builds a displayio case group."""
-        self._debug = debug
-
         self._case_group = displayio.Group()
 
         self._sx0, self._sy0 = screen_to_rect(0.50, 0.50)
@@ -66,10 +64,13 @@ class Case:
 
 
 class Dial:
-    def __init__(self, center=(0.50, 0.50), radius=0.25, debug=False):
-        """Instantiate the dial graphic for PyPortal devices.
-        Builds a displayio dial group."""
-        self._debug = debug
+    def __init__(self, center=(0.50, 0.50), radius=0.25):
+        """Instantiate the dial graphic for PyPortal devices. Defaults to center
+        at 0.5, 0.5 with a radius of 0.25 (normalized display units). Builds a
+        displayio dial group.
+
+        :param center: The dial center x,y tuple in normalized display units.
+        :param radius: The dial radius in normalized display units."""
 
         # Dial normalized screen values
         self._center_norm = center
@@ -85,7 +86,35 @@ class Dial:
         self._outside_radius = self.RADIUS - self._point_diameter
         self._inside_radius = self.RADIUS - (2 * self._point_diameter)
 
+        self._plate_group = displayio.Group()
         self._dial_group = displayio.Group()
+        self._needles_group = displayio.Group()
+
+        # Define moveable plate graphic
+        self._sx, self._sy = screen_to_rect(0.46, 0.16)
+        self._sw, self._sh = screen_to_rect(0.08, 0.25)
+        self.riser = Rect(
+            self._sx,
+            self._sy,
+            width=self._sw,
+            height=self._sh,
+            fill=Palette.GRAY,
+            outline=Palette.BLACK,
+        )
+        self._plate_group.append(self.riser)
+
+        self._sx, self._sy = screen_to_rect(0.34, 0.16)
+        self._sw, self._sh = screen_to_rect(0.32, 0.06)
+        self.plate = RoundRect(
+            self._sx,
+            self._sy,
+            width=self._sw,
+            height=self._sh,
+            r=5,
+            fill=Palette.GRAY,
+            outline=Palette.BLACK,
+        )
+        self._plate_group.append(self.plate)
 
         # Define primary dial graphic
         self._sx, self._sy = screen_to_rect(self._center_norm[0], self._center_norm[1])
@@ -157,6 +186,16 @@ class Dial:
         return self._dial_group
 
     @property
+    def needles_group(self):
+        """Displayio needles group."""
+        return self._needles_group
+
+    @property
+    def plate_group(self):
+        """Displayio plate group."""
+        return self._plate_group
+
+    @property
     def center(self):
         """Dial center normalized screen coordinates."""
         return self._center_norm
@@ -166,13 +205,79 @@ class Dial:
         """Dial radius normalized screen value."""
         return self._radius_norm
 
+    def plot_needles(self, pointer_1=0, pointer_2=0):
+        """Display channel 1 and 2 indicator needles and move scale plate
+        proportionally. Input is normalized for 0.0 to 1.0 (minimum and maximum
+        range), but accepts any floating point value.
+
+        :param pointer_1: The normalized first needle position on the dial circumference.
+        :param pointer_1: The normalized second needle position on the dial circumference."""
+
+        if pointer_1 != min(1.0, max(pointer_1, 0.0)):
+            self._hand_1_outline = Palette.RED
+        else:
+            self._hand_1_outline = Palette.ORANGE
+
+        if pointer_2 != min(1.0, max(pointer_2, 0.0)):
+            self._hand_2_outline = Palette.RED
+        else:
+            self._hand_2_outline = Palette.GREEN
+
+        self._base = self.RADIUS // 10
+        self._sx0, self._sy0 = screen_to_rect(0.00, 0.16)
+        self._sx1, self._sy1 = screen_to_rect(0.00, 0.03)
+        self.plate.y = int(
+            self._sy0 + (self._sy1 * min(2, max(-2, (pointer_1 + pointer_2))))
+        )
+        self.riser.y = self.plate.y
+
+        self._x0, self._y0 = dial_to_rect(pointer_2, radius=self.RADIUS)
+        self._x1, self._y1 = dial_to_rect(pointer_2 - 0.25, radius=self._base // 2)
+        self._x2, self._y2 = dial_to_rect(pointer_2 + 0.25, radius=self._base // 2)
+        self.hand_2 = Triangle(
+            self._x0,
+            self._y0,
+            self._x1,
+            self._y1,
+            self._x2,
+            self._y2,
+            fill=Palette.GREEN,
+            outline=self._hand_2_outline,
+        )
+        self._needles_group.append(self.hand_2)
+
+        self._x0, self._y0 = dial_to_rect(pointer_1, radius=self.RADIUS)
+        self._x1, self._y1 = dial_to_rect(pointer_1 - 0.25, radius=self._base // 2)
+        self._x2, self._y2 = dial_to_rect(pointer_1 + 0.25, radius=self._base // 2)
+        self.hand_1 = Triangle(
+            self._x0,
+            self._y0,
+            self._x1,
+            self._y1,
+            self._x2,
+            self._y2,
+            fill=Palette.ORANGE,
+            outline=self._hand_1_outline,
+        )
+        self._needles_group.append(self.hand_1)
+
+        self._x0, self._y0 = screen_to_rect(self.center[0], self.center[1])
+        self.pivot = Circle(self._x0, self._y0, self._base // 2, fill=Palette.WHITE)
+        self._needles_group.append(self.pivot)
+
+        return
+
+    def erase_needles(self):
+        self._needles_group.remove(self._needles_group[len(self._needles_group) - 1])
+        self._needles_group.remove(self._needles_group[len(self._needles_group) - 1])
+        self._needles_group.remove(self._needles_group[len(self._needles_group) - 1])
+        return
+
 
 class Labels:
-    def __init__(self, debug=False):
+    def __init__(self):
         """Instantiate the labels and values objects.
         Builds a displayio labels group."""
-        self._debug = debug
-
         self._labels_group = displayio.Group()
 
         self.chan_1_name = Label(
@@ -243,42 +348,16 @@ class Labels:
         """Displayio labels group."""
         return self._labels_group
 
-
-class Plate:
-    def __init__(self, debug=False):
-        """Instantiate the plate and riser object.
-        Builds a displayio plate group."""
-        self._debug = debug
-
-        self._plate_group = displayio.Group()
-
-        self._sx, self._sy = screen_to_rect(0.46, 0.16)
-        self._sw, self._sh = screen_to_rect(0.08, 0.25)
-        self.riser = Rect(
-            self._sx,
-            self._sy,
-            width=self._sw,
-            height=self._sh,
-            fill=Palette.GRAY,
-            outline=Palette.BLACK,
-        )
-        self._plate_group.append(self.riser)
-
-        self._sx, self._sy = screen_to_rect(0.34, 0.16)
-        self._sw, self._sh = screen_to_rect(0.32, 0.06)
-        self.plate = RoundRect(
-            self._sx,
-            self._sy,
-            width=self._sw,
-            height=self._sh,
-            r=5,
-            fill=Palette.GRAY,
-            outline=Palette.BLACK,
-        )
-        self._plate_group.append(self.plate)
+    def flash_status(self, text=" ", duration=0.05):
+        """Flash a text message once in the stats message area.
+        param: text: The text to be displayed.
+        param: duration: The display duration in seconds."""
+        
+        self.status_label.text = " "
+        self.status_label.text = text
+        self.status_label.color = Palette.YELLOW
+        time.sleep(duration)
+        self.status_label.color = Palette.BLACK
+        time.sleep(duration)
+        self.status_label.text = " "
         return
-
-    @property
-    def display_group(self):
-        """Displayio plate group."""
-        return self._plate_group
