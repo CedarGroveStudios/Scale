@@ -283,8 +283,8 @@ class Labels:
         self.chan_1_name = Label(
             FONT_0, text=Defaults.CHAN_1_NAME, color=Palette.ORANGE
         )
-        self.chan_1_name.anchor_point = (1.0, 0)
-        self.chan_1_name.anchored_position = screen_to_rect(0.28, 0.10)
+        self.chan_1_name.anchor_point = (0, 0)
+        self.chan_1_name.anchored_position = screen_to_rect(0.03, 0.10)
         self._labels_group.append(self.chan_1_name)
 
         self.chan_2_name = Label(FONT_0, text=Defaults.CHAN_2_NAME, color=Palette.GREEN)
@@ -352,7 +352,7 @@ class Labels:
         """Flash a text message once in the stats message area.
         param: text: The text to be displayed.
         param: duration: The display duration in seconds."""
-        
+
         self.status_label.text = " "
         self.status_label.text = text
         self.status_label.color = Palette.YELLOW
