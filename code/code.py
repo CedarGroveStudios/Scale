@@ -9,28 +9,27 @@
 import board
 import time
 import displayio
-from simpleio import tone
-from adafruit_bitmapsaver import save_pixels
 from cedargrove_nau7802 import NAU7802
-
 import cedargrove_scale.display_graphics
 import cedargrove_scale.buttons_pyportal
-from cedargrove_scale.configuration import play_tone, dial_to_rect, screen_to_rect
+from cedargrove_scale.configuration import play_tone, dial_to_rect
 from cedargrove_scale.configuration import (
     Configuration as config,
     Palette as color,
-    Screen as screen,
-    SDcard as sd,
+    SDCard,
 )
 from scale_defaults import Defaults as default
 
 DEBUG = False
 
 # Instantiate display groups and graphics
-panel = cedargrove_scale.buttons_pyportal.ScaleButtons(timeout=0.5, debug=DEBUG)
+case = cedargrove_scale.display_graphics.Case()
 dial = cedargrove_scale.display_graphics.Dial()
 labels = cedargrove_scale.display_graphics.Labels()
-case = cedargrove_scale.display_graphics.Case()
+panel = cedargrove_scale.buttons_pyportal.ScaleButtons(timeout=0.5, debug=DEBUG)
+
+# Instantiate SD card
+sd = SDCard()
 
 # Instantiate load cell ADC FeatherWing
 nau7802 = NAU7802(board.I2C(), address=0x2A, active_channels=2)
@@ -173,12 +172,10 @@ plot_tares()
 plot_alarms()
 
 if sd.has_card:
-    print("Taking Screenshot...", end="")
     labels.flash_status("SCREENSHOT...", 0.8)
     labels.status_label.text = default.NAME
     labels.status_label.color = color.CYAN
-    save_pixels("/sd/screenshot.bmp")
-    print(" Screenshot stored")
+    sd.screenshot()
     labels.flash_status("... STORED", 0.8)
 else:
     labels.flash_status("SCREENSHOT: NO SD CARD", 1.0)

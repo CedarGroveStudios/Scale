@@ -5,22 +5,45 @@ import digitalio
 import storage
 from math import cos, sin, pi
 import adafruit_sdcard
+from adafruit_bitmapsaver import save_pixels
 from simpleio import tone
 
 
-class SDcard:
-    # Instantiate SD card
-    spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
-    sd_cs = digitalio.DigitalInOut(board.SD_CS)
-    has_card = False
-    try:
-        sdcard = adafruit_sdcard.SDCard(spi, sd_cs)
-        vfs = storage.VfsFat(sdcard)
-        storage.mount(vfs, "/sd")
-        print("SD card found")
-        has_card = True
-    except OSError as error:
-        print("SD card NOT found:", error)
+class SDCard:
+    def __init__(self):
+        """Instantiate and test for PyPortal SD card."""
+        self._spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
+        self._sd_cs = digitalio.DigitalInOut(board.SD_CS)
+        self._has_card = False
+        try:
+            self._sdcard = adafruit_sdcard.SDCard(self._spi, self._sd_cs)
+            self._vfs = storage.VfsFat(self._sdcard)
+            storage.mount(self._vfs, '/sd')
+            print('SD card found')
+            self._has_card = True
+        except OSError as error:
+            print('SD card NOT found: ', error)
+
+    @property
+    def has_card(self):
+        """True if SD card inserted."""
+        return self._has_card
+
+    def screenshot(self):
+        if self._has_card:
+            print('Taking Screenshot...', end='')
+            save_pixels('/sd/screenshot.bmp')
+            print(' Screenshot stored')
+        else:
+            print('SCREENSHOT: NO SD CARD')
+
+    def read_config(self):
+        """Read configuration text file from SD card."""
+        pass
+
+    def write_config(self):
+        """Write configuration text file to SD card."""
+        pass
 
 
 class Configuration:
@@ -45,15 +68,6 @@ class Screen:
     WIDTH = board.DISPLAY.width
     HEIGHT = board.DISPLAY.height
     CENTER = (WIDTH // 2, HEIGHT // 2)
-
-
-"""class Pointer:
-    STROKE = 2
-    DIAMETER = int((Screen.HEIGHT * 1/32) + (2 * STROKE))
-    RADIUS = DIAMETER // 2
-    OUT_PATH_RADIUS = Dial.RADIUS - DIAMETER
-    IN_PATH_RADIUS = Dial.RADIUS - (2 * DIAMETER)"""
-
 
 class Palette:
     # Define a few colors (https://en.wikipedia.org/wiki/Web_colors)
