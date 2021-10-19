@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # display_graphics.py
-# 2021-10-16 v1.1
+# 2021-10-18 v1.1
 
 import time
 import displayio
@@ -17,9 +17,14 @@ from adafruit_display_shapes.triangle import Triangle
 from cedargrove_scale.configuration import Palette, Screen, dial_to_rect, screen_to_rect
 from scale_defaults import Defaults
 
-FONT_0 = bitmap_font.load_font("/fonts/Helvetica-Bold-24.bdf")
-FONT_1 = bitmap_font.load_font("/fonts/OpenSans-16.bdf")
-FONT_2 = bitmap_font.load_font("/fonts/OpenSans-9.bdf")
+if Screen.HEIGHT < 300:
+    FONT_0 = bitmap_font.load_font("/fonts/Helvetica-Bold-24.bdf")
+    FONT_1 = bitmap_font.load_font("/fonts/OpenSans-9.bdf")
+    FONT_2 = bitmap_font.load_font("/fonts/OpenSans-9.bdf")
+else:
+    FONT_0 = bitmap_font.load_font("/fonts/Helvetica-Bold-36.bdf")
+    FONT_1 = bitmap_font.load_font("/fonts/OpenSans-16.bdf")
+    FONT_2 = bitmap_font.load_font("/fonts/OpenSans-9.bdf")
 
 
 class Case:
@@ -316,27 +321,27 @@ class Labels:
         self.chan_2_value.anchored_position = screen_to_rect(0.97, 0.38)
         self._labels_group.append(self.chan_2_value)
 
-        self.tare_1_value = Label(FONT_2, text="0.0", color=Palette.GRAY)
+        self.tare_1_value = Label(FONT_1, text="0.0", color=Palette.GRAY)
         self.tare_1_value.anchor_point = (1.0, 0.5)
         self.tare_1_value.anchored_position = screen_to_rect(0.28, 0.56)
         self._labels_group.append(self.tare_1_value)
 
-        self.tare_2_value = Label(FONT_2, text="0.0", color=Palette.GRAY)
+        self.tare_2_value = Label(FONT_1, text="0.0", color=Palette.GRAY)
         self.tare_2_value.anchor_point = (0.0, 0.5)
         self.tare_2_value.anchored_position = screen_to_rect(0.75, 0.56)
         self._labels_group.append(self.tare_2_value)
 
-        self.alarm_1_value = Label(FONT_2, text="0.0", color=Palette.GRAY)
+        self.alarm_1_value = Label(FONT_1, text="0.0", color=Palette.GRAY)
         self.alarm_1_value.anchor_point = (1.0, 0.5)
         self.alarm_1_value.anchored_position = screen_to_rect(0.28, 0.75)
         self._labels_group.append(self.alarm_1_value)
 
-        self.alarm_2_value = Label(FONT_2, text="0.0", color=Palette.GRAY)
+        self.alarm_2_value = Label(FONT_1, text="0.0", color=Palette.GRAY)
         self.alarm_2_value.anchor_point = (0.0, 0.5)
         self.alarm_2_value.anchored_position = screen_to_rect(0.75, 0.75)
         self._labels_group.append(self.alarm_2_value)
 
-        self.status_label = Label(FONT_2, text=" ", color=None)
+        self.status_label = Label(FONT_1, text=" ", color=None)
         self.status_label.anchor_point = (0.5, 0.5)
         self.status_label.anchored_position = screen_to_rect(0.50, 0.95)
         self._labels_group.append(self.status_label)
