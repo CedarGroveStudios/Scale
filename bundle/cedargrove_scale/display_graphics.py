@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # display_graphics.py
-# 2021-10-18 v1.1
+# 2021-10-20 v1.1
 
 import time
 import displayio
@@ -163,6 +163,20 @@ class Dial:
                 self._x0, self._y0, self._x1, self._y1, Palette.CYAN
             )
             self._dial_group.append(self._hash_mark_b)
+
+        # Define dial bezel graphic
+        self._sx, self._sy = screen_to_rect(self._center_norm[0], self._center_norm[1])
+        self._ry, self._ry = screen_to_rect(0.00, self._radius_norm)
+        self._ry = self._ry + 1
+        self.scale_bezel = Circle(
+            self._sx,
+            self._sy,
+            self._ry,
+            fill=None,
+            outline=Palette.BLACK,
+            stroke=1,
+        )
+        self._dial_group.append(self.scale_bezel)
 
         self.chan_1_alarm = Circle(
             -50,
