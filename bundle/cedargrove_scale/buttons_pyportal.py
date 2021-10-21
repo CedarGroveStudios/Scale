@@ -41,7 +41,7 @@ class ScaleButtons:
 
         # Tare and alarm tile grid
         self._sprite_sheet, self._palette = adafruit_imageload.load(
-            "/cedargrove_scale/scale_sprite_sheet.bmp",
+            '/cedargrove_scale/scale_sprite_sheet.bmp',
             bitmap=displayio.Bitmap,
             palette=displayio.Palette,
         )
@@ -89,7 +89,7 @@ class ScaleButtons:
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name="zero_1",
+            name='zero_1',
             selected_fill=color.RED,
             selected_outline=color.RED,
         )
@@ -106,7 +106,7 @@ class ScaleButtons:
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name="zero_2",
+            name='zero_2',
             selected_fill=color.RED,
             selected_outline=color.RED,
         )
@@ -123,7 +123,7 @@ class ScaleButtons:
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name="tare_1",
+            name='tare_1',
             selected_fill=color.BLUE,
             selected_outline=color.BLUE,
         )
@@ -140,7 +140,7 @@ class ScaleButtons:
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name="tare_2",
+            name='tare_2',
             selected_fill=color.BLUE,
             selected_outline=color.BLUE,
         )
@@ -157,7 +157,7 @@ class ScaleButtons:
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name="alarm_1",
+            name='alarm_1',
             selected_fill=color.BLUE,
             selected_outline=color.BLUE,
         )
@@ -174,7 +174,7 @@ class ScaleButtons:
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name="alarm_2",
+            name='alarm_2',
             selected_fill=color.BLUE,
             selected_outline=color.BLUE,
         )
@@ -245,7 +245,7 @@ class ScaleButtons:
     def timeout(self, hold_time=1.0):
         """Select timeout duration value in seconds, positive float value."""
         if hold_time < 0 or hold_time >= 10:
-            "Invalid button timeout duration value. Must be between 0 and 10 seconds."
+            print('Invalid button timeout duration value. Must be between 0 and 10 seconds.')
             return
         self._timeout = hold_time
         return

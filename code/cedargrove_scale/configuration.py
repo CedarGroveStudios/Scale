@@ -88,9 +88,9 @@ class Palette:
 
 
 def play_tone(note=None):
-    if note == "high":
+    if note == 'high':
         tone(board.A0, 880, 0.1)
-    elif note == "low":
+    elif note == 'low':
         tone(board.A0, 440, 0.1)
     return
 
