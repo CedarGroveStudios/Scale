@@ -15,6 +15,10 @@ from cedargrove_scale.configuration import play_tone, dial_to_rect
 from cedargrove_scale.configuration import Config, Colors, SDCard
 from cedargrove_widgets.scale import Scale
 from scale_defaults import Defaults
+import gc
+import time
+
+gc.collect
 
 DEBUG = False
 
@@ -172,6 +176,7 @@ play_tone('low')
 
 # -- Main loop: Read sample, move bubble, and display values
 while True:
+    t0 = time.monotonic()
     if not alarm:
         labels.status_label.text = Defaults.NAME
         labels.status_label.color = Colors.CYAN
@@ -313,3 +318,7 @@ while True:
         else:
             labels.flash_status('SETUP 2', 0.5)
             pass"""
+
+    free_memory = gc.mem_free()
+    frame = time.monotonic() - t0
+    print(f'frame: {frame:5.2f} sec   free memory: {free_memory} bytes')
