@@ -23,11 +23,11 @@ class SDCard:
         try:
             self._sdcard = adafruit_sdcard.SDCard(self._spi, self._sd_cs)
             self._vfs = storage.VfsFat(self._sdcard)
-            storage.mount(self._vfs, '/sd')
-            print('SD card found')
+            storage.mount(self._vfs, "/sd")
+            print("SD card found")
             self._has_card = True
         except OSError as error:
-            print('SD card NOT found: ', error)
+            print("SD card NOT found: ", error)
 
     @property
     def has_card(self):
@@ -36,11 +36,11 @@ class SDCard:
 
     def screenshot(self):
         if self._has_card:
-            print('Taking Screenshot...', end='')
-            save_pixels('/sd/scale_screenshot.bmp')
-            print(' Screenshot stored')
+            print("Taking Screenshot...", end="")
+            save_pixels("/sd/scale_screenshot.bmp")
+            print(" Screenshot stored")
         else:
-            print('SCREENSHOT: NO SD CARD')
+            print("SCREENSHOT: NO SD CARD")
 
     def read_config(self):
         """Read configuration text file from SD card."""
@@ -74,6 +74,7 @@ class Screen:
     HEIGHT = board.DISPLAY.height
     CENTER = (WIDTH // 2, HEIGHT // 2)
 
+
 class Colors:
     # Define a few colors (https://en.wikipedia.org/wiki/Web_colors)
     BLACK = 0x000000
@@ -93,9 +94,9 @@ class Colors:
 
 
 def play_tone(note=None):
-    if note == 'high':
+    if note == "high":
         tone(board.A0, 880, 0.1)
-    elif note == 'low':
+    elif note == "low":
         tone(board.A0, 440, 0.1)
     return
 

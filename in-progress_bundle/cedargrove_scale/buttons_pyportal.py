@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # buttons_pyportal.py
-# 2021-11-30 v1.1
+# 2021-12-01 v1.1
 
 import board
 import time
@@ -13,7 +13,7 @@ import adafruit_touchscreen
 from simpleio import tone
 
 from cedargrove_scale.configuration import Colors
-from cedargrove_scale.configuration import play_tone, screen_to_rect
+from cedargrove_scale.configuration import screen_to_rect
 
 
 class ScaleButtons:
@@ -41,7 +41,7 @@ class ScaleButtons:
 
         # Tare and alarm tile grid
         self._sprite_sheet, self._palette = adafruit_imageload.load(
-            '/cedargrove_scale/scale_sprite_sheet.bmp',
+            "/cedargrove_scale/scale_sprite_sheet.bmp",
             bitmap=displayio.Bitmap,
             palette=displayio.Palette,
         )
@@ -89,7 +89,7 @@ class ScaleButtons:
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='zero_1',
+            name="zero_1",
             selected_fill=Colors.RED,
             selected_outline=Colors.RED,
         )
@@ -106,7 +106,7 @@ class ScaleButtons:
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='zero_2',
+            name="zero_2",
             selected_fill=Colors.RED,
             selected_outline=Colors.RED,
         )
@@ -123,7 +123,7 @@ class ScaleButtons:
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='tare_1',
+            name="tare_1",
             selected_fill=Colors.BLUE,
             selected_outline=Colors.BLUE,
         )
@@ -140,7 +140,7 @@ class ScaleButtons:
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='tare_2',
+            name="tare_2",
             selected_fill=Colors.BLUE,
             selected_outline=Colors.BLUE,
         )
@@ -157,7 +157,7 @@ class ScaleButtons:
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='alarm_1',
+            name="alarm_1",
             selected_fill=Colors.BLUE,
             selected_outline=Colors.BLUE,
         )
@@ -174,7 +174,7 @@ class ScaleButtons:
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='alarm_2',
+            name="alarm_2",
             selected_fill=Colors.BLUE,
             selected_outline=Colors.BLUE,
         )
@@ -245,27 +245,29 @@ class ScaleButtons:
     def timeout(self, hold_time=1.0):
         """Select timeout duration value in seconds, positive float value."""
         if hold_time < 0 or hold_time >= 10:
-            print('Invalid button timeout duration value. Must be between 0 and 10 seconds.')
+            print(
+                "Invalid button timeout duration value. Must be between 0 and 10 seconds."
+            )
             return
         self._timeout = hold_time
         return
 
     def read_buttons(self):
-        self._button_pressed = None
-        self._hold_time = 0
-        self._touch = self._ts.touch_point
-        if self._touch:
+        button_pressed = None
+        hold_time = 0
+        touch = self._ts.touch_point
+        if touch:
             for self._button in self._buttons:
-                if self._button.contains(self._touch):
+                if self._button.contains(touch):
                     self._button.selected = True
                     tone(board.A0, 1319, 0.030)  # E6
-                    self._button_pressed = self._button.name
-                    self._timeout_beep = False
+                    button_pressed = self._button.name
+                    timeout_beep = False
                     while self._ts.touch_point:
                         time.sleep(0.1)
-                        self._hold_time += 0.1
-                        if self._hold_time >= self._timeout and not self._timeout_beep:
+                        hold_time += 0.1
+                        if hold_time >= self._timeout and not timeout_beep:
                             tone(board.A0, 1175, 0.030)  # D6
-                            self._timeout_beep = True
+                            timeout_beep = True
                     self._button.selected = False
-        return self._button_pressed, self._hold_time
+        return button_pressed, hold_time

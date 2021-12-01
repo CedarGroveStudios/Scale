@@ -1,4 +1,8 @@
+# SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
+# SPDX-License-Identifier: MIT
+
 # scale_defaults.py
+# 2021-12-01 v1.0
 
 
 class Defaults:
