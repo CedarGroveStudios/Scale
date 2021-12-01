@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # buttons_pyportal.py
-# 2021-10-13 v1.0.1
+# 2021-11-30 v1.1
 
 import board
 import time
@@ -12,8 +12,8 @@ from adafruit_button import Button
 import adafruit_touchscreen
 from simpleio import tone
 
-from cedargrove_scale.configuration import Palette as color
-from cedargrove_scale.configuration import play_tone, dial_to_rect, screen_to_rect
+from cedargrove_scale.configuration import Colors
+from cedargrove_scale.configuration import play_tone, screen_to_rect
 
 
 class ScaleButtons:
@@ -26,9 +26,9 @@ class ScaleButtons:
         self._WIDTH = board.DISPLAY.width
         self._HEIGHT = board.DISPLAY.height
 
-        self._outline = color.BLACK
+        self._outline = Colors.BLACK
         if self._debug:
-            self._outline = color.GRAY
+            self._outline = Colors.GRAY
 
         self._ts = adafruit_touchscreen.Touchscreen(
             board.TOUCH_XL,
@@ -51,135 +51,135 @@ class ScaleButtons:
         self._buttons = []
         self._button_group = displayio.Group()
 
-        """self._sx, self._sy = screen_to_rect(0.01, 0.02)
-        self._sw, self._sh = screen_to_rect(0.30, 0.20)
-        self.setup_1_button = Button(
-            x=self._sx, y=self._sy, height=self._sh, width=self._sw,
+        """x0, y0 = screen_to_rect(0.01, 0.02)
+        w, h = screen_to_rect(0.30, 0.20)
+        setup_1_button = Button(
+            x=x0, y=y0, height=h, width=w,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
             name='setup_1',
-            selected_fill=color.BLUE,
-            selected_outline=color.BLUE,
+            selected_fill=Colors.BLUE,
+            selected_outline=Colors.BLUE,
         )
-        self._button_group.append(self.setup_1_button)
-        self._buttons.append(self.setup_1_button)
+        self._button_group.append(setup_1_button)
+        self._buttons.append(setup_1_button)
 
-        self._sx, self._sy = screen_to_rect(0.70, 0.02)
-        self._sw, self._sh = screen_to_rect(0.30, 0.20)
-        self.setup_2_button = Button(
-            x=self._sx, y=self._sy, height=self._sh, width=self._sw,
+        x0, y0 = screen_to_rect(0.70, 0.02)
+        w, h = screen_to_rect(0.30, 0.20)
+        setup_2_button = Button(
+            x=x0, y=y0, height=h, width=w,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
             name='setup_2',
-            selected_fill=color.BLUE,
-            selected_outline=color.BLUE,
+            selected_fill=Colors.BLUE,
+            selected_outline=Colors.BLUE,
         )
-        self._button_group.append(self.setup_2_button)
-        self._buttons.append(self.setup_2_button)"""
+        self._button_group.append(setup_2_button)
+        self._buttons.append(setup_2_button)"""
 
-        x, y = screen_to_rect(0.01, 0.28)
+        x0, y0 = screen_to_rect(0.01, 0.28)
         w, h = screen_to_rect(0.30, 0.18)
-        self.zero_1_button = Button(
-            x=x,
-            y=y,
+        zero_1_button = Button(
+            x=x0,
+            y=y0,
             height=h,
             width=w,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
             name='zero_1',
-            selected_fill=color.RED,
-            selected_outline=color.RED,
+            selected_fill=Colors.RED,
+            selected_outline=Colors.RED,
         )
-        self._button_group.append(self.zero_1_button)
-        self._buttons.append(self.zero_1_button)
+        self._button_group.append(zero_1_button)
+        self._buttons.append(zero_1_button)
 
-        self._sx, self._sy = screen_to_rect(0.70, 0.28)
-        self._sw, self._sh = screen_to_rect(0.30, 0.18)
-        self.zero_2_button = Button(
-            x=self._sx,
-            y=self._sy,
-            height=self._sh,
-            width=self._sw,
+        x0, y0 = screen_to_rect(0.70, 0.28)
+        w, h = screen_to_rect(0.30, 0.18)
+        zero_2_button = Button(
+            x=x0,
+            y=y0,
+            height=h,
+            width=w,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
             name='zero_2',
-            selected_fill=color.RED,
-            selected_outline=color.RED,
+            selected_fill=Colors.RED,
+            selected_outline=Colors.RED,
         )
-        self._button_group.append(self.zero_2_button)
-        self._buttons.append(self.zero_2_button)
+        self._button_group.append(zero_2_button)
+        self._buttons.append(zero_2_button)
 
-        self._sx, self._sy = screen_to_rect(0.01, 0.50)
-        self._sw, self._sh = screen_to_rect(0.30, 0.19)
-        self.tare_1_button = Button(
-            x=self._sx,
-            y=self._sy,
-            height=self._sh,
-            width=self._sw,
+        x0, y0 = screen_to_rect(0.01, 0.50)
+        w, h = screen_to_rect(0.30, 0.19)
+        tare_1_button = Button(
+            x=x0,
+            y=y0,
+            height=h,
+            width=w,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
             name='tare_1',
-            selected_fill=color.BLUE,
-            selected_outline=color.BLUE,
+            selected_fill=Colors.BLUE,
+            selected_outline=Colors.BLUE,
         )
-        self._button_group.append(self.tare_1_button)
-        self._buttons.append(self.tare_1_button)
+        self._button_group.append(tare_1_button)
+        self._buttons.append(tare_1_button)
 
-        self._sx, self._sy = screen_to_rect(0.70, 0.50)
-        self._sw, self._sh = screen_to_rect(0.30, 0.19)
-        self.tare_2_button = Button(
-            x=self._sx,
-            y=self._sy,
-            height=self._sh,
-            width=self._sw,
+        x0, y0 = screen_to_rect(0.70, 0.50)
+        w, h = screen_to_rect(0.30, 0.19)
+        tare_2_button = Button(
+            x=x0,
+            y=y0,
+            height=h,
+            width=w,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
             name='tare_2',
-            selected_fill=color.BLUE,
-            selected_outline=color.BLUE,
+            selected_fill=Colors.BLUE,
+            selected_outline=Colors.BLUE,
         )
-        self._button_group.append(self.tare_2_button)
-        self._buttons.append(self.tare_2_button)
+        self._button_group.append(tare_2_button)
+        self._buttons.append(tare_2_button)
 
-        self._sx, self._sy = screen_to_rect(0.01, 0.70)
-        self._sw, self._sh = screen_to_rect(0.30, 0.20)
-        self.alarm_1_button = Button(
-            x=self._sx,
-            y=self._sy,
-            height=self._sh,
-            width=self._sw,
+        x0, y0 = screen_to_rect(0.01, 0.70)
+        w, h = screen_to_rect(0.30, 0.20)
+        alarm_1_button = Button(
+            x=x0,
+            y=y0,
+            height=h,
+            width=w,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
             name='alarm_1',
-            selected_fill=color.BLUE,
-            selected_outline=color.BLUE,
+            selected_fill=Colors.BLUE,
+            selected_outline=Colors.BLUE,
         )
-        self._button_group.append(self.alarm_1_button)
-        self._buttons.append(self.alarm_1_button)
+        self._button_group.append(alarm_1_button)
+        self._buttons.append(alarm_1_button)
 
-        sx, sy = screen_to_rect(0.70, 0.70)
-        sw, sh = screen_to_rect(0.30, 0.20)
-        self.alarm_2_button = Button(
-            x=sx,
-            y=sy,
-            height=sh,
-            width=sw,
+        x0, y0 = screen_to_rect(0.70, 0.70)
+        w, h = screen_to_rect(0.30, 0.20)
+        alarm_2_button = Button(
+            x=x0,
+            y=y0,
+            height=h,
+            width=w,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
             name='alarm_2',
-            selected_fill=color.BLUE,
-            selected_outline=color.BLUE,
+            selected_fill=Colors.BLUE,
+            selected_outline=Colors.BLUE,
         )
-        self._button_group.append(self.alarm_2_button)
-        self._buttons.append(self.alarm_2_button)
+        self._button_group.append(alarm_2_button)
+        self._buttons.append(alarm_2_button)
 
         self.tare_1_icon = displayio.TileGrid(
             self._sprite_sheet,

@@ -1,4 +1,9 @@
-# cedargrove_scale\configuration.py
+# SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
+# SPDX-License-Identifier: MIT
+
+# cedargrove_scale/configuration.py
+# 2021-11-30 v1.1
+
 import board
 import busio
 import digitalio
@@ -32,7 +37,7 @@ class SDCard:
     def screenshot(self):
         if self._has_card:
             print('Taking Screenshot...', end='')
-            save_pixels('/sd/screenshot.bmp')
+            save_pixels('/sd/scale_screenshot.bmp')
             print(' Screenshot stored')
         else:
             print('SCREENSHOT: NO SD CARD')
@@ -46,7 +51,7 @@ class SDCard:
         pass
 
 
-class Configuration:
+class Config:
     SAMPLE_AVG = 100  # Number of samples to average per measurement
 
     PGA_GAIN = 128  # Default gain for internal PGA
@@ -69,7 +74,7 @@ class Screen:
     HEIGHT = board.DISPLAY.height
     CENTER = (WIDTH // 2, HEIGHT // 2)
 
-class Palette:
+class Colors:
     # Define a few colors (https://en.wikipedia.org/wiki/Web_colors)
     BLACK = 0x000000
     CYAN = 0x00FFFF

@@ -7,14 +7,10 @@
 import time
 import displayio
 from adafruit_bitmap_font import bitmap_font
-from adafruit_display_shapes.circle import Circle
 from adafruit_display_text.label import Label
 from adafruit_display_shapes.line import Line
-from adafruit_display_shapes.rect import Rect
-from adafruit_display_shapes.roundrect import RoundRect
-from adafruit_display_shapes.triangle import Triangle
 
-from cedargrove_scale.configuration import Palette, Screen, dial_to_rect, screen_to_rect
+from cedargrove_scale.configuration import Colors, Screen, screen_to_rect
 from scale_defaults import Defaults
 
 if Screen.HEIGHT < 300:
@@ -35,57 +31,57 @@ class Labels:
         self._labels_group = displayio.Group()
 
         self.chan_1_name = Label(
-            FONT_0, text=Defaults.CHAN_1_NAME, color=Palette.ORANGE
+            FONT_0, text=Defaults.CHAN_1_NAME, color=Colors.ORANGE
         )
         self.chan_1_name.anchor_point = (0, 0)
         self.chan_1_name.anchored_position = screen_to_rect(0.03, 0.10)
         self._labels_group.append(self.chan_1_name)
 
-        self.chan_2_name = Label(FONT_0, text=Defaults.CHAN_2_NAME, color=Palette.GREEN)
+        self.chan_2_name = Label(FONT_0, text=Defaults.CHAN_2_NAME, color=Colors.GREEN)
         self.chan_2_name.anchor_point = (1.0, 0)
         self.chan_2_name.anchored_position = screen_to_rect(0.97, 0.10)
         self._labels_group.append(self.chan_2_name)
 
         self.chan_1_label = Label(
-            FONT_0, text=Defaults.MASS_UNITS.lower(), color=Palette.BLUE
+            FONT_0, text=Defaults.MASS_UNITS.lower(), color=Colors.BLUE
         )
         self.chan_1_label.anchor_point = (1.0, 0)
         self.chan_1_label.anchored_position = screen_to_rect(0.28, 0.38)
         self._labels_group.append(self.chan_1_label)
 
         self.chan_2_label = Label(
-            FONT_0, text=Defaults.MASS_UNITS.lower(), color=Palette.BLUE
+            FONT_0, text=Defaults.MASS_UNITS.lower(), color=Colors.BLUE
         )
         self.chan_2_label.anchor_point = (1.0, 0)
         self.chan_2_label.anchored_position = screen_to_rect(0.97, 0.38)
         self._labels_group.append(self.chan_2_label)
 
-        self.chan_1_value = Label(FONT_0, text='0.0', color=Palette.WHITE)
+        self.chan_1_value = Label(FONT_0, text='0.0', color=Colors.WHITE)
         self.chan_1_value.anchor_point = (1.0, 1.0)
         self.chan_1_value.anchored_position = screen_to_rect(0.28, 0.38)
         self._labels_group.append(self.chan_1_value)
 
-        self.chan_2_value = Label(FONT_0, text='0.0', color=Palette.WHITE)
+        self.chan_2_value = Label(FONT_0, text='0.0', color=Colors.WHITE)
         self.chan_2_value.anchor_point = (1.0, 1.0)
         self.chan_2_value.anchored_position = screen_to_rect(0.97, 0.38)
         self._labels_group.append(self.chan_2_value)
 
-        self.tare_1_value = Label(FONT_1, text='0.0', color=Palette.GRAY)
+        self.tare_1_value = Label(FONT_1, text='0.0', color=Colors.GRAY)
         self.tare_1_value.anchor_point = (1.0, 0.5)
         self.tare_1_value.anchored_position = screen_to_rect(0.28, 0.56)
         self._labels_group.append(self.tare_1_value)
 
-        self.tare_2_value = Label(FONT_1, text='0.0', color=Palette.GRAY)
+        self.tare_2_value = Label(FONT_1, text='0.0', color=Colors.GRAY)
         self.tare_2_value.anchor_point = (0.0, 0.5)
         self.tare_2_value.anchored_position = screen_to_rect(0.75, 0.56)
         self._labels_group.append(self.tare_2_value)
 
-        self.alarm_1_value = Label(FONT_1, text='0.0', color=Palette.GRAY)
+        self.alarm_1_value = Label(FONT_1, text='0.0', color=Colors.GRAY)
         self.alarm_1_value.anchor_point = (1.0, 0.5)
         self.alarm_1_value.anchored_position = screen_to_rect(0.28, 0.75)
         self._labels_group.append(self.alarm_1_value)
 
-        self.alarm_2_value = Label(FONT_1, text='0.0', color=Palette.GRAY)
+        self.alarm_2_value = Label(FONT_1, text='0.0', color=Colors.GRAY)
         self.alarm_2_value.anchor_point = (0.0, 0.5)
         self.alarm_2_value.anchored_position = screen_to_rect(0.75, 0.75)
         self._labels_group.append(self.alarm_2_value)
@@ -109,9 +105,9 @@ class Labels:
 
         self.status_label.text = ' '
         self.status_label.text = text
-        self.status_label.color = Palette.YELLOW
+        self.status_label.color = Colors.YELLOW
         time.sleep(duration)
-        self.status_label.color = Palette.BLACK
+        self.status_label.color = Colors.BLACK
         time.sleep(duration)
         self.status_label.text = ' '
         return
