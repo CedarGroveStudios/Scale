@@ -177,6 +177,7 @@ play_tone("low")
 # -- Main loop: Read sample, move bubble, and display values
 while True:
     t0 = time.monotonic()
+    labels.watchdog.fill = Colors.MAROON
     if not alarm:
         labels.status_label.text = Defaults.NAME
         labels.status_label.color = Colors.CYAN
@@ -207,10 +208,11 @@ while True:
 
     chan_1_mass_gr_norm = chan_1_mass_gr / Defaults.MAX_GR
     chan_2_mass_gr_norm = chan_2_mass_gr / Defaults.MAX_GR
-
     dial.value = (chan_1_mass_gr_norm, chan_2_mass_gr_norm)
 
     print("(%+5.1f, %+5.1f)" % (chan_1_mass_gr, chan_2_mass_gr))
+
+    labels.watchdog.fill = Colors.YELLOW
 
     a1 = a2 = False
     if alarm_1_enable and chan_1_mass_gr >= alarm_1_mass_gr:

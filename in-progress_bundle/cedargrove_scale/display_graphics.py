@@ -8,6 +8,7 @@ import time
 import displayio
 from adafruit_bitmap_font import bitmap_font
 from adafruit_display_text.label import Label
+from adafruit_display_shapes.circle import Circle
 
 from cedargrove_scale.configuration import Colors, Screen, screen_to_rect
 from scale_defaults import Defaults
@@ -86,6 +87,10 @@ class Labels:
         self.status_label.anchor_point = (0.5, 0.5)
         self.status_label.anchored_position = screen_to_rect(0.50, 0.92)
         self._labels_group.append(self.status_label)
+
+        x0, y0 = screen_to_rect(0.05, 0.95)
+        self.watchdog = Circle(x0, y0, 5, fill=Colors.MAROON, outline=None, stroke=0)
+        self._labels_group.append(self.watchdog)
 
         return
 
