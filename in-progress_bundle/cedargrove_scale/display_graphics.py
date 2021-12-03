@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # display_graphics.py
-# 2021-12-01 v1.2
+# 2021-12-02 v1.2
 
 import time
 import displayio
@@ -89,15 +89,25 @@ class Labels:
         self._labels_group.append(self.status_label)
 
         x0, y0 = screen_to_rect(0.05, 0.95)
-        self.watchdog = Circle(x0, y0, 5, fill=Colors.MAROON, outline=None, stroke=0)
-        self._labels_group.append(self.watchdog)
-
+        w, h = screen_to_rect(0.025, 0.025)
+        self._heartbeat = Circle(x0, y0, min(w, h), fill=Colors.MAROON, outline=None, stroke=0)
+        self._labels_group.append(self._heartbeat)
         return
 
     @property
     def display_group(self):
         """Displayio labels group."""
         return self._labels_group
+
+    def heartbeat(self, color_index=0):
+        """Set heartbeat indicator color."""
+        if color_index == None:
+            self._heartbeat.fill = None
+        elif color_index == 0:
+            self._heartbeat.fill = Colors.MAROON
+        elif color_index == 1:
+            self._heartbeat.fill = Colors.YELLOW
+        return
 
     def flash_status(self, text=" ", duration=0.05):
         """Flash a text message once in the stats message area.

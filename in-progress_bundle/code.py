@@ -1,6 +1,6 @@
 # PyPortal Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# 2021-12-01 v2.2 Cedar Grove Studios
+# 2021-12-02 v2.2 Cedar Grove Studios
 
 # uncomment the following import line to run the calibration method
 # (this will eventually be put into the setup process)
@@ -177,7 +177,7 @@ play_tone("low")
 # -- Main loop: Read sample, move bubble, and display values
 while True:
     t0 = time.monotonic()
-    labels.watchdog.fill = Colors.MAROON
+    labels.heartbeat(None)  # Blank heartbeat indicator
     if not alarm:
         labels.status_label.text = Defaults.NAME
         labels.status_label.color = Colors.CYAN
@@ -212,7 +212,7 @@ while True:
 
     print("(%+5.1f, %+5.1f)" % (chan_1_mass_gr, chan_2_mass_gr))
 
-    labels.watchdog.fill = Colors.YELLOW
+    labels.heartbeat(0)  # Maroon heartbeat indicator
 
     a1 = a2 = False
     if alarm_1_enable and chan_1_mass_gr >= alarm_1_mass_gr:
