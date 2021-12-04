@@ -1,9 +1,9 @@
 # PyPortal Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# 2021-12-03 v2.3 Cedar Grove Studios
+# 2021-12-04 v2.3 Cedar Grove Studios
 
 # uncomment the following import line to run the calibration method
-# (this will eventually be put into the setup process)
+# (this may eventually become part of a built-in setup process)
 # import cedargrove_scale.load_cell_calibrator
 
 import board
@@ -11,7 +11,7 @@ import displayio
 import gc
 import time
 from cedargrove_nau7802 import NAU7802
-#from cedargrove_nau7802_fake import NAU7802
+from cedargrove_fake_nau7802 import FakeNAU7802
 import cedargrove_scale.display_graphics
 import cedargrove_scale.buttons_pyportal
 from cedargrove_scale.configuration import play_tone, dial_to_rect
@@ -31,9 +31,13 @@ panel = cedargrove_scale.buttons_pyportal.ScaleButtons(timeout=1.0, debug=DEBUG)
 # Instantiate SD card
 sd = SDCard()
 
-# Instantiate load cell ADC FeatherWing
-nau7802 = NAU7802(board.I2C(), address=0x2A, active_channels=2)
-
+# Instantiate load cell ADC FeatherWing or fake if FeatherWing not found
+try:
+    nau7802 = NAU7802(board.I2C(), address=0x2A, active_channels=2)
+    print('* NAU7802 FeatherWing FOUND.')
+except:
+    nau7802 = FakeNAU7802(board.I2C(), address=0x2A, active_channels=2)
+    print('*** NAU7802 FeatherWing NOT FOUND; random data will be displayed.')
 
 def zero_channel():
     """Initiate internal calibration for currently enabled channel. Returns
@@ -44,15 +48,15 @@ def zero_channel():
     labels.status_label.text = 'ZERO LOAD CELL ' + str(nau7802.channel)
     labels.status_label.color = Colors.YELLOW
     print(
-        'channel %1d calibrate.INTERNAL: %5s'
+        '  channel %1d calibrate.INTERNAL: %5s'
         % (nau7802.channel, nau7802.calibrate('INTERNAL'))
     )
     print(
-        'channel %1d calibrate.OFFSET:   %5s'
-        % (nau7802.channel, nau7802.calibrate('OFFSET'))
+        '  channel %1d calibrate.OFFSET:   %5s ...'
+        % (nau7802.channel, nau7802.calibrate('OFFSET')), end=''
     )
     zero_offset = read(100)  # Average 100 samples to establish zero offset value
-    print('...channel zeroed')
+    print(' channel zeroed')
     labels.status_label.text = ' '
     return zero_offset
 
@@ -111,7 +115,7 @@ display.brightness = Defaults.BRIGHTNESS
 scale_group = displayio.Group()
 
 # Define display background and displayio group elements
-print('*** Define display background and displayio group elements')
+print('* Define display background and displayio group elements')
 
 # Bitmap background -- FUTURE FEATURE?
 """_bkg = displayio.OnDiskBitmap('/sd/background.bmp')
@@ -133,8 +137,8 @@ else:
     labels.flash_status('NO SD CARD', 0.5)
 
 # Instantiate and calibrate load cell inputs
-print('*** Instantiate and calibrate load cells')
-print(' enable NAU7802 digital and analog power: %5s' % (nau7802.enable(True)))
+print('* Instantiate and calibrate load cells')
+print('  enable NAU7802 digital and analog power: %5s' % (nau7802.enable(True)))
 
 nau7802.gain = Config.PGA_GAIN  # Use default gain
 nau7802.channel = 1  # Set to second channel
@@ -285,7 +289,6 @@ while True:
             plot_tares()
         else:
             play_tone('high')
-            play_tone('high')
             print('*** set tare', button_pressed)
 
     if button_pressed in ('alarm_1', 'alarm_2'):
@@ -315,7 +318,6 @@ while True:
                     panel.alarm_2_icon[0] = 6
             plot_alarms()
         else:
-            play_tone('high')
             play_tone('high')
             print('*** set alarm', channel)
 

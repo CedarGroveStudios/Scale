@@ -1,6 +1,6 @@
-# cedargrove_nau7802_fake.py
+# cedargrove_fake_nau7802.py
 # 2021-12-03 v01.3
-# Fake Device driver library for the CedarGrove NAU7802 24-bit ADC FeatherWing
+# A fake device driver library for the CedarGrove NAU7802 24-bit ADC FeatherWing
 
 import time
 import random
@@ -33,7 +33,7 @@ class CalibrationMode:
     OFFSET   = const(0x2)  # Offset Calibration System;   _CTRL2[1:0] = 2
     GAIN     = const(0x3)  # Gain   Calibration System;   _CTRL2[1:0] = 3
 
-class NAU7802:
+class FakeNAU7802:
     def __init__(self, i2c_bus, address=0x2A, active_channels=1):
         """ Instantiate NAU7802; LDO 3v0 volts, gain 128, 10 samples per second
         conversion rate, disabled ADC chopper clock, low ESR caps, and PGA output
@@ -159,7 +159,7 @@ class NAU7802:
         """ Resets all device registers and enables digital system power.
         Returns the power ready status bit value: True when system is ready;
         False when system not ready for use."""
-        time.sleep(0.100)          # Wait 100ms; 10ms minimum
+        time.sleep(0.100)  # Wait 100ms; 10ms minimum
         time.sleep(0.750)  # Wait 750ms; 400ms minimum
         return True
 
@@ -176,6 +176,5 @@ class NAU7802:
             self._c2_cal_mode = CalibrationMode.OFFSET
         elif self._calib_mode == 'GAIN':    # External PGA full-scale gain setting
             self._c2_cal_mode = CalibrationMode.GAIN
-
         time.sleep(1.010)  # 10ms
         return True
