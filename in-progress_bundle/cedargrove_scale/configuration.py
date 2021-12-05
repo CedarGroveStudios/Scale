@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # cedargrove_scale/configuration.py
-# 2021-11-30 v1.1
+# 2021-12-05 v1.2
 
 import board
 import busio
@@ -23,11 +23,11 @@ class SDCard:
         try:
             self._sdcard = adafruit_sdcard.SDCard(self._spi, self._sd_cs)
             self._vfs = storage.VfsFat(self._sdcard)
-            storage.mount(self._vfs, "/sd")
-            print("SD card found")
+            storage.mount(self._vfs, '/sd')
+            print('SD card FOUND')
             self._has_card = True
         except OSError as error:
-            print("SD card NOT found: ", error)
+            print('SD card NOT FOUND: ', error)
 
     @property
     def has_card(self):
@@ -36,19 +36,36 @@ class SDCard:
 
     def screenshot(self):
         if self._has_card:
-            print("Taking Screenshot...", end="")
-            save_pixels("/sd/scale_screenshot.bmp")
-            print(" Screenshot stored")
+            print('* Taking Screenshot...', end='')
+            save_pixels('/sd/scale_screenshot.bmp')
+            print(' STORED')
         else:
-            print("SCREENSHOT: NO SD CARD")
+            print('* SCREENSHOT: NO SD CARD')
 
-    def read_config(self):
-        """Read configuration text file from SD card."""
-        pass
+    def read_alarm_tare(self):
+        """Read alarm and tare settings file from SD card. If SD card or
+        file not found, provide the scale_defaults values."""
+        if self._has_card:
+            try:
+                import sd.alarm_tare.py as settings
+                print('  /sd/alarm_tare settings file FOUND')
+                return settings.alarm_tare
+            except:
+                print('  /sd/alarm_tare settings file NOT FOUND')
+        from scale_defaults import Defaults
+        print('  using scale_defaults for alarm_tare settings')
+        return (Defaults.ALARM_1_MASS_GR, Defaults.ALARM_2_MASS_GR, Defaults.TARE_1_MASS_GR, Defaults.TARE_2_MASS_GR)
 
-    def write_config(self):
-        """Write configuration text file to SD card."""
-        pass
+    def write_alarm_tare(self, list=(None, None, None, None)):
+        """Write configuration text file to SD card. List of values contains
+        alarm_1, alarm_2, tare_1, tare_2."""
+        if self._has_card:
+            data_record = f'alarm_tare = {list}  # alarm_1, alarm_2, tare_1, tare_2'
+            log_file = open('/sd/alarm_tare.py', 'w')
+            log_file.write(data_record)
+            log_file.close()
+            return True
+        return False
 
 
 class Config:
@@ -94,9 +111,9 @@ class Colors:
 
 
 def play_tone(note=None):
-    if note == "high":
+    if note == 'high':
         tone(board.A0, 880, 0.1)
-    elif note == "low":
+    elif note == 'low':
         tone(board.A0, 440, 0.1)
     return
 

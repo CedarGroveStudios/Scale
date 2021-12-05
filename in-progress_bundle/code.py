@@ -1,6 +1,6 @@
 # PyPortal Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# 2021-12-04 v2.3 Cedar Grove Studios
+# 2021-12-05 v2.4 Cedar Grove Studios
 
 # uncomment the following import line to run the calibration method
 # (this may eventually become part of a built-in setup process)
@@ -34,10 +34,10 @@ sd = SDCard()
 # Instantiate load cell ADC FeatherWing or fake if FeatherWing not found
 try:
     nau7802 = NAU7802(board.I2C(), address=0x2A, active_channels=2)
-    print('* NAU7802 FeatherWing FOUND.')
+    print('* NAU7802 FeatherWing FOUND')
 except:
     nau7802 = FakeNAU7802(board.I2C(), address=0x2A, active_channels=2)
-    print('*** NAU7802 FeatherWing NOT FOUND; random data will be displayed.')
+    print('*** NAU7802 FeatherWing NOT FOUND; random data will be displayed')
 
 def zero_channel():
     """Initiate internal calibration for currently enabled channel. Returns
@@ -149,16 +149,20 @@ nau7802.channel = 2  # Set to first channel
 if not DEBUG:
     chan_2_zero = zero_channel()  # Re-calibrate and get raw zero offset value
 
-tare_1_mass_gr = round(Defaults.TARE_1_MASS_GR, 1)
+# Get default or stored alarm and tare values
+print('* Read default or stored alarm and tare settings')
+alarm_1_mass_gr, alarm_2_mass_gr, tare_1_mass_gr, tare_2_mass_gr = sd.read_alarm_tare()
+
+tare_1_mass_gr = round(tare_1_mass_gr, 1)
 labels.tare_1_value.text = str(tare_1_mass_gr)
 tare_1_enable = Defaults.TARE_1_ENABLE
-tare_2_mass_gr = round(Defaults.TARE_2_MASS_GR, 1)
+tare_2_mass_gr = round(tare_2_mass_gr, 1)
 labels.tare_2_value.text = str(tare_2_mass_gr)
 tare_2_enable = Defaults.TARE_2_ENABLE
-alarm_1_mass_gr = round(Defaults.ALARM_1_MASS_GR, 1)
+alarm_1_mass_gr = round(alarm_1_mass_gr, 1)
 labels.alarm_1_value.text = str(alarm_1_mass_gr)
 alarm_1_enable = Defaults.ALARM_1_ENABLE
-alarm_2_mass_gr = round(Defaults.ALARM_2_MASS_GR, 1)
+alarm_2_mass_gr = round(alarm_2_mass_gr, 1)
 labels.alarm_2_value.text = str(alarm_2_mass_gr)
 alarm_2_enable = Defaults.ALARM_2_ENABLE
 alarm = False
@@ -166,15 +170,16 @@ alarm = False
 plot_tares()
 plot_alarms()
 
-if sd.has_card:
+"""if sd.has_card:
     labels.flash_status('SCREENSHOT...', 0.8)
     labels.status_label.text = Defaults.NAME
     labels.status_label.color = Colors.CYAN
     sd.screenshot()
     labels.flash_status('... STORED', 0.8)
 else:
-    labels.flash_status('SCREENSHOT: NO SD CARD', 1.0)
+    labels.flash_status('SCREENSHOT: NO SD CARD', 1.0)"""
 
+print('*** READY ***')
 labels.flash_status('READY', 0.5)
 play_tone('high')
 play_tone('low')
@@ -289,7 +294,9 @@ while True:
             plot_tares()
         else:
             play_tone('high')
-            print('*** set tare', button_pressed)
+            print('* Set tare', channel, end=': ')
+            print(sd.write_alarm_tare(list=(alarm_1_mass_gr, alarm_2_mass_gr, tare_1_mass_gr, tare_2_mass_gr)))
+            labels.flash_status('STORED', 0.5)
 
     if button_pressed in ('alarm_1', 'alarm_2'):
         # Enable/disable alarms
@@ -319,7 +326,9 @@ while True:
             plot_alarms()
         else:
             play_tone('high')
-            print('*** set alarm', channel)
+            print('* Set alarm', channel, end=': ')
+            print(sd.write_alarm_tare(list=(alarm_1_mass_gr, alarm_2_mass_gr, tare_1_mass_gr, tare_2_mass_gr)))
+            labels.flash_status('STORED', 0.5)
 
     """if button.name in ('setup_1', 'setup_2'):
         # Initiate the setup process for a channel
