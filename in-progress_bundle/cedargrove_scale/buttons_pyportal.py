@@ -51,34 +51,6 @@ class ScaleButtons:
         self._buttons = []
         self._button_group = displayio.Group()
 
-        """x0, y0 = screen_to_rect(0.01, 0.02)
-        w, h = screen_to_rect(0.30, 0.20)
-        setup_1_button = Button(
-            x=x0, y=y0, height=h, width=w,
-            style=Button.ROUNDRECT,
-            fill_color=None,
-            outline_color=self._outline,
-            name='setup_1',
-            selected_fill=Colors.BLUE,
-            selected_outline=Colors.BLUE,
-        )
-        self._button_group.append(setup_1_button)
-        self._buttons.append(setup_1_button)
-
-        x0, y0 = screen_to_rect(0.70, 0.02)
-        w, h = screen_to_rect(0.30, 0.20)
-        setup_2_button = Button(
-            x=x0, y=y0, height=h, width=w,
-            style=Button.ROUNDRECT,
-            fill_color=None,
-            outline_color=self._outline,
-            name='setup_2',
-            selected_fill=Colors.BLUE,
-            selected_outline=Colors.BLUE,
-        )
-        self._button_group.append(setup_2_button)
-        self._buttons.append(setup_2_button)"""
-
         x0, y0 = screen_to_rect(0.01, 0.28)
         w, h = screen_to_rect(0.30, 0.18)
         zero_1_button = Button(

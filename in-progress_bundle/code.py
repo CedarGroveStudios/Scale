@@ -134,7 +134,8 @@ display.show(scale_group)
 if sd.has_card:
     labels.flash_status('SD CARD FOUND', 0.5)
 else:
-    labels.flash_status('NO SD CARD', 0.5)
+    play_tone('low', 3)
+    labels.flash_status('NO SD CARD', 0.75)
 
 # Instantiate and calibrate load cell inputs
 print('* Instantiate and calibrate load cells')
@@ -293,10 +294,15 @@ while True:
                     panel.tare_2_icon[0] = 7
             plot_tares()
         else:
-            play_tone('high')
+            sd_flag = sd.write_alarm_tare(list=(alarm_1_mass_gr, alarm_2_mass_gr, tare_1_mass_gr, tare_2_mass_gr))
             print('* Set tare', channel, end=': ')
-            print(sd.write_alarm_tare(list=(alarm_1_mass_gr, alarm_2_mass_gr, tare_1_mass_gr, tare_2_mass_gr)))
-            labels.flash_status('STORED', 0.5)
+            print(sd_flag)
+            if sd_flag:
+                play_tone('high')
+                labels.flash_status('STORED', 0.5)
+            else:
+                play_tone('low', 3)
+                labels.flash_status('NOT STORED', 0.75)
 
     if button_pressed in ('alarm_1', 'alarm_2'):
         # Enable/disable alarms
@@ -325,22 +331,15 @@ while True:
                     panel.alarm_2_icon[0] = 6
             plot_alarms()
         else:
-            play_tone('high')
+            sd_flag = sd.write_alarm_tare(list=(alarm_1_mass_gr, alarm_2_mass_gr, tare_1_mass_gr, tare_2_mass_gr))
             print('* Set alarm', channel, end=': ')
-            print(sd.write_alarm_tare(list=(alarm_1_mass_gr, alarm_2_mass_gr, tare_1_mass_gr, tare_2_mass_gr)))
-            labels.flash_status('STORED', 0.5)
-
-    """if button.name in ('setup_1', 'setup_2'):
-        # Initiate the setup process for a channel
-        channel = int(button.name[6])
-        play_tone('high')
-
-        if channel == 1:
-            labels.flash_status('SETUP 1', 0.5)
-            pass
-        else:
-            labels.flash_status('SETUP 2', 0.5)
-            pass"""
+            print(sd_flag)
+            if sd_flag:
+                play_tone('high')
+                labels.flash_status('STORED', 0.5)
+            else:
+                play_tone('low', 3)
+                labels.flash_status('NOT STORED', 0.75)
 
     gc.collect()
     free_memory = gc.mem_free()

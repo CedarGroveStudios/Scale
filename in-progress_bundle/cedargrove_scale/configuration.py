@@ -110,11 +110,12 @@ class Colors:
     WHITE = 0xFFFFFF
 
 
-def play_tone(note=None):
-    if note == 'high':
-        tone(board.A0, 880, 0.1)
-    elif note == 'low':
-        tone(board.A0, 440, 0.1)
+def play_tone(note=None, count=1):
+    for i in range(0, count):
+        if note == 'high':
+            tone(board.A0, 880, 0.1)
+        elif note == 'low':
+            tone(board.A0, 440, 0.1)
     return
 
 
