@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: MIT
 
 # scale_defaults.py
-# 2021-12-01 v1.0
+# 2021-12-05 v2.0
 
 
 class Defaults:
 
     NAME = "John's Espresso Bench"
 
-    BRIGHTNESS = 0.2  # Display brightness, 0 to 1.0; 0.75 typical, 0.1 for photos
+    BRIGHTNESS = 0.5  # Display brightness, 0 to 1.0; 0.75 typical, 0.1 for photos
 
     MAX_GR = 100  # Maximum (full-scale) display range in grams
 

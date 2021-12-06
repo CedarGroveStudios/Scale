@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # display_graphics.py
-# 2021-12-05 v1.3
+# 2021-12-05 v2.0
 
 import time
 import displayio

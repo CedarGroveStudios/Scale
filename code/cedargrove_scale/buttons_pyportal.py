@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # buttons_pyportal.py
-# 2021-10-13 v1.0.1
+# 2021-12-05 v2.0
 
 import board
 import time
@@ -12,23 +12,23 @@ from adafruit_button import Button
 import adafruit_touchscreen
 from simpleio import tone
 
-from cedargrove_scale.configuration import Palette as color
-from cedargrove_scale.configuration import play_tone, dial_to_rect, screen_to_rect
+from cedargrove_scale.configuration import Colors
+from cedargrove_scale.configuration import screen_to_rect
 
 
 class ScaleButtons:
     def __init__(self, disp_height=240, disp_width=320, timeout=1.0, debug=False):
-        """Instantiate the scale buttons for PyPortal devices.
-        Builds displayio button group."""
+        """Instantiate the Scale on-screen touch buttons for PyPortal devices.
+        Builds the displayio button_group."""
 
         self._debug = debug
         self._timeout = timeout
         self._WIDTH = board.DISPLAY.width
         self._HEIGHT = board.DISPLAY.height
 
-        self._outline = color.BLACK
+        self._outline = Colors.BLACK
         if self._debug:
-            self._outline = color.GRAY
+            self._outline = Colors.GRAY
 
         self._ts = adafruit_touchscreen.Touchscreen(
             board.TOUCH_XL,
@@ -41,7 +41,7 @@ class ScaleButtons:
 
         # Tare and alarm tile grid
         self._sprite_sheet, self._palette = adafruit_imageload.load(
-            '/cedargrove_scale/scale_sprite_sheet.bmp',
+            "/cedargrove_scale/scale_sprite_sheet.bmp",
             bitmap=displayio.Bitmap,
             palette=displayio.Palette,
         )
@@ -51,135 +51,124 @@ class ScaleButtons:
         self._buttons = []
         self._button_group = displayio.Group()
 
-        """self._sx, self._sy = screen_to_rect(0.01, 0.02)
-        self._sw, self._sh = screen_to_rect(0.30, 0.20)
-        self.setup_1_button = Button(
-            x=self._sx, y=self._sy, height=self._sh, width=self._sw,
+        x0, y0 = screen_to_rect(0.25, 0.01)
+        w, h = screen_to_rect(0.50, 0.15)
+        reset_button = Button(
+            x=x0,
+            y=y0,
+            height=h,
+            width=w,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='setup_1',
-            selected_fill=color.BLUE,
-            selected_outline=color.BLUE,
+            name="reset",
+            selected_fill=Colors.RED,
+            selected_outline=Colors.RED,
         )
-        self._button_group.append(self.setup_1_button)
-        self._buttons.append(self.setup_1_button)
+        self._button_group.append(reset_button)
+        self._buttons.append(reset_button)
 
-        self._sx, self._sy = screen_to_rect(0.70, 0.02)
-        self._sw, self._sh = screen_to_rect(0.30, 0.20)
-        self.setup_2_button = Button(
-            x=self._sx, y=self._sy, height=self._sh, width=self._sw,
+        x0, y0 = screen_to_rect(0.01, 0.28)
+        w, h = screen_to_rect(0.30, 0.18)
+        zero_1_button = Button(
+            x=x0,
+            y=y0,
+            height=h,
+            width=w,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='setup_2',
-            selected_fill=color.BLUE,
-            selected_outline=color.BLUE,
+            name="zero_1",
+            selected_fill=Colors.RED,
+            selected_outline=Colors.RED,
         )
-        self._button_group.append(self.setup_2_button)
-        self._buttons.append(self.setup_2_button)"""
+        self._button_group.append(zero_1_button)
+        self._buttons.append(zero_1_button)
 
-        self._sx, self._sy = screen_to_rect(0.01, 0.28)
-        self._sw, self._sh = screen_to_rect(0.30, 0.18)
-        self.zero_1_button = Button(
-            x=self._sx,
-            y=self._sy,
-            height=self._sh,
-            width=self._sw,
+        x0, y0 = screen_to_rect(0.70, 0.28)
+        w, h = screen_to_rect(0.30, 0.18)
+        zero_2_button = Button(
+            x=x0,
+            y=y0,
+            height=h,
+            width=w,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='zero_1',
-            selected_fill=color.RED,
-            selected_outline=color.RED,
+            name="zero_2",
+            selected_fill=Colors.RED,
+            selected_outline=Colors.RED,
         )
-        self._button_group.append(self.zero_1_button)
-        self._buttons.append(self.zero_1_button)
+        self._button_group.append(zero_2_button)
+        self._buttons.append(zero_2_button)
 
-        self._sx, self._sy = screen_to_rect(0.70, 0.28)
-        self._sw, self._sh = screen_to_rect(0.30, 0.18)
-        self.zero_2_button = Button(
-            x=self._sx,
-            y=self._sy,
-            height=self._sh,
-            width=self._sw,
+        x0, y0 = screen_to_rect(0.01, 0.50)
+        w, h = screen_to_rect(0.30, 0.19)
+        tare_1_button = Button(
+            x=x0,
+            y=y0,
+            height=h,
+            width=w,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='zero_2',
-            selected_fill=color.RED,
-            selected_outline=color.RED,
+            name="tare_1",
+            selected_fill=Colors.BLUE,
+            selected_outline=Colors.BLUE,
         )
-        self._button_group.append(self.zero_2_button)
-        self._buttons.append(self.zero_2_button)
+        self._button_group.append(tare_1_button)
+        self._buttons.append(tare_1_button)
 
-        self._sx, self._sy = screen_to_rect(0.01, 0.50)
-        self._sw, self._sh = screen_to_rect(0.30, 0.19)
-        self.tare_1_button = Button(
-            x=self._sx,
-            y=self._sy,
-            height=self._sh,
-            width=self._sw,
+        x0, y0 = screen_to_rect(0.70, 0.50)
+        w, h = screen_to_rect(0.30, 0.19)
+        tare_2_button = Button(
+            x=x0,
+            y=y0,
+            height=h,
+            width=w,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='tare_1',
-            selected_fill=color.BLUE,
-            selected_outline=color.BLUE,
+            name="tare_2",
+            selected_fill=Colors.BLUE,
+            selected_outline=Colors.BLUE,
         )
-        self._button_group.append(self.tare_1_button)
-        self._buttons.append(self.tare_1_button)
+        self._button_group.append(tare_2_button)
+        self._buttons.append(tare_2_button)
 
-        self._sx, self._sy = screen_to_rect(0.70, 0.50)
-        self._sw, self._sh = screen_to_rect(0.30, 0.19)
-        self.tare_2_button = Button(
-            x=self._sx,
-            y=self._sy,
-            height=self._sh,
-            width=self._sw,
+        x0, y0 = screen_to_rect(0.01, 0.70)
+        w, h = screen_to_rect(0.30, 0.20)
+        alarm_1_button = Button(
+            x=x0,
+            y=y0,
+            height=h,
+            width=w,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='tare_2',
-            selected_fill=color.BLUE,
-            selected_outline=color.BLUE,
+            name="alarm_1",
+            selected_fill=Colors.BLUE,
+            selected_outline=Colors.BLUE,
         )
-        self._button_group.append(self.tare_2_button)
-        self._buttons.append(self.tare_2_button)
+        self._button_group.append(alarm_1_button)
+        self._buttons.append(alarm_1_button)
 
-        self._sx, self._sy = screen_to_rect(0.01, 0.70)
-        self._sw, self._sh = screen_to_rect(0.30, 0.20)
-        self.alarm_1_button = Button(
-            x=self._sx,
-            y=self._sy,
-            height=self._sh,
-            width=self._sw,
+        x0, y0 = screen_to_rect(0.70, 0.70)
+        w, h = screen_to_rect(0.30, 0.20)
+        alarm_2_button = Button(
+            x=x0,
+            y=y0,
+            height=h,
+            width=w,
             style=Button.ROUNDRECT,
             fill_color=None,
             outline_color=self._outline,
-            name='alarm_1',
-            selected_fill=color.BLUE,
-            selected_outline=color.BLUE,
+            name="alarm_2",
+            selected_fill=Colors.BLUE,
+            selected_outline=Colors.BLUE,
         )
-        self._button_group.append(self.alarm_1_button)
-        self._buttons.append(self.alarm_1_button)
-
-        sx, sy = screen_to_rect(0.70, 0.70)
-        sw, sh = screen_to_rect(0.30, 0.20)
-        self.alarm_2_button = Button(
-            x=sx,
-            y=sy,
-            height=sh,
-            width=sw,
-            style=Button.ROUNDRECT,
-            fill_color=None,
-            outline_color=self._outline,
-            name='alarm_2',
-            selected_fill=color.BLUE,
-            selected_outline=color.BLUE,
-        )
-        self._button_group.append(self.alarm_2_button)
-        self._buttons.append(self.alarm_2_button)
+        self._button_group.append(alarm_2_button)
+        self._buttons.append(alarm_2_button)
 
         self.tare_1_icon = displayio.TileGrid(
             self._sprite_sheet,
@@ -228,7 +217,6 @@ class ScaleButtons:
         self.alarm_2_icon.x, self.alarm_2_icon.y = screen_to_rect(0.85, 0.70)
         self.alarm_2_icon[0] = 6
         self._button_group.append(self.alarm_2_icon)
-
         return
 
     @property
@@ -245,27 +233,29 @@ class ScaleButtons:
     def timeout(self, hold_time=1.0):
         """Select timeout duration value in seconds, positive float value."""
         if hold_time < 0 or hold_time >= 10:
-            print('Invalid button timeout duration value. Must be between 0 and 10 seconds.')
+            print(
+                "Invalid button timeout duration value. Must be between 0 and 10 seconds."
+            )
             return
         self._timeout = hold_time
         return
 
     def read_buttons(self):
-        self._button_pressed = None
-        self._hold_time = 0
-        self._touch = self._ts.touch_point
-        if self._touch:
+        button_pressed = None
+        hold_time = 0
+        touch = self._ts.touch_point
+        if touch:
             for self._button in self._buttons:
-                if self._button.contains(self._touch):
+                if self._button.contains(touch):
                     self._button.selected = True
                     tone(board.A0, 1319, 0.030)  # E6
-                    self._button_pressed = self._button.name
-                    self._timeout_beep = False
+                    button_pressed = self._button.name
+                    timeout_beep = False
                     while self._ts.touch_point:
                         time.sleep(0.1)
-                        self._hold_time += 0.1
-                        if self._hold_time >= self._timeout and not self._timeout_beep:
+                        hold_time += 0.1
+                        if hold_time >= self._timeout and not timeout_beep:
                             tone(board.A0, 1175, 0.030)  # D6
-                            self._timeout_beep = True
+                            timeout_beep = True
                     self._button.selected = False
-        return self._button_pressed, self._hold_time
+        return button_pressed, hold_time

@@ -1,6 +1,6 @@
 # PyPortal Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# 2021-12-05 v2.5 Cedar Grove Studios
+# 2021-12-05 v2.0 Cedar Grove Studios
 
 # uncomment the following import line to run the calibration method
 # (this may eventually become part of a built-in setup process)
@@ -21,7 +21,7 @@ from scale_defaults import Defaults
 
 gc.collect()
 
-DEBUG = True
+DEBUG = True  # True: display button outlines
 
 # Instantiate display groups and graphics
 dial = Scale(max_scale=100, center=(0.5, 0.55), size=0.52)

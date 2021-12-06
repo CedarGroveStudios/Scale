@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # cedargrove_scale/configuration.py
-# 2021-12-05 v1.3
+# 2021-12-05 v2.0
 
 import board
 import busio

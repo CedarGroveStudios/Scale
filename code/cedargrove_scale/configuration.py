@@ -1,4 +1,9 @@
-# cedargrove_scale\configuration.py
+# SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
+# SPDX-License-Identifier: MIT
+
+# cedargrove_scale/configuration.py
+# 2021-12-05 v2.0
+
 import board
 import busio
 import digitalio
@@ -18,11 +23,11 @@ class SDCard:
         try:
             self._sdcard = adafruit_sdcard.SDCard(self._spi, self._sd_cs)
             self._vfs = storage.VfsFat(self._sdcard)
-            storage.mount(self._vfs, '/sd')
-            print('SD card found')
+            storage.mount(self._vfs, "/sd")
+            print("SD card FOUND")
             self._has_card = True
         except OSError as error:
-            print('SD card NOT found: ', error)
+            print("SD card NOT FOUND: ", error)
 
     @property
     def has_card(self):
@@ -31,22 +36,69 @@ class SDCard:
 
     def screenshot(self):
         if self._has_card:
-            print('Taking Screenshot...', end='')
-            save_pixels('/sd/screenshot.bmp')
-            print(' Screenshot stored')
+            print("* Taking Screenshot...", end="")
+            save_pixels("/sd/scale_screenshot.bmp")
+            print(" STORED")
         else:
-            print('SCREENSHOT: NO SD CARD')
+            print("* SCREENSHOT: NO SD CARD")
 
-    def read_config(self):
-        """Read configuration text file from SD card."""
-        pass
+    def read_settings(self):
+        """Read alarm and tare settings file from SD card. If SD card or
+        file not found, provide the scale_defaults values."""
+        if self._has_card:
+            try:
+                settings_file = open("/sd/alarm_tare.set", "r")
+                print("  /sd/alarm_tare.set settings file FOUND")
+                alarm_tare = settings_file.read()
+                settings_file.close()
+                alarm_tare = alarm_tare.split(",")
+                for i in range(0, 4):
+                    alarm_tare[i] = float(alarm_tare[i])
+                for i in range(3, 8):
+                    if alarm_tare[i] == "True":
+                        alarm_tare[i] = True
+                    else:
+                        alarm_tare[i] = False
+                return alarm_tare
+            except:
+                print("  /sd/alarm_tare.set settings file NOT FOUND")
+        from scale_defaults import Defaults
 
-    def write_config(self):
-        """Write configuration text file to SD card."""
-        pass
+        print("  using scale_defaults for alarm_tare settings")
+        alarm_tare = (
+            Defaults.ALARM_1_MASS_GR,
+            Defaults.ALARM_2_MASS_GR,
+            Defaults.TARE_1_MASS_GR,
+            Defaults.TARE_2_MASS_GR,
+            Defaults.ALARM_1_ENABLE,
+            Defaults.ALARM_2_ENABLE,
+            Defaults.TARE_1_ENABLE,
+            Defaults.TARE_2_ENABLE,
+        )
+        return alarm_tare
+
+    def write_settings(self, list=(None, None, None, None, False, False, False, False)):
+        """Write settings file to SD card.
+        Order of values and enables is alarm_1, alarm_2, tare_1, tare_2."""
+        if self._has_card:
+            settings_file = open("/sd/alarm_tare.set", "w")
+            for var in list:
+                settings_file.write(str(var) + ",")
+            settings_file.close()
+            return True
+        return False
+
+    def reset_settings(self):
+        """Clear settings file on SD card."""
+        if self._has_card:
+            settings_file = open("/sd/alarm_tare.set", "w")
+            settings_file.write("")
+            settings_file.close()
+            return True
+        return False
 
 
-class Configuration:
+class Config:
     SAMPLE_AVG = 100  # Number of samples to average per measurement
 
     PGA_GAIN = 128  # Default gain for internal PGA
@@ -69,7 +121,8 @@ class Screen:
     HEIGHT = board.DISPLAY.height
     CENTER = (WIDTH // 2, HEIGHT // 2)
 
-class Palette:
+
+class Colors:
     # Define a few colors (https://en.wikipedia.org/wiki/Web_colors)
     BLACK = 0x000000
     CYAN = 0x00FFFF
@@ -87,11 +140,12 @@ class Palette:
     WHITE = 0xFFFFFF
 
 
-def play_tone(note=None):
-    if note == 'high':
-        tone(board.A0, 880, 0.1)
-    elif note == 'low':
-        tone(board.A0, 440, 0.1)
+def play_tone(note=None, count=1):
+    for i in range(0, count):
+        if note == "high":
+            tone(board.A0, 880, 0.1)
+        elif note == "low":
+            tone(board.A0, 440, 0.1)
     return
 
 
