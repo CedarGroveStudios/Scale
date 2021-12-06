@@ -4,7 +4,7 @@
 
 Mass measurements from two loadcell sensors are processed by the CedarGrove NAU7802 precision ADC FeatherWing and displayed graphically on an Adafruit PyPortal, PyPortal Pynt, or PyPortal Titano. Each channel's display mass values within the range of the loadcell are displayed in Grams, including negative values. Tare and alarm levels are user-specified and selectively enabled as needed.
 
-Default operational parameters are specified in the `scale_defaults.py` file in the PyPortal's root directory. Scale on-screen graphics and fonts are automatically sized and positioned based upon detected PyPortal display characteristics.
+Default operational parameters are specified in the `scale_defaults.py` file in the PyPortal's root directory. Scale’s graphics and touchscreen zones are display size independent. Built-in board size is automatically detected; other displays are user-specified. Font sizes are based upon display size, but do not scale proportionally at this time. Tare and alarm settings are stored on the SD card and used upon power-up. To facilitate testing, the code will simulate a missing custom loadcell FeatherWing board.
 
 ![Pyportal Scale](https://github.com/CedarGroveStudios/Scale/blob/main/photos_and_graphics/pyportal_v20_social.png)
 
@@ -14,7 +14,7 @@ Using an SD card will allow changed tare/alarm settings to be remembered if powe
 
 For testing and compatibility checks, the v2.0-Alpha code will function without the CedarGrove NAU7802 FeatherWing; the measured values are simulated if the Wing is not connected.
 
-On-screen touch areas (buttons) are outlined in the v2.0-Alpha version. Changing the `code.py` line 24 `debug = True` to `debug = False` will remove the button outlines.
+On-screen touch areas (buttons) are outlined in the v2.0-Alpha version. Change the `code.py` line 24 `debug = True` to `debug = False` to remove the button outlines.
 
 ![Pyportal Scale Screenshot](https://github.com/CedarGroveStudios/Scale/blob/main/photos_and_graphics/johns_scale.png)
 
