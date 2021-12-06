@@ -6,7 +6,9 @@ Mass measurements from two loadcell sensors are processed by the CedarGrove NAU7
 
 All default parameters are specified in the `scale_defaults.py` file in the PyPortal's root directory.
 
-![Project Composite Photo](https://github.com/CedarGroveStudios/Scale/blob/main/photos_and_graphics/johns_scale.png)
+![Pyportal Scale](https://github.com/CedarGroveStudios/Scale/blob/main/photos_and_graphics/pyportal_v20_social.png)
+
+
 
 Touching a tare or alarm icon for one second or less (release after the first beep) toggles it on/off. Touch and hold the icon until the second beep to set the tare/alarm value with the current Scale measurement. Setting the value will be confirmed with two beeps and an on-screen message; errors are three beeps with an on-screen message. The updated tare/alarm values and settings are then stored on the SD card (if installed). Stored settings will also be used the next time the Scale is powered on.
 
@@ -16,5 +18,6 @@ For testing and compatibility checks, the v2.0-Alpha code will function without 
 
 On-screen touch areas (buttons) are outlined in the v2.0-Alpha version. Changing the `code.py` line 24 `debug = True` to `debug = False` will remove the button outlines.
 
+![Pyportal Scale Screenshot](https://github.com/CedarGroveStudios/Scale/blob/main/photos_and_graphics/johns_scale.png)
 
 _CedarGroveStudios/Scale v2.0-Alpha_
