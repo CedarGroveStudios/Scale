@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # display_graphics.py
-# 2021-12-02 v1.2
+# 2021-12-05 v1.3
 
 import time
 import displayio
@@ -90,7 +90,9 @@ class Labels:
 
         x0, y0 = screen_to_rect(0.05, 0.95)
         w, h = screen_to_rect(0.025, 0.025)
-        self._heartbeat = Circle(x0, y0, min(w, h), fill=Colors.MAROON, outline=None, stroke=0)
+        self._heartbeat = Circle(
+            x0, y0, min(w, h), fill=Colors.MAROON, outline=None, stroke=0
+        )
         self._labels_group.append(self._heartbeat)
         return
 

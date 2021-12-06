@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # cedargrove_scale/configuration.py
-# 2021-12-05 v1.2
+# 2021-12-05 v1.3
 
 import board
 import busio
@@ -23,11 +23,11 @@ class SDCard:
         try:
             self._sdcard = adafruit_sdcard.SDCard(self._spi, self._sd_cs)
             self._vfs = storage.VfsFat(self._sdcard)
-            storage.mount(self._vfs, '/sd')
-            print('SD card FOUND')
+            storage.mount(self._vfs, "/sd")
+            print("SD card FOUND")
             self._has_card = True
         except OSError as error:
-            print('SD card NOT FOUND: ', error)
+            print("SD card NOT FOUND: ", error)
 
     @property
     def has_card(self):
@@ -36,34 +36,64 @@ class SDCard:
 
     def screenshot(self):
         if self._has_card:
-            print('* Taking Screenshot...', end='')
-            save_pixels('/sd/scale_screenshot.bmp')
-            print(' STORED')
+            print("* Taking Screenshot...", end="")
+            save_pixels("/sd/scale_screenshot.bmp")
+            print(" STORED")
         else:
-            print('* SCREENSHOT: NO SD CARD')
+            print("* SCREENSHOT: NO SD CARD")
 
-    def read_alarm_tare(self):
+    def read_settings(self):
         """Read alarm and tare settings file from SD card. If SD card or
         file not found, provide the scale_defaults values."""
         if self._has_card:
             try:
-                import sd.alarm_tare.py as settings
-                print('  /sd/alarm_tare settings file FOUND')
-                return settings.alarm_tare
+                settings_file = open("/sd/alarm_tare.set", "r")
+                print("  /sd/alarm_tare.set settings file FOUND")
+                alarm_tare = settings_file.read()
+                settings_file.close()
+                alarm_tare = alarm_tare.split(",")
+                for i in range(0, 4):
+                    alarm_tare[i] = float(alarm_tare[i])
+                for i in range(3, 8):
+                    if alarm_tare[i] == "True":
+                        alarm_tare[i] = True
+                    else:
+                        alarm_tare[i] = False
+                return alarm_tare
             except:
-                print('  /sd/alarm_tare settings file NOT FOUND')
+                print("  /sd/alarm_tare.set settings file NOT FOUND")
         from scale_defaults import Defaults
-        print('  using scale_defaults for alarm_tare settings')
-        return (Defaults.ALARM_1_MASS_GR, Defaults.ALARM_2_MASS_GR, Defaults.TARE_1_MASS_GR, Defaults.TARE_2_MASS_GR)
 
-    def write_alarm_tare(self, list=(None, None, None, None)):
-        """Write configuration text file to SD card. List of values contains
-        alarm_1, alarm_2, tare_1, tare_2."""
+        print("  using scale_defaults for alarm_tare settings")
+        alarm_tare = (
+            Defaults.ALARM_1_MASS_GR,
+            Defaults.ALARM_2_MASS_GR,
+            Defaults.TARE_1_MASS_GR,
+            Defaults.TARE_2_MASS_GR,
+            Defaults.ALARM_1_ENABLE,
+            Defaults.ALARM_2_ENABLE,
+            Defaults.TARE_1_ENABLE,
+            Defaults.TARE_2_ENABLE,
+        )
+        return alarm_tare
+
+    def write_settings(self, list=(None, None, None, None, False, False, False, False)):
+        """Write settings file to SD card.
+        Order of values and enables is alarm_1, alarm_2, tare_1, tare_2."""
         if self._has_card:
-            data_record = f'alarm_tare = {list}  # alarm_1, alarm_2, tare_1, tare_2'
-            log_file = open('/sd/alarm_tare.py', 'w')
-            log_file.write(data_record)
-            log_file.close()
+            settings_file = open("/sd/alarm_tare.set", "w")
+            for var in list:
+                settings_file.write(str(var) + ",")
+            settings_file.close()
+            return True
+        return False
+
+    def reset_settings(self):
+        """Clear settings file on SD card."""
+        if self._has_card:
+            settings_file = open("/sd/alarm_tare.set", "w")
+            settings_file.write("")
+            settings_file.close()
             return True
         return False
 
@@ -112,9 +142,9 @@ class Colors:
 
 def play_tone(note=None, count=1):
     for i in range(0, count):
-        if note == 'high':
+        if note == "high":
             tone(board.A0, 880, 0.1)
-        elif note == 'low':
+        elif note == "low":
             tone(board.A0, 440, 0.1)
     return
 
