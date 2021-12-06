@@ -18,4 +18,6 @@ On-screen touch areas (buttons) are outlined in the v2.0-Alpha version. Changing
 
 ![Pyportal Scale Screenshot](https://github.com/CedarGroveStudios/Scale/blob/main/photos_and_graphics/johns_scale.png)
 
+Acknowledgements: Thank you to @siddacious and @foamyguy for educational and very helpful coding examples.
+
 _CedarGroveStudios/Scale v2.0-Alpha_
