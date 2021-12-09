@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # scale.py
-# 2021-11-30 v2.1
+# 2021-12-09 v2.2
 
 import displayio
 import vectorio
@@ -28,7 +28,7 @@ class Colors:
     WHITE = 0xFFFFFF
 
 
-class Scale:
+class Scale(displayio.Group):
     def __init__(
         self,
         max_scale=100,
@@ -39,7 +39,7 @@ class Scale:
         display_size=(None, None),
     ):
         """Instantiate the scale graphic object for DisplayIO devices.
-        Builds a displayio group representing the scale widget.
+        The Scale class is a displayio group representing the scale widget.
 
         :param max_scale: The maximum scale integer value. Used to label the
         ten major dial hashmarks.
@@ -246,19 +246,22 @@ class Scale:
         )
         self._pivot_group.append(pivot)
 
-        self._scale_group.append(self._hands_group)
-        self._scale_group.append(self._pivot_group)
+        super().__init__()
+        self.append(self._scale_group)
+        self.append(self._hands_group)
+        self.append(self._pivot_group)
         return
 
-    @property
-    def display_group(self):
-        """Displayio scale group."""
-        return self._scale_group
 
     @property
     def center(self):
         """Normalized display coordinates of object center."""
         return self._center_norm
+
+    @property
+    def max_scale(self):
+        """Maximum scale value."""
+        return self._max_scale
 
     @property
     def value(self):

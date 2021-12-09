@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # buttons_pyportal.py
-# 2021-12-05 v2.0
+# 2021-12-09 v2.1
 
 import board
 import time
@@ -16,7 +16,7 @@ from cedargrove_scale.configuration import Colors
 from cedargrove_scale.configuration import screen_to_rect
 
 
-class ScaleButtons:
+class ScaleButtons(displayio.Group):
     def __init__(self, disp_height=240, disp_width=320, timeout=1.0, debug=False):
         """Instantiate the Scale on-screen touch buttons for PyPortal devices.
         Builds the displayio button_group."""
@@ -217,12 +217,11 @@ class ScaleButtons:
         self.alarm_2_icon.x, self.alarm_2_icon.y = screen_to_rect(0.85, 0.70)
         self.alarm_2_icon[0] = 6
         self._button_group.append(self.alarm_2_icon)
+
+        super().__init__()
+        self.append(self._button_group)
         return
 
-    @property
-    def button_group(self):
-        """Displayio button group."""
-        return self._button_group
 
     @property
     def timeout(self):

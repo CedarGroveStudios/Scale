@@ -1,6 +1,6 @@
 # PyPortal Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# 2021-12-05 v2.0 Cedar Grove Studios
+# 2021-12-09 v2.1 Cedar Grove Studios
 
 # uncomment the following import line to run the calibration method
 # (this may eventually become part of a built-in setup process)
@@ -16,7 +16,7 @@ import cedargrove_scale.display_graphics
 import cedargrove_scale.buttons_pyportal
 from cedargrove_scale.configuration import play_tone, dial_to_rect
 from cedargrove_scale.configuration import Config, Colors, SDCard
-from cedargrove_widgets.scale import Scale
+import cedargrove_widgets.scale
 from scale_defaults import Defaults
 
 gc.collect()
@@ -24,7 +24,7 @@ gc.collect()
 DEBUG = True  # True: display button outlines
 
 # Instantiate display groups and graphics
-dial = Scale(max_scale=100, center=(0.5, 0.55), size=0.52)
+dial = cedargrove_widgets.scale.Scale(max_scale=100, center=(0.5,0.55), size=0.52)
 labels = cedargrove_scale.display_graphics.Labels()
 panel = cedargrove_scale.buttons_pyportal.ScaleButtons(timeout=1.0, debug=DEBUG)
 
@@ -145,9 +145,9 @@ background = displayio.TileGrid(_bkg, pixel_shader=displayio.ColorConverter(), x
 scale_group.append(background)"""
 
 # -- DISPLAY ELEMENTS -- #
-scale_group.append(panel.button_group)
-scale_group.append(labels.display_group)
-scale_group.append(dial.display_group)
+scale_group.append(panel)
+scale_group.append(labels)
+scale_group.append(dial)
 
 # Zero the hand positions and activate the display
 dial.value = (0, 0)

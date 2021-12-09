@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # display_graphics.py
-# 2021-12-05 v2.0
+# 2021-12-09 v2.1
 
 import time
 import displayio
@@ -23,7 +23,7 @@ else:
     FONT_2 = bitmap_font.load_font("/fonts/OpenSans-9.bdf")
 
 
-class Labels:
+class Labels(displayio.Group):
     def __init__(self):
         """Instantiate the labels and values objects.
         Builds a displayio labels group."""
@@ -94,12 +94,11 @@ class Labels:
             x0, y0, min(w, h), fill=Colors.MAROON, outline=None, stroke=0
         )
         self._labels_group.append(self._heartbeat)
+
+        super().__init__()
+        self.append(self._labels_group)
         return
 
-    @property
-    def display_group(self):
-        """Displayio labels group."""
-        return self._labels_group
 
     def heartbeat(self, color_index=0):
         """Set heartbeat indicator color."""
