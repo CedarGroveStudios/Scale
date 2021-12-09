@@ -15,7 +15,7 @@ from cedargrove_fake_nau7802 import FakeNAU7802
 import cedargrove_scale.display_graphics
 import cedargrove_scale.buttons_pyportal
 from cedargrove_scale.configuration import play_tone, dial_to_rect
-from cedargrove_scale.configuration import Config, Colors, SDCard
+from cedargrove_scale.configuration import Config, Colors, NVM
 import cedargrove_widgets.scale
 from scale_defaults import Defaults
 
@@ -28,8 +28,8 @@ dial = cedargrove_widgets.scale.Scale(max_scale=100, center=(0.5,0.55), size=0.5
 labels = cedargrove_scale.display_graphics.Labels()
 panel = cedargrove_scale.buttons_pyportal.ScaleButtons(timeout=1.0, debug=DEBUG)
 
-# Instantiate SD card
-sd = SDCard()
+# Instantiate Non-Volatile-Memory
+nvm = NVM()
 
 # Instantiate load cell ADC FeatherWing or fake if FeatherWing not found
 try:
@@ -42,7 +42,8 @@ except:
 
 def read_settings():
     global alarm_1_mass_gr, alarm_2_mass_gr, tare_1_mass_gr, tare_2_mass_gr, alarm_1_enable, alarm_2_enable, tare_1_enable, tare_2_enable
-    settings = sd.read_settings()
+
+    settings = nvm.fetch_settings()
 
     alarm_1_mass_gr = round(settings[0], 1)
     labels.alarm_1_value.text = str(alarm_1_mass_gr)
@@ -139,11 +140,6 @@ scale_group = displayio.Group()
 # Define display background and displayio group elements
 print("* Define display background and displayio group elements")
 
-# Bitmap background -- FUTURE FEATURE?
-"""_bkg = displayio.OnDiskBitmap('/sd/background.bmp')
-background = displayio.TileGrid(_bkg, pixel_shader=displayio.ColorConverter(), x=0, y=0)
-scale_group.append(background)"""
-
 # -- DISPLAY ELEMENTS -- #
 scale_group.append(panel)
 scale_group.append(labels)
@@ -152,12 +148,6 @@ scale_group.append(dial)
 # Zero the hand positions and activate the display
 dial.value = (0, 0)
 display.show(scale_group)
-
-if sd.has_card:
-    labels.flash_status("SD CARD FOUND", 0.5)
-else:
-    play_tone("low", 3)
-    labels.flash_status("NO SD CARD", 0.75)
 
 # Instantiate and calibrate load cell inputs
 print("* Instantiate and calibrate load cells")
@@ -179,15 +169,6 @@ plot_tares()
 plot_alarms()
 
 alarm = False
-
-"""if sd.has_card:
-    labels.flash_status('SCREENSHOT...', 0.8)
-    labels.status_label.text = Defaults.NAME
-    labels.status_label.color = Colors.CYAN
-    sd.screenshot()
-    labels.flash_status('... STORED', 0.8)
-else:
-    labels.flash_status('SCREENSHOT: NO SD CARD', 1.0)"""
 
 print("*** READY ***")
 labels.flash_status("READY", 0.5)
@@ -265,11 +246,11 @@ while True:
     button_pressed, hold_time = panel.read_buttons()
     if button_pressed == "reset":
         if hold_time > panel.timeout:
-            print("* RESET to default settings")
-            sd.reset_settings()
+            print("* RESTORE default settings")
+            nvm.restore_defaults()
             read_settings()
             play_tone("low", 3)
-            labels.flash_status("RESET", 1.0)
+            labels.flash_status("SETTINGS RESTORED", 1.0)
 
     if button_pressed in ("zero_1", "zero_2"):
         # Zero and recalibrate channel
@@ -311,7 +292,7 @@ while True:
                 labels.tare_2_value.text = str(tare_2_mass_gr)
             print("* Set tare", channel)
 
-        alarm_tare = (
+        settings = [
             alarm_1_mass_gr,
             alarm_2_mass_gr,
             tare_1_mass_gr,
@@ -320,14 +301,10 @@ while True:
             alarm_2_enable,
             tare_1_enable,
             tare_2_enable,
-        )
-        sd_flag = sd.write_settings(list=alarm_tare)
-        if sd_flag:
-            play_tone("high")
-            labels.flash_status("STORED", 0.5)
-        else:
-            play_tone("low", 3)
-            labels.flash_status("TEMPORARY", 1.0)
+        ]
+        nvm.write_settings(list=settings)
+        play_tone("high")
+        labels.flash_status("STORED", 0.5)
 
     if button_pressed in ("alarm_1", "alarm_2"):
         # Enable/disable alarms
@@ -348,7 +325,7 @@ while True:
                 labels.alarm_2_value.text = str(alarm_2_mass_gr)
             print("* Set alarm", channel)
 
-        alarm_tare = (
+        settings = [
             alarm_1_mass_gr,
             alarm_2_mass_gr,
             tare_1_mass_gr,
@@ -357,15 +334,10 @@ while True:
             alarm_2_enable,
             tare_1_enable,
             tare_2_enable,
-        )
-        sd_flag = sd.write_settings(list=alarm_tare)
-        print(sd_flag)
-        if sd_flag:
-            play_tone("high")
-            labels.flash_status("STORED", 0.5)
-        else:
-            play_tone("low", 3)
-            labels.flash_status("TEMPORARY", 1.0)
+        ]
+        nvm.write_settings(list=settings)
+        play_tone("high")
+        labels.flash_status("STORED", 0.5)
 
     gc.collect()
     free_memory = gc.mem_free()

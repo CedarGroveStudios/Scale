@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # cedargrove_scale/configuration.py
-# 2021-12-05 v2.0
+# 2021-12-09 v2.1
 
 import board
 import busio
@@ -12,6 +12,48 @@ from math import cos, sin, pi
 import adafruit_sdcard
 from adafruit_bitmapsaver import save_pixels
 from simpleio import tone
+import foamyguy_nvm_helper as nvm_helper
+
+class NVM:
+    def __init__(self):
+        pass
+
+    def write_settings(self, list=[None, None, None, None, False, False, False, False]):
+        """Write settings data to NVM.
+        Order of values and enables is alarm_1, alarm_2, tare_1, tare_2."""
+        list.insert(0, '')
+        nvm_helper.save_data(list, test_run=False, verbose=False)
+        return True
+
+    def restore_defaults(self):
+        """Clear NVM settings data."""
+        from scale_defaults import Defaults
+        print("  restore default settings")
+        settings = [
+            Defaults.ALARM_1_MASS_GR,
+            Defaults.ALARM_2_MASS_GR,
+            Defaults.TARE_1_MASS_GR,
+            Defaults.TARE_2_MASS_GR,
+            Defaults.ALARM_1_ENABLE,
+            Defaults.ALARM_2_ENABLE,
+            Defaults.TARE_1_ENABLE,
+            Defaults.TARE_2_ENABLE,
+        ]
+        self.write_settings(list=settings)
+        return True
+
+    def fetch_settings(self):
+        """Fetch alarm and tare settings data from NVM. If empty, provide
+        the scale_defaults values."""
+        nvm_data = nvm_helper.read_data()
+
+        if nvm_data[0] == '':  # If settings valid, first entry in list should be ''
+            print("  settings data FOUND")
+            return nvm_data[1:]
+        else:
+            print("  settings data NOT FOUND")
+            self.restore_defaults()
+        return nvm_helper.read_data()[1:]
 
 
 class SDCard:
@@ -41,61 +83,6 @@ class SDCard:
             print(" STORED")
         else:
             print("* SCREENSHOT: NO SD CARD")
-
-    def read_settings(self):
-        """Read alarm and tare settings file from SD card. If SD card or
-        file not found, provide the scale_defaults values."""
-        if self._has_card:
-            try:
-                settings_file = open("/sd/alarm_tare.set", "r")
-                print("  /sd/alarm_tare.set settings file FOUND")
-                alarm_tare = settings_file.read()
-                settings_file.close()
-                alarm_tare = alarm_tare.split(",")
-                for i in range(0, 4):
-                    alarm_tare[i] = float(alarm_tare[i])
-                for i in range(3, 8):
-                    if alarm_tare[i] == "True":
-                        alarm_tare[i] = True
-                    else:
-                        alarm_tare[i] = False
-                return alarm_tare
-            except:
-                print("  /sd/alarm_tare.set settings file NOT FOUND")
-        from scale_defaults import Defaults
-
-        print("  using scale_defaults for alarm_tare settings")
-        alarm_tare = (
-            Defaults.ALARM_1_MASS_GR,
-            Defaults.ALARM_2_MASS_GR,
-            Defaults.TARE_1_MASS_GR,
-            Defaults.TARE_2_MASS_GR,
-            Defaults.ALARM_1_ENABLE,
-            Defaults.ALARM_2_ENABLE,
-            Defaults.TARE_1_ENABLE,
-            Defaults.TARE_2_ENABLE,
-        )
-        return alarm_tare
-
-    def write_settings(self, list=(None, None, None, None, False, False, False, False)):
-        """Write settings file to SD card.
-        Order of values and enables is alarm_1, alarm_2, tare_1, tare_2."""
-        if self._has_card:
-            settings_file = open("/sd/alarm_tare.set", "w")
-            for var in list:
-                settings_file.write(str(var) + ",")
-            settings_file.close()
-            return True
-        return False
-
-    def reset_settings(self):
-        """Clear settings file on SD card."""
-        if self._has_card:
-            settings_file = open("/sd/alarm_tare.set", "w")
-            settings_file.write("")
-            settings_file.close()
-            return True
-        return False
 
 
 class Config:
