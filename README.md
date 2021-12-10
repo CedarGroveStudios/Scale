@@ -4,7 +4,7 @@
 
 Mass measurements from two loadcell sensors are processed by the CedarGrove NAU7802 precision ADC FeatherWing and displayed graphically on an Adafruit PyPortal, PyPortal Pynt, or PyPortal Titano. Each channel's display mass values within the range of the loadcell are displayed in Grams, including negative values. Tare and alarm levels are user-specified and selectively enabled as needed.
 
-Default operational parameters are specified in the `scale_defaults.py` file in the PyPortal's root directory. Scale’s graphics and touchscreen zones are display size independent. Built-in board size is automatically detected; other displays are user-specified. Font sizes are based upon display size, but do not scale proportionally at this time. Tare and alarm settings are stored in the PyPortal' non-volatile memory (NVM) to be recalled upon power-up. To facilitate testing, the code will simulate a missing custom loadcell FeatherWing board.
+Default operational parameters are specified in the `scale_defaults.py` file in the PyPortal's root directory. Scale’s graphics and touchscreen zones are display size independent. Built-in board size is automatically detected; other displays are user-specified. Font sizes are based upon display size, but do not scale proportionally at this time. Tare and alarm settings are stored in the PyPortal's non-volatile memory (NVM) to be recalled upon power-up. To facilitate testing, the code will simulate a missing custom loadcell FeatherWing board.
 
 ![Pyportal Scale](https://github.com/CedarGroveStudios/Scale/blob/main/photos_and_graphics/pyportal_v20_social.png)
 
