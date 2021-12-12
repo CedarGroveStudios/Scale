@@ -1,6 +1,6 @@
 # PyPortal Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# 2021-12-09 v2.1 Cedar Grove Studios
+# 2021-12-11 v2.2 Cedar Grove Studios
 
 # uncomment the following import line to run the calibration method
 # (this may eventually become part of a built-in setup process)
@@ -24,7 +24,7 @@ gc.collect()
 DEBUG = True  # True: display button outlines
 
 # Instantiate display groups and graphics
-dial = cedargrove_widgets.scale.Scale(max_scale=100, center=(0.5,0.55), size=0.52)
+dial = cedargrove_widgets.scale.Scale(num_hands=2, max_scale=100, center=(0.5,0.55), size=0.52)
 labels = cedargrove_scale.display_graphics.Labels()
 panel = cedargrove_scale.buttons_pyportal.ScaleButtons(timeout=1.0, debug=DEBUG)
 
@@ -113,20 +113,20 @@ def plot_tares():
 
 def plot_alarms():
     if alarm_1_enable:
-        dial.alarm_1 = alarm_1_mass_gr / Defaults.MAX_GR
+        dial.alarm1 = alarm_1_mass_gr / Defaults.MAX_GR
         labels.alarm_1_value.color = Colors.ORANGE
         panel.alarm_1_icon[0] = 0
     else:
-        dial.alarm_1 = None
+        dial.alarm1 = None
         labels.alarm_1_value.color = Colors.GRAY
         panel.alarm_1_icon[0] = 2
 
     if alarm_2_enable:
-        dial.alarm_2 = alarm_2_mass_gr / Defaults.MAX_GR
+        dial.alarm2 = alarm_2_mass_gr / Defaults.MAX_GR
         labels.alarm_2_value.color = Colors.GREEN
         panel.alarm_2_icon[0] = 4
     else:
-        dial.alarm_2 = None
+        dial.alarm2 = None
         labels.alarm_2_value.color = Colors.GRAY
         panel.alarm_2_icon[0] = 6
     return
@@ -146,7 +146,7 @@ scale_group.append(labels)
 scale_group.append(dial)
 
 # Zero the hand positions and activate the display
-dial.value = (0, 0)
+dial.hand1 = dial.hand2 = 0
 display.show(scale_group)
 
 # Instantiate and calibrate load cell inputs
@@ -213,7 +213,8 @@ while True:
 
     chan_1_mass_gr_norm = chan_1_mass_gr / Defaults.MAX_GR
     chan_2_mass_gr_norm = chan_2_mass_gr / Defaults.MAX_GR
-    dial.value = (chan_1_mass_gr_norm, chan_2_mass_gr_norm)
+    dial.hand1 = chan_1_mass_gr_norm
+    dial.hand2 = chan_2_mass_gr_norm
 
     print("(%+5.1f, %+5.1f)" % (chan_1_mass_gr, chan_2_mass_gr))
 

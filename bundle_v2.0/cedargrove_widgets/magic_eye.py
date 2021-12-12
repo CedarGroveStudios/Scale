@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # magic_eye.py
-# 2021-11-30 v2.0
+# 2021-12-09 v2.1
 
 import displayio
 import vectorio
@@ -18,7 +18,7 @@ class Colors:
     GREEN_LT = 0x00A060
 
 
-class MagicEye:
+class MagicEye(displayio.Group):
     def __init__(
         self,
         center=(0.50, 0.50),
@@ -35,9 +35,9 @@ class MagicEye:
         integral display width and height. The default RGB bezel color is
         0x000000 (black).
 
-        :param center: The target anode center x,y tuple in normalized display
+        :param center: The widget center x,y tuple in normalized display
         units. Defaults to (0.5, 0.5).
-        :param size: The normalized diameter value of the target anode relative
+        :param size: The normalized diameter value of the widget relative
         to the display's shorter axis. Defaults to 0.5.
         :param display_size: The host display's integer width and height tuple
         expressed in pixels. If (None, None) and the host includes an integral
@@ -61,7 +61,8 @@ class MagicEye:
         # Define object center in normalized display and pixel coordinates
         self._center_norm = center
         self._center = self.display_to_pixel(self._center_norm[0], self._center_norm[1])
-        self._radius_norm = size / 2
+        self._size = size
+        self._radius_norm = self._size / 2
 
         # Target anode and cathode light shield pixel screen values
         self._outside_radius = int(self._radius_norm * min(self.WIDTH, self.HEIGHT))
@@ -191,18 +192,24 @@ class MagicEye:
         self._bezel_group.append(cathode_shield)
 
         # Arrange image group layers
-        self._image_group.append(self._anode_group)
-        self._image_group.append(self._eye_group)
-        self._image_group.append(self._bezel_group)
+        super().__init__()
+        self.append(self._anode_group)
+        self.append(self._eye_group)
+        self.append(self._bezel_group)
 
         self._eye_value = 0
         self._show_signal(self._eye_value)  # Plot no signal shadow wedge
         return
 
     @property
-    def display_group(self):
-        """Displayio dial group."""
-        return self._image_group
+    def center(self):
+        """Normalized display coordinates of object center."""
+        return self._center_norm
+
+    @property
+    def size(self):
+        """Normalized object size."""
+        return self._size
 
     @property
     def display_size(self):

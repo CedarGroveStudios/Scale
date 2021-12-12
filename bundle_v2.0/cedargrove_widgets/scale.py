@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # scale.py
-# 2021-12-09 v2.2
+# 2021-12-11 v2.3
 
 import displayio
 import vectorio
@@ -31,42 +31,49 @@ class Colors:
 class Scale(displayio.Group):
     def __init__(
         self,
-        max_scale=100,
-        alarm_1=None,
-        alarm_2=None,
+        num_hands=1,
         center=(0.50, 0.50),
         size=0.5,
+        max_scale=100,
         display_size=(None, None),
     ):
         """Instantiate the scale graphic object for DisplayIO devices.
         The Scale class is a displayio group representing the scale widget.
 
-        :param max_scale: The maximum scale integer value. Used to label the
-        ten major dial hashmarks.
-        :param center: The dial center x,y tuple in normalized display units.
-        :param size: The widget size factor relative to the display's
-        shorter axis.
-        :param display_size: The host display's integer width and height tuple
-        expressed in pixels. If (None, None) and the host includes an integral
-        display, the tuple value is set to (board.DISPLAY.width, board.DISPLAY.height)."""
+        :param integer num_hands: The number of dial pointers.
+        :param float center: The dial center x,y tuple in normalized display
+        units.
+        :param float size: The widget size factor relative to the display's
+        smaller axis.
+        :param integer max_scale: The maximum scale integer value. Used for
+        labeling the ten major dial hashmarks.
+        :param integer display_size: The host display's integer width and
+        height tuple expressed in pixels. If (None, None) and the host includes
+        an integral display, the tuple value is set to (board.DISPLAY.width,
+        board.DISPLAY.height)."""
 
         # Determine default display size in pixels
         if None in display_size:
             import board
 
-            if "DISPLAY" in dir(board):
+            if 'DISPLAY' in dir(board):
                 self.WIDTH = board.DISPLAY.width
                 self.HEIGHT = board.DISPLAY.height
             else:
-                raise ValueError("No integral display. Specify display size.")
+                raise ValueError('No integral display. Specify display size.')
         else:
             self.WIDTH = display_size[0]
             self.HEIGHT = display_size[1]
 
-        self._max_scale = max_scale
-        self._alarm_1 = alarm_1
-        self._alarm_2 = alarm_2
+        if num_hands < 1 or num_hands > 2:
+            raise ValueError('Number of hands must be 1 or 2.')
+        self._num_hands = num_hands
+        if size < 0 or size > 1:
+            raise ValueError('Size must be in range of 0.0 to 1.0, inclusive.')
         self._size = size
+        self._max_scale = max_scale
+        self._alarm1 = None
+        self._alarm2 = None
 
         # Define object center relative to normalized display and pixel coordinates
         self._center_norm = center
@@ -77,16 +84,16 @@ class Scale(displayio.Group):
         else:
             self.FONT_0 = bitmap_font.load_font("/fonts/OpenSans-9.bdf")
 
-        self._scale_group = displayio.Group()
+        scale_group = displayio.Group()
         self._hands_group = displayio.Group()
-        self._pivot_group = displayio.Group()
+        pivot_group = displayio.Group()
 
         # Define dial radii layout
         self._outside_radius = self.cart_dist_to_pixel(0.5, self._size)
-        self._major_radius = int(round(self._outside_radius * 0.88, 0))
-        self._minor_radius = int(round(self._outside_radius * 0.93, 0))
-        self._label_radius = int(round(self._outside_radius * 0.70, 0))
-        self._point_radius = int(round(self._outside_radius * 0.06, 0))
+        major_radius = int(round(self._outside_radius * 0.88, 0))
+        minor_radius = int(round(self._outside_radius * 0.93, 0))
+        label_radius = int(round(self._outside_radius * 0.70, 0))
+        point_radius = int(round(self._outside_radius * 0.06, 0))
 
         x1, y1 = self.cart_to_pixel(-0.49, -0.51, self._size)
         x2, y2 = self.cart_to_pixel(0.49, -0.51, self._size)
@@ -100,7 +107,7 @@ class Scale(displayio.Group):
             fill=Colors.GRAY,
             outline=Colors.BLACK,
         )
-        self._scale_group.append(base)
+        scale_group.append(base)
 
         x, y = self.cart_to_pixel(-0.5, -0.5, self._size)
         foot = RoundRect(
@@ -112,7 +119,7 @@ class Scale(displayio.Group):
             fill=Colors.GRAY,
             outline=Colors.BLACK,
         )
-        self._scale_group.append(foot)
+        scale_group.append(foot)
 
         # Define moveable plate graphic
         self._plate_y = 0.65
@@ -126,7 +133,7 @@ class Scale(displayio.Group):
             fill=Colors.GRAY,
             outline=Colors.BLACK,
         )
-        self._scale_group.append(self.riser)
+        scale_group.append(self.riser)
 
         x, y = self.cart_to_pixel(-0.5, self._plate_y, self._size)
         self.plate = RoundRect(
@@ -138,7 +145,7 @@ class Scale(displayio.Group):
             fill=Colors.GRAY,
             outline=Colors.BLACK,
         )
-        self._scale_group.append(self.plate)
+        scale_group.append(self.plate)
 
         # Define primary dial graphic
         dial = Circle(
@@ -149,32 +156,32 @@ class Scale(displayio.Group):
             outline=Colors.WHITE,
             stroke=1,
         )
-        self._scale_group.append(dial)
+        scale_group.append(dial)
 
         # Define hashmarks
         for i in range(0, self._max_scale, self._max_scale // 10):
             hash_value = Label(self.FONT_0, text=str(i), color=Colors.CYAN)
             hash_value.anchor_point = (0.5, 0.5)
             hash_value.anchored_position = self.dial_to_pixel(
-                i / self._max_scale, center=self._center, radius=self._label_radius
+                i / self._max_scale, center=self._center, radius=label_radius
             )
-            self._scale_group.append(hash_value)
+            scale_group.append(hash_value)
 
             # Major hashmarks
             x0, y0 = self.dial_to_pixel(
-                i / self._max_scale, center=self._center, radius=self._major_radius
+                i / self._max_scale, center=self._center, radius=major_radius
             )
             x1, y1 = self.dial_to_pixel(
                 i / self._max_scale, center=self._center, radius=self._outside_radius
             )
             hashmark_a = Line(x0, y0, x1, y1, Colors.CYAN)
-            self._scale_group.append(hashmark_a)
+            scale_group.append(hashmark_a)
 
             # Minor hashmarks
             x0, y0 = self.dial_to_pixel(
                 (i + self._max_scale / 20) / self._max_scale,
                 center=self._center,
-                radius=self._minor_radius,
+                radius=minor_radius,
             )
             x1, y1 = self.dial_to_pixel(
                 (i + self._max_scale / 20) / self._max_scale,
@@ -182,7 +189,7 @@ class Scale(displayio.Group):
                 radius=self._outside_radius,
             )
             hashmark_b = Line(x0, y0, x1, y1, Colors.CYAN)
-            self._scale_group.append(hashmark_b)
+            scale_group.append(hashmark_b)
 
         # Define dial bezel
         bezel = Circle(
@@ -193,46 +200,46 @@ class Scale(displayio.Group):
             outline=Colors.BLACK,
             stroke=1,
         )
-        self._scale_group.append(bezel)
+        scale_group.append(bezel)
 
         # Define alarm points
-        self._alarm_1_palette = displayio.Palette(1)
-        self._alarm_1_palette[0] = Colors.ORANGE
-        if self._alarm_1 != None:
+        self._alarm1_palette = displayio.Palette(1)
+        self._alarm1_palette[0] = Colors.ORANGE
+        if self._alarm1 != None:
             x0, y0 = self.dial_to_pixel(
-                self._alarm_1, center=self._center, radius=self._outside_radius
+                self._alarm1, center=self._center, radius=self._outside_radius
             )
-            self._alarm_1_palette.make_opaque(0)
+            self._alarm1_palette.make_opaque(0)
         else:
             x0 = y0 = 0
-            self._alarm_1_palette.make_transparent(0)
+            self._alarm1_palette.make_transparent(0)
 
-        self.alarm_1_marker = vectorio.Circle(
-            pixel_shader=self._alarm_1_palette,
-            radius=self._point_radius,
+        self.alarm1_marker = vectorio.Circle(
+            pixel_shader=self._alarm1_palette,
+            radius=point_radius,
             x=x0,
             y=y0,
         )
-        self._scale_group.append(self.alarm_1_marker)
+        scale_group.append(self.alarm1_marker)
 
-        self._alarm_2_palette = displayio.Palette(1)
-        self._alarm_2_palette[0] = Colors.GREEN
-        if self._alarm_2 != None:
+        self._alarm2_palette = displayio.Palette(1)
+        self._alarm2_palette[0] = Colors.GREEN
+        if self._alarm2 != None:
             x0, y0 = self.dial_to_pixel(
-                self._alarm_2, center=self._center, radius=self._outside_radius
+                self._alarm2, center=self._center, radius=self._outside_radius
             )
-            self._alarm_2_palette.make_opaque(0)
+            self._alarm2_palette.make_opaque(0)
         else:
             x0 = y0 = 0
-            self._alarm_2_palette.make_transparent(0)
+            self._alarm2_palette.make_transparent(0)
 
-        self.alarm_2_marker = vectorio.Circle(
-            pixel_shader=self._alarm_2_palette,
-            radius=self._point_radius,
+        self.alarm2_marker = vectorio.Circle(
+            pixel_shader=self._alarm2_palette,
+            radius=point_radius,
             x=x0,
             y=y0,
         )
-        self._scale_group.append(self.alarm_2_marker)
+        scale_group.append(self.alarm2_marker)
 
         # Define dial center piviot
         pivot_palette = displayio.Palette(1)
@@ -244,12 +251,15 @@ class Scale(displayio.Group):
             x=x0,
             y=y0,
         )
-        self._pivot_group.append(pivot)
+        pivot_group.append(pivot)
 
         super().__init__()
-        self.append(self._scale_group)
+        self.append(scale_group)
         self.append(self._hands_group)
-        self.append(self._pivot_group)
+        self.append(pivot_group)
+
+        self._hand1 = self._hand2 = 0
+        self._show_hands(hand1=0, hand2=0)
         return
 
 
@@ -264,49 +274,62 @@ class Scale(displayio.Group):
         return self._max_scale
 
     @property
-    def value(self):
-        """Currently displayed value."""
-        return self._hand_1, self._hand_2
+    def hand1(self):
+        """Currently displayed hand1 value."""
+        return self._hand1
 
-    @value.setter
-    def value(self, hands=(0, 0)):
-        self._show_hands(hands[0], hands[1])
-
-    @property
-    def alarm_1(self):
-        """Current alarm_1 value."""
-        return self._alarm_1
-
-    @alarm_1.setter
-    def alarm_1(self, alarm=None):
-        self._alarm_1 = alarm
-        self._alarm_1_palette[0] = Colors.ORANGE
-        if self._alarm_1 != None:
-            self.alarm_1_marker.x, self.alarm_1_marker.y = self.dial_to_pixel(
-                self._alarm_1, center=self._center, radius=self._outside_radius
-            )
-            self._alarm_1_palette.make_opaque(0)
-        else:
-            self.alarm_1_marker.x = self.alarm_1_marker.y = 0
-            self._alarm_1_palette.make_transparent(0)
+    @hand1.setter
+    def hand1(self, value=0):
+        self._show_hands(hand1=value, hand2=self._hand2)
 
     @property
-    def alarm_2(self):
-        """Current alarm_2 value."""
-        return self._alarm_2
+    def hand2(self):
+        """Currently displayed hand2 value."""
+        return self._hand2
 
-    @alarm_2.setter
-    def alarm_2(self, alarm=None):
-        self._alarm_2 = alarm
-        self._alarm_2_palette[0] = Colors.GREEN
-        if self._alarm_2 != None:
-            self.alarm_2_marker.x, self.alarm_2_marker.y = self.dial_to_pixel(
-                self._alarm_2, center=self._center, radius=self._outside_radius
+    @hand2.setter
+    def hand2(self, value=0):
+        self._show_hands(self._hand1, hand2=value)
+
+    @property
+    def alarm1(self):
+        """Current alarm1 value."""
+        return self._alarm1
+
+    @alarm1.setter
+    def alarm1(self, value=None):
+        self._alarm1 = value
+        self._alarm1_palette[0] = Colors.ORANGE
+        if self._alarm1 != None:
+            self.alarm1_marker.x, self.alarm1_marker.y = self.dial_to_pixel(
+                self._alarm1, center=self._center, radius=self._outside_radius
             )
-            self._alarm_2_palette.make_opaque(0)
+            self._alarm1_palette.make_opaque(0)
         else:
-            self.alarm_2_marker.x = self.alarm_2_marker.y = 0
-            self._alarm_2_palette.make_transparent(0)
+            self.alarm1_marker.x = self.alarm1_marker.y = 0
+            self._alarm1_palette.make_transparent(0)
+
+    @property
+    def alarm2(self):
+        """Current alarm2 value."""
+        if self._num_hands != 2:
+            return None
+        return self._alarm2
+
+    @alarm2.setter
+    def alarm2(self, value=None):
+        if self._num_hands !=2:
+            return
+        self._alarm2 = value
+        self._alarm2_palette[0] = Colors.GREEN
+        if self._alarm2 != None:
+            self.alarm2_marker.x, self.alarm2_marker.y = self.dial_to_pixel(
+                self._alarm2, center=self._center, radius=self._outside_radius
+            )
+            self._alarm2_palette.make_opaque(0)
+        else:
+            self.alarm2_marker.x = self.alarm2_marker.y = 0
+            self._alarm2_palette.make_transparent(0)
 
     def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):
         """Convert normalized display position input (0.0 to 1.0) to display
@@ -338,79 +361,79 @@ class Scale(displayio.Group):
         min_axis = min(self.WIDTH, self.HEIGHT)
         return int(round(min_axis * size * distance, 0))
 
-    def _show_hands(self, hand_1=0, hand_2=0):
-        """Display indicator plot_handes and move scale plate
-        proportionally. Input is normalized for 0.0 to 1.0 (minimum and maximum
-        range), but accepts any floating point value.
+    def _show_hands(self, hand1=0, hand2=0):
+        """Display hand(s) and move scale plate proportionally. Input
+        is normalized for 0.0 (minimum) to 1.0 (maximum), but wraps around for
+        any positive or negative floating point value.
 
-        :param hand_1: The normalized first hand position on the dial circumference.
-        :param hand_1: The normalized second hand position on the dial circumference."""
+        :param float hand1: The normalized first hand position on the dial.
+        :param float hand1: The normalized second hand position on the dial."""
 
-        self._hand_1 = hand_1
-        self._hand_2 = hand_2
-
-        if self._hand_1 != min(1.0, max(self._hand_1, 0.0)):
-            self._hand_1_outline = Colors.RED
-        else:
-            self._hand_1_outline = Colors.ORANGE
-
-        if self._hand_2 != min(1.0, max(self._hand_2, 0.0)):
-            self._hand_2_outline = Colors.RED
-        else:
-            self._hand_2_outline = Colors.GREEN
+        self._hand1 = hand1
+        self._hand2 = hand2
 
         # Move plate/riser
         plate_disp = self._plate_y - (
-            min(2, max(-2, (self._hand_1 + self._hand_2))) * 0.10 / 2
+            min(2, max(-2, (hand1 + hand2))) * 0.10 / 2
         )
-        self._x0, self.plate.y = self.cart_to_pixel(0.00, plate_disp, size=self._size)
+        _, self.plate.y = self.cart_to_pixel(0.00, plate_disp, size=self._size)
         self.riser.y = self.plate.y
 
         # Draw hands
         base = self._outside_radius // 16
-        x0, y0 = self.dial_to_pixel(
-            self._hand_2, center=self._center, radius=self._outside_radius
-        )
-        x1, y1 = self.dial_to_pixel(
-            self._hand_2 - 0.25, center=self._center, radius=base
-        )
-        x2, y2 = self.dial_to_pixel(
-            self._hand_2 + 0.25, center=self._center, radius=base
-        )
-        self.hand_2 = Triangle(
-            x0,
-            y0,
-            x1,
-            y1,
-            x2,
-            y2,
-            fill=Colors.GREEN,
-            outline=self._hand_2_outline,
-        )
-        self._hands_group.append(self.hand_2)
-        if len(self._hands_group) > 2:
-            self._hands_group.remove(self._hands_group[0])
+        hand2_fill = hand2_outline = None
+        if self._num_hands == 2:
+            hand2_fill = hand2_outline = Colors.GREEN
+            if self._hand2 != min(1.0, max(self._hand2, 0.0)):
+                hand2_outline = Colors.RED
+
+            x0, y0 = self.dial_to_pixel(
+                self._hand2, center=self._center, radius=self._outside_radius
+            )
+            x1, y1 = self.dial_to_pixel(
+                self._hand2 - 0.25, center=self._center, radius=base
+            )
+            x2, y2 = self.dial_to_pixel(
+                self._hand2 + 0.25, center=self._center, radius=base
+            )
+            pointer_2 = Triangle(
+                x0,
+                y0,
+                x1,
+                y1,
+                x2,
+                y2,
+                fill=hand2_fill,
+                outline=hand2_outline,
+            )
+            self._hands_group.append(pointer_2)
+            if len(self._hands_group) > self._num_hands:
+                self._hands_group.remove(self._hands_group[0])
+
+        hand1_fill = hand1_outline = Colors.ORANGE
+        if self._hand1 != min(1.0, max(self._hand1, 0.0)):
+            hand1_outline = Colors.RED
 
         x0, y0 = self.dial_to_pixel(
-            self._hand_1, center=self._center, radius=self._outside_radius
+            self._hand1, center=self._center, radius=self._outside_radius
         )
         x1, y1 = self.dial_to_pixel(
-            self._hand_1 - 0.25, center=self._center, radius=base
+            self._hand1 - 0.25, center=self._center, radius=base
         )
         x2, y2 = self.dial_to_pixel(
-            self._hand_1 + 0.25, center=self._center, radius=base
+            self._hand1 + 0.25, center=self._center, radius=base
         )
-        self.hand_1 = Triangle(
+        pointer_1 = Triangle(
             x0,
             y0,
             x1,
             y1,
             x2,
             y2,
-            fill=Colors.ORANGE,
-            outline=self._hand_1_outline,
+            fill=hand1_fill,
+            outline=hand1_outline,
         )
-        self._hands_group.append(self.hand_1)
-        if len(self._hands_group) > 2:
+        self._hands_group.append(pointer_1)
+        if len(self._hands_group) > self._num_hands:
             self._hands_group.remove(self._hands_group[0])
         return
