@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # magic_eye.py
-# 2021-12-09 v2.1
+# 2021-12-11 v2.2
 
 import displayio
 import vectorio
@@ -35,9 +35,9 @@ class MagicEye(displayio.Group):
         integral display width and height. The default RGB bezel color is
         0x000000 (black).
 
-        :param center: The widget center x,y tuple in normalized display
+        :param center: The target anode center x,y tuple in normalized display
         units. Defaults to (0.5, 0.5).
-        :param size: The normalized diameter value of the widget relative
+        :param size: The normalized diameter value of the target anode relative
         to the display's shorter axis. Defaults to 0.5.
         :param display_size: The host display's integer width and height tuple
         expressed in pixels. If (None, None) and the host includes an integral
@@ -197,8 +197,8 @@ class MagicEye(displayio.Group):
         self.append(self._eye_group)
         self.append(self._bezel_group)
 
-        self._eye_value = 0
-        self._show_signal(self._eye_value)  # Plot no signal shadow wedge
+        self._eye_value = 1
+        self._show_signal(0)  # Plot no signal shadow wedge
         return
 
     @property
@@ -223,8 +223,8 @@ class MagicEye(displayio.Group):
 
     @value.setter
     def value(self, signal=0):
-        self._eye_value = min(max(0, signal), 2.0)
-        self._show_signal(self._eye_value)
+        signal = min(max(0, signal), 2.0)
+        self._show_signal(signal)
 
     def _show_signal(self, signal=0):
         """Plot the MagicEye shadow wedge. Input is a positive floating point
@@ -235,31 +235,33 @@ class MagicEye(displayio.Group):
         :param eye_normal: The normalized floating point signal  value for the
         shadow wedge. Defaults to 0 (no signal)."""
 
-        # Combined shadow wedge and tarsus polygon points
-        x1, y1 = self.dial_to_pixel(
-            0.35 + (signal * 0.15),
-            center=self._center,
-            radius=self._outside_radius,
-        )
-        x2, y2 = self.dial_to_pixel(
-            0.65 - (signal * 0.15),
-            center=self._center,
-            radius=self._outside_radius,
-        )
-        _points = [
-            self._center,
-            (x1, y1),
-            (x1, self._center[1] + self._outside_radius),
-            (x2, self._center[1] + self._outside_radius),
-            (x2, y2),
-        ]
+        if signal != self._eye_value:
+            self._eye_value = signal
+            # Combined shadow wedge and tarsus polygon points
+            x1, y1 = self.dial_to_pixel(
+                0.35 + (self._eye_value * 0.15),
+                center=self._center,
+                radius=self._outside_radius,
+            )
+            x2, y2 = self.dial_to_pixel(
+                0.65 - (self._eye_value * 0.15),
+                center=self._center,
+                radius=self._outside_radius,
+            )
+            _points = [
+                self._center,
+                (x1, y1),
+                (x1, self._center[1] + self._outside_radius),
+                (x2, self._center[1] + self._outside_radius),
+                (x2, y2),
+            ]
 
-        if signal > 1.0:
-            self.eye.pixel_shader = self._overlap_palette
-        else:
-            self.eye.pixel_shader = self._shadow_palette
+            if self._eye_value > 1.0:
+                self.eye.pixel_shader = self._overlap_palette
+            else:
+                self.eye.pixel_shader = self._shadow_palette
 
-        self.eye.points = _points
+            self.eye.points = _points
         return
 
     def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):
