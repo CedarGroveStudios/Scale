@@ -41,12 +41,12 @@ class Scale(displayio.Group):
         The Scale class is a displayio group representing the scale widget.
 
         :param integer num_hands: The number of dial pointers.
-        :param float center: The dial center x,y tuple in normalized display
-        units.
+        :param float center: The widget center x,y tuple in normalized display
+        units. Defaults to (0.5, 0.5).
         :param float size: The widget size factor relative to the display's
-        smaller axis.
+        smaller axis. Defaults to 0.5.
         :param integer max_scale: The maximum scale integer value. Used for
-        labeling the ten major dial hashmarks.
+        labeling the ten major dial hashmarks. Defaults to 100.
         :param integer display_size: The host display's integer width and
         height tuple expressed in pixels. If (None, None) and the host includes
         an integral display, the tuple value is set to (board.DISPLAY.width,
@@ -317,9 +317,19 @@ class Scale(displayio.Group):
         return self._center_norm
 
     @property
+    def size(self):
+        """Normalized object size."""
+        return self._size
+
+    @property
     def max_scale(self):
         """Maximum scale value."""
         return self._max_scale
+
+    @property
+    def display_size(self):
+        """Size of display."""
+        return (self.WIDTH, self.HEIGHT)
 
     @property
     def hand1(self):
@@ -379,35 +389,6 @@ class Scale(displayio.Group):
             self.alarm2_marker.x = self.alarm2_marker.y = 0
             self._alarm2_palette.make_transparent(0)
 
-    def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):
-        """Convert normalized display position input (0.0 to 1.0) to display
-        pixel position."""
-        return int(round(size * self.WIDTH * width_factor, 0)), int(
-            round(size * self.HEIGHT * height_factor, 0)
-        )
-
-    def dial_to_pixel(self, dial_factor, center=(0, 0), radius=0):
-        """Convert normalized dial_factor input (-1.0 to 1.0) to display pixel
-        position on the circumference of the dial's circle with center
-        (x,y pixels) and radius (pixels)."""
-        rads = (-2 * pi) * (dial_factor)  # convert scale_factor to radians
-        rads = rads + (pi / 2)  # rotate axis counterclockwise
-        x = center[0] + int(cos(rads) * radius)
-        y = center[1] - int(sin(rads) * radius)
-        return x, y
-
-    def cart_to_pixel(self, x, y, size=1.0):
-        """Convert normalized cartesian position value (-0.5, to + 0.5) to display
-        pixels."""
-        min_axis = min(self.WIDTH, self.HEIGHT)
-        x1 = int(round(min_axis * size * x, 0)) + self._center[0]
-        y1 = self._center[1] - int(round(min_axis * size * y, 0))
-        return x1, y1
-
-    def cart_dist_to_pixel(self, distance=0, size=1.0):
-        """Convert normalized cartesian distance value to display pixels."""
-        min_axis = min(self.WIDTH, self.HEIGHT)
-        return int(round(min_axis * size * distance, 0))
 
     def _show_hands(self, hand1=0, hand2=0):
         """Display hand(s) and move scale plate proportionally. Input
@@ -482,3 +463,34 @@ class Scale(displayio.Group):
                 )
                 self._hands_group[1] = pointer_2
         return
+
+
+    def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):
+        """Convert normalized display position input (0.0 to 1.0) to display
+        pixel position."""
+        return int(round(size * self.WIDTH * width_factor, 0)), int(
+            round(size * self.HEIGHT * height_factor, 0)
+        )
+
+    def dial_to_pixel(self, dial_factor, center=(0, 0), radius=0):
+        """Convert normalized dial_factor input (-1.0 to 1.0) to display pixel
+        position on the circumference of the dial's circle with center
+        (x,y pixels) and radius (pixels)."""
+        rads = (-2 * pi) * (dial_factor)  # convert scale_factor to radians
+        rads = rads + (pi / 2)  # rotate axis counterclockwise
+        x = center[0] + int(cos(rads) * radius)
+        y = center[1] - int(sin(rads) * radius)
+        return x, y
+
+    def cart_to_pixel(self, x, y, size=1.0):
+        """Convert normalized cartesian position value (-0.5, to + 0.5) to display
+        pixels."""
+        min_axis = min(self.WIDTH, self.HEIGHT)
+        x1 = int(round(min_axis * size * x, 0)) + self._center[0]
+        y1 = self._center[1] - int(round(min_axis * size * y, 0))
+        return x1, y1
+
+    def cart_dist_to_pixel(self, distance=0, size=1.0):
+        """Convert normalized cartesian distance value to display pixels."""
+        min_axis = min(self.WIDTH, self.HEIGHT)
+        return int(round(min_axis * size * distance, 0))

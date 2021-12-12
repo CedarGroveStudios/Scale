@@ -35,13 +35,14 @@ class MagicEye(displayio.Group):
         integral display width and height. The default RGB bezel color is
         0x000000 (black).
 
-        :param center: The target anode center x,y tuple in normalized display
+        :param float center: The widget center x,y tuple in normalized display
         units. Defaults to (0.5, 0.5).
-        :param size: The normalized diameter value of the target anode relative
-        to the display's shorter axis. Defaults to 0.5.
-        :param display_size: The host display's integer width and height tuple
-        expressed in pixels. If (None, None) and the host includes an integral
-        display, the tuple value is set to (board.DISPLAY.width, board.DISPLAY.height).
+        :param float size: The widget size factor relative to the display's
+        smaller axis. Defaults to 0.5.
+        :param integer display_size: The host display's integer width and
+        height tuple expressed in pixels. If (None, None) and the host includes
+        an integral display, the tuple value is set to (board.DISPLAY.width,
+        board.DISPLAY.height).
         :param bezel_color: The integer RGB color value for the outer bezel.
         Recommend setting to display background color. Defaults to 0x000000 (black)."""
 
@@ -49,11 +50,11 @@ class MagicEye(displayio.Group):
         if None in display_size:
             import board
 
-            if "DISPLAY" in dir(board):
+            if 'DISPLAY' in dir(board):
                 self.WIDTH = board.DISPLAY.width
                 self.HEIGHT = board.DISPLAY.height
             else:
-                raise ValueError("No integral display. Specify display size.")
+                raise ValueError('No integral display. Specify display size.')
         else:
             self.WIDTH = display_size[0]
             self.HEIGHT = display_size[1]
