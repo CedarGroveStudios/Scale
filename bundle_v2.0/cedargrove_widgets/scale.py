@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # scale.py
-# 2021-12-11 v2.3
+# 2021-12-11 v2.4
 
 import displayio
 import vectorio
@@ -72,6 +72,8 @@ class Scale(displayio.Group):
             raise ValueError('Size must be in range of 0.0 to 1.0, inclusive.')
         self._size = size
         self._max_scale = max_scale
+        self._hand1 = 0
+        self._hand2 = 0
         self._alarm1 = None
         self._alarm2 = None
 
@@ -257,9 +259,6 @@ class Scale(displayio.Group):
         self.append(scale_group)
         self.append(self._hands_group)
         self.append(pivot_group)
-
-        self._hand1 = self._hand2 = 0
-        self._show_hands(hand1=0, hand2=0)
         return
 
 
@@ -366,74 +365,78 @@ class Scale(displayio.Group):
         is normalized for 0.0 (minimum) to 1.0 (maximum), but wraps around for
         any positive or negative floating point value.
 
-        :param float hand1: The normalized first hand position on the dial.
-        :param float hand1: The normalized second hand position on the dial."""
-
-        self._hand1 = hand1
-        self._hand2 = hand2
+        :param float hand1: The first hand position on the scale dial.
+        :param float hand1: The second hand position on the scale dial."""
 
         # Move plate/riser
-        plate_disp = self._plate_y - (
-            min(2, max(-2, (hand1 + hand2))) * 0.10 / 2
-        )
-        _, self.plate.y = self.cart_to_pixel(0.00, plate_disp, size=self._size)
-        self.riser.y = self.plate.y
+        if hand1 != self._hand1 or hand2 != self._hand2:
+            plate_disp = self._plate_y - (
+                min(2, max(-2, (hand1 + hand2))) * 0.10 / 2
+            )
+            _, self.plate.y = self.cart_to_pixel(0.00, plate_disp, size=self._size)
+            self.riser.y = self.plate.y
 
         # Draw hands
         base = self._outside_radius // 16
-        hand2_fill = hand2_outline = None
-        if self._num_hands == 2:
-            hand2_fill = hand2_outline = Colors.GREEN
-            if self._hand2 != min(1.0, max(self._hand2, 0.0)):
-                hand2_outline = Colors.RED
+        if hand1 != self._hand1 or len(self._hands_group) == 0:
+            self._hand1 = hand1
+            hand1_fill = hand1_outline = Colors.ORANGE
+            if self._hand1 != min(1.0, max(self._hand1, 0.0)):
+                hand1_outline = Colors.RED
 
             x0, y0 = self.dial_to_pixel(
-                self._hand2, center=self._center, radius=self._outside_radius
+                self._hand1, center=self._center, radius=self._outside_radius
             )
             x1, y1 = self.dial_to_pixel(
-                self._hand2 - 0.25, center=self._center, radius=base
+                self._hand1 - 0.25, center=self._center, radius=base
             )
             x2, y2 = self.dial_to_pixel(
-                self._hand2 + 0.25, center=self._center, radius=base
+                self._hand1 + 0.25, center=self._center, radius=base
             )
-            pointer_2 = Triangle(
+            pointer_1 = Triangle(
                 x0,
                 y0,
                 x1,
                 y1,
                 x2,
                 y2,
-                fill=hand2_fill,
-                outline=hand2_outline,
+                fill=hand1_fill,
+                outline=hand1_outline,
             )
-            self._hands_group.append(pointer_2)
-            if len(self._hands_group) > self._num_hands:
-                self._hands_group.remove(self._hands_group[0])
+            if len(self._hands_group) == 0:
+                self._hands_group.append(pointer_1)
+            else:
+                self._hands_group[0] = pointer_1
 
-        hand1_fill = hand1_outline = Colors.ORANGE
-        if self._hand1 != min(1.0, max(self._hand1, 0.0)):
-            hand1_outline = Colors.RED
+        if hand2 != self._hand2 or len(self._hands_group) == 1:
+            self._hand2 = hand2
+            hand2_fill = hand2_outline = None
+            if self._num_hands == 2:
+                hand2_fill = hand2_outline = Colors.GREEN
+                if self._hand2 != min(1.0, max(self._hand2, 0.0)):
+                    hand2_outline = Colors.RED
 
-        x0, y0 = self.dial_to_pixel(
-            self._hand1, center=self._center, radius=self._outside_radius
-        )
-        x1, y1 = self.dial_to_pixel(
-            self._hand1 - 0.25, center=self._center, radius=base
-        )
-        x2, y2 = self.dial_to_pixel(
-            self._hand1 + 0.25, center=self._center, radius=base
-        )
-        pointer_1 = Triangle(
-            x0,
-            y0,
-            x1,
-            y1,
-            x2,
-            y2,
-            fill=hand1_fill,
-            outline=hand1_outline,
-        )
-        self._hands_group.append(pointer_1)
-        if len(self._hands_group) > self._num_hands:
-            self._hands_group.remove(self._hands_group[0])
+                x0, y0 = self.dial_to_pixel(
+                    self._hand2, center=self._center, radius=self._outside_radius
+                )
+                x1, y1 = self.dial_to_pixel(
+                    self._hand2 - 0.25, center=self._center, radius=base
+                )
+                x2, y2 = self.dial_to_pixel(
+                    self._hand2 + 0.25, center=self._center, radius=base
+                )
+                pointer_2 = Triangle(
+                    x0,
+                    y0,
+                    x1,
+                    y1,
+                    x2,
+                    y2,
+                    fill=hand2_fill,
+                    outline=hand2_outline,
+                )
+                if len(self._hands_group) == 1:
+                    self._hands_group.append(pointer_2)
+                else:
+                    self._hands_group[1] = pointer_2
         return
