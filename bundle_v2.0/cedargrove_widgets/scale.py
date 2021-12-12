@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # scale.py
-# 2021-12-11 v2.4
+# 2021-12-11 v2.5
 
 import displayio
 import vectorio
@@ -204,6 +204,55 @@ class Scale(displayio.Group):
         )
         scale_group.append(bezel)
 
+        # Define pointer 1
+        self._base = self._outside_radius // 16
+        self._hand1 = 0
+        x0, y0 = self.dial_to_pixel(
+            self._hand1, center=self._center, radius=self._outside_radius
+        )
+        x1, y1 = self.dial_to_pixel(
+            self._hand1 - 0.25, center=self._center, radius=self._base
+        )
+        x2, y2 = self.dial_to_pixel(
+            self._hand1 + 0.25, center=self._center, radius=self._base
+        )
+        pointer_1 = Triangle(
+            x0,
+            y0,
+            x1,
+            y1,
+            x2,
+            y2,
+            fill=Colors.ORANGE,
+            outline=Colors.ORANGE,
+        )
+        self._hands_group.append(pointer_1)
+
+        # Define pointer 2
+        if self._num_hands == 2:
+                self._hand2 = 0
+                hand2_fill = hand2_outline = None
+                x0, y0 = self.dial_to_pixel(
+                    self._hand2, center=self._center, radius=self._outside_radius
+                )
+                x1, y1 = self.dial_to_pixel(
+                    self._hand2 - 0.25, center=self._center, radius=self._base
+                )
+                x2, y2 = self.dial_to_pixel(
+                    self._hand2 + 0.25, center=self._center, radius=self._base
+                )
+                pointer_2 = Triangle(
+                    x0,
+                    y0,
+                    x1,
+                    y1,
+                    x2,
+                    y2,
+                    fill=Colors.GREEN,
+                    outline=Colors.GREEN,
+                )
+                self._hands_group.append(pointer_2)
+
         # Define alarm points
         self._alarm1_palette = displayio.Palette(1)
         self._alarm1_palette[0] = Colors.ORANGE
@@ -377,8 +426,7 @@ class Scale(displayio.Group):
             self.riser.y = self.plate.y
 
         # Draw hands
-        base = self._outside_radius // 16
-        if hand1 != self._hand1 or len(self._hands_group) == 0:
+        if hand1 != self._hand1:
             self._hand1 = hand1
             hand1_fill = hand1_outline = Colors.ORANGE
             if self._hand1 != min(1.0, max(self._hand1, 0.0)):
@@ -388,10 +436,10 @@ class Scale(displayio.Group):
                 self._hand1, center=self._center, radius=self._outside_radius
             )
             x1, y1 = self.dial_to_pixel(
-                self._hand1 - 0.25, center=self._center, radius=base
+                self._hand1 - 0.25, center=self._center, radius=self._base
             )
             x2, y2 = self.dial_to_pixel(
-                self._hand1 + 0.25, center=self._center, radius=base
+                self._hand1 + 0.25, center=self._center, radius=self._base
             )
             pointer_1 = Triangle(
                 x0,
@@ -403,12 +451,9 @@ class Scale(displayio.Group):
                 fill=hand1_fill,
                 outline=hand1_outline,
             )
-            if len(self._hands_group) == 0:
-                self._hands_group.append(pointer_1)
-            else:
-                self._hands_group[0] = pointer_1
+            self._hands_group[0] = pointer_1
 
-        if hand2 != self._hand2 or len(self._hands_group) == 1:
+        if hand2 != self._hand2:
             self._hand2 = hand2
             hand2_fill = hand2_outline = None
             if self._num_hands == 2:
@@ -420,10 +465,10 @@ class Scale(displayio.Group):
                     self._hand2, center=self._center, radius=self._outside_radius
                 )
                 x1, y1 = self.dial_to_pixel(
-                    self._hand2 - 0.25, center=self._center, radius=base
+                    self._hand2 - 0.25, center=self._center, radius=self._base
                 )
                 x2, y2 = self.dial_to_pixel(
-                    self._hand2 + 0.25, center=self._center, radius=base
+                    self._hand2 + 0.25, center=self._center, radius=self._base
                 )
                 pointer_2 = Triangle(
                     x0,
@@ -435,8 +480,5 @@ class Scale(displayio.Group):
                     fill=hand2_fill,
                     outline=hand2_outline,
                 )
-                if len(self._hands_group) == 1:
-                    self._hands_group.append(pointer_2)
-                else:
-                    self._hands_group[1] = pointer_2
+                self._hands_group[1] = pointer_2
         return
