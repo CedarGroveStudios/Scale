@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT# LED bubble display widget
 
 # based on the HP QDSP-6064 4-Digit Micro 7 Segment Numeric Indicator
-# 2021-12-12 v0.9
+# 2021-12-12 v1.0
 
 import displayio
 import vectorio
@@ -48,11 +48,16 @@ class Colors:
 
 class BubbleDisplay(displayio.Group):
     def __init__(
-        self, units=0, mode="Normal", center=(0, 0), size=1, display_size=(None, None)
+        self, units=1, digits=4, mode="Normal", center=(0, 0), size=1,
+        display_size=(None, None),
     ):
-        """Instantiate the HP QDSP-6064 4-digit 7-segment numeric end-stackable
+        """Instantiate the multi-digit 7-segment numeric end-stackable
         LED display graphic object for DisplayIO devices. Builds a hierachical
         DisplayIO group consisting of chip, digits, and digit segments.
+
+        This widget is based on the HP-QDSP-6064 4-digit and the HP-35
+        calculator's HP-5802-7433 3-digit 7-segment numeric end-stackable
+        LED displays.
 
         This widget class displays decimal numeric values as well
         as alphanumeric strings (with a limited character set). Decimal values
@@ -68,7 +73,9 @@ class BubbleDisplay(displayio.Group):
         built-in display width and height.
 
         :param integer units: The number of end-stacked widget units. Defaults
-        to 1 widget (4 digits).
+        to 1 widget.
+        :param integer digits: The number of digits per display
+        cluster (unit) ranging from 1 to 5 digits. Defaults to 4 digits per unit.
         :param string mode: The decimal point display mode. The default 'Normal'
         mode places the decimal point within the 'ones' digit; in 'HP-35' mode,
         the decimal point is place in a separate digit between the 'ones' and
@@ -100,7 +107,8 @@ class BubbleDisplay(displayio.Group):
         self._center = self.display_to_pixel(self._center_norm[0], self._center_norm[1])
         self._size = size
         self._mode = mode
-        self._units = units
+        self._units = max(0, units)
+        self._num_digits = min(5, max(1, digits))
 
         # Create displayio group layers
         cluster = displayio.Group()
@@ -167,19 +175,29 @@ class BubbleDisplay(displayio.Group):
                 self.cart_dist_to_pixel(0.017, self._size) + upper_left_corner[0],
                 self.cart_dist_to_pixel(0.050, self._size) + upper_left_corner[1],
             )
-            dp = (
-                self.cart_dist_to_pixel(0.046, self._size) + upper_left_corner[0],
-                self.cart_dist_to_pixel(0.075, self._size) + upper_left_corner[1],
-            )
+            if mode == "HP-35":
+                dp = (
+                    self.cart_dist_to_pixel(0.029, self._size) + upper_left_corner[0],
+                    self.cart_dist_to_pixel(0.065, self._size) + upper_left_corner[1],
+                    )
+            else:
+                dp = (
+                    self.cart_dist_to_pixel(0.046, self._size) + upper_left_corner[0],
+                    self.cart_dist_to_pixel(0.075, self._size) + upper_left_corner[1],
+                    )
+
             dp_size = self.cart_dist_to_pixel(0.008, self._size)
 
-            for i in range(0, 4):
-                step = i * self.cart_dist_to_pixel(0.0625, self._size)
+            step_norm = 0.250 / self._num_digits
+            step_offset = self.cart_dist_to_pixel(0.09374 - ((0.25 - step_norm) / 2), self._size)
+
+            for i in range(0, self._num_digits):
+                step = i * self.cart_dist_to_pixel(step_norm, self._size)
                 lens = RoundRect(
                     upper_left_corner[0] + step,
                     upper_left_corner[1],
-                    self.cart_dist_to_pixel(0.063, self._size),
-                    self.cart_dist_to_pixel(0.104, self._size),
+                    self.cart_dist_to_pixel(step_norm, self._size),
+                    self.cart_dist_to_pixel(0.100, self._size),
                     self.cart_dist_to_pixel(0.029, self._size),
                     fill=Colors.RED_BKG,
                     outline=Colors.RED_LENS,
@@ -187,70 +205,70 @@ class BubbleDisplay(displayio.Group):
                 cluster.append(lens)
 
                 seg_a = Line(
-                    a1[0] + step,
+                    a1[0] + step + step_offset,
                     a1[1],
-                    b1[0] + step,
+                    b1[0] + step + step_offset,
                     b1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_a)
 
                 seg_b = Line(
-                    b1[0] + step,
+                    b1[0] + step + step_offset,
                     b1[1],
-                    c1[0] + step,
+                    c1[0] + step + step_offset,
                     c1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_b)
 
                 seg_c = Line(
-                    c1[0] + step,
+                    c1[0] + step + step_offset,
                     c1[1],
-                    d1[0] + step,
+                    d1[0] + step + step_offset,
                     d1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_c)
 
                 seg_d = Line(
-                    d1[0] + step,
+                    d1[0] + step + step_offset,
                     d1[1],
-                    e1[0] + step,
+                    e1[0] + step + step_offset,
                     e1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_d)
 
                 seg_e = Line(
-                    e1[0] + step,
+                    e1[0] + step + step_offset,
                     e1[1],
-                    f1[0] + step,
+                    f1[0] + step + step_offset,
                     f1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_e)
 
                 seg_f = Line(
-                    f1[0] + step,
+                    f1[0] + step + step_offset,
                     f1[1],
-                    a1[0] + step,
+                    a1[0] + step + step_offset,
                     a1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_f)
 
                 seg_g = Line(
-                    f1[0] + step,
+                    f1[0] + step + step_offset,
                     f1[1],
-                    c1[0] + step,
+                    c1[0] + step + step_offset,
                     c1[1],
                     color=Colors.RED_BKG,
                 )
                 self._digits.append(seg_g)
 
                 seg_dp = Rect(
-                    dp[0] + step,
+                    dp[0] + step + step_offset,
                     dp[1],
                     dp_size,
                     dp_size,
@@ -266,6 +284,11 @@ class BubbleDisplay(displayio.Group):
     def units(self):
         """Number of units."""
         return self._units
+
+    @property
+    def units(self):
+        """Number of digits per unit."""
+        return self._digits
 
     @property
     def mode(self):
@@ -321,10 +344,10 @@ class BubbleDisplay(displayio.Group):
     #    return
 
     def _show_text(self, text=""):
-        text = text[0 : self._units * 4]  # Truncate to left-most digits
-        text = (" " * ((self._units * 4) - len(text))) + text
+        text = text[0 : self._units * self._num_digits]  # Truncate to left-most digits
+        text = (" " * ((self._units * self._num_digits) - len(text))) + text
 
-        for _digit in range(0, self._units * 4):
+        for _digit in range(0, self._units * self._num_digits):
             if text[_digit] in NUMBERS:
                 _decode = NUMBERS[text[_digit]]
             else:
@@ -346,10 +369,10 @@ class BubbleDisplay(displayio.Group):
             _display = str(value)
 
         # if value string is larger than can be displayed, show dashes
-        if len(_display) > self._units * 4:
-            _display = "-" * self._units * 4
+        if len(_display) > self._units * self._num_digits:
+            _display = "-" * self._units * self._num_digits
         else:
-            _display = (" " * ((self._units * 4) - len(_display))) + _display
+            _display = (" " * ((self._units * self._num_digits) - len(_display))) + _display
 
         # locate decimal point and remove from display string
         dp_digit = _display.find(".")
@@ -359,7 +382,7 @@ class BubbleDisplay(displayio.Group):
         self._show_text(_display)
 
         # clear all decimal points and plot the current point
-        for digit in range(0, self._units * 4):
+        for digit in range(0, self._units * self._num_digits):
             self._digits[(digit * 8) + 7].fill = Colors.RED_BKG
         if dp_digit > -1:
             self._digits[(dp_digit * 8) + 7].fill = Colors.RED
