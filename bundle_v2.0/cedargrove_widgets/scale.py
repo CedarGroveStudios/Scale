@@ -56,20 +56,20 @@ class Scale(displayio.Group):
         if None in display_size:
             import board
 
-            if 'DISPLAY' in dir(board):
+            if "DISPLAY" in dir(board):
                 self.WIDTH = board.DISPLAY.width
                 self.HEIGHT = board.DISPLAY.height
             else:
-                raise ValueError('No integral display. Specify display size.')
+                raise ValueError("No integral display. Specify display size.")
         else:
             self.WIDTH = display_size[0]
             self.HEIGHT = display_size[1]
 
         if num_hands < 1 or num_hands > 2:
-            raise ValueError('Number of hands must be 1 or 2.')
+            raise ValueError("Number of hands must be 1 or 2.")
         self._num_hands = num_hands
         if size < 0 or size > 1:
-            raise ValueError('Size must be in range of 0.0 to 1.0, inclusive.')
+            raise ValueError("Size must be in range of 0.0 to 1.0, inclusive.")
         self._size = size
         self._max_scale = max_scale
         self._hand1 = 0
@@ -230,28 +230,28 @@ class Scale(displayio.Group):
 
         # Define pointer 2
         if self._num_hands == 2:
-                self._hand2 = 0
-                hand2_fill = hand2_outline = None
-                x0, y0 = self.dial_to_pixel(
-                    self._hand2, center=self._center, radius=self._outside_radius
-                )
-                x1, y1 = self.dial_to_pixel(
-                    self._hand2 - 0.25, center=self._center, radius=self._base
-                )
-                x2, y2 = self.dial_to_pixel(
-                    self._hand2 + 0.25, center=self._center, radius=self._base
-                )
-                pointer_2 = Triangle(
-                    x0,
-                    y0,
-                    x1,
-                    y1,
-                    x2,
-                    y2,
-                    fill=Colors.GREEN,
-                    outline=Colors.GREEN,
-                )
-                self._hands_group.append(pointer_2)
+            self._hand2 = 0
+            hand2_fill = hand2_outline = None
+            x0, y0 = self.dial_to_pixel(
+                self._hand2, center=self._center, radius=self._outside_radius
+            )
+            x1, y1 = self.dial_to_pixel(
+                self._hand2 - 0.25, center=self._center, radius=self._base
+            )
+            x2, y2 = self.dial_to_pixel(
+                self._hand2 + 0.25, center=self._center, radius=self._base
+            )
+            pointer_2 = Triangle(
+                x0,
+                y0,
+                x1,
+                y1,
+                x2,
+                y2,
+                fill=Colors.GREEN,
+                outline=Colors.GREEN,
+            )
+            self._hands_group.append(pointer_2)
 
         # Define alarm points
         self._alarm1_palette = displayio.Palette(1)
@@ -309,7 +309,6 @@ class Scale(displayio.Group):
         self.append(self._hands_group)
         self.append(pivot_group)
         return
-
 
     @property
     def center(self):
@@ -376,7 +375,7 @@ class Scale(displayio.Group):
 
     @alarm2.setter
     def alarm2(self, value=None):
-        if self._num_hands !=2:
+        if self._num_hands != 2:
             return
         self._alarm2 = value
         self._alarm2_palette[0] = Colors.GREEN
@@ -389,7 +388,6 @@ class Scale(displayio.Group):
             self.alarm2_marker.x = self.alarm2_marker.y = 0
             self._alarm2_palette.make_transparent(0)
 
-
     def _show_hands(self, hand1=0, hand2=0):
         """Display hand(s) and move scale plate proportionally. Input
         is normalized for 0.0 (minimum) to 1.0 (maximum), but wraps around for
@@ -400,9 +398,7 @@ class Scale(displayio.Group):
 
         # Move plate/riser
         if hand1 != self._hand1 or hand2 != self._hand2:
-            plate_disp = self._plate_y - (
-                min(2, max(-2, (hand1 + hand2))) * 0.10 / 2
-            )
+            plate_disp = self._plate_y - (min(2, max(-2, (hand1 + hand2))) * 0.10 / 2)
             _, self.plate.y = self.cart_to_pixel(0.00, plate_disp, size=self._size)
             self.riser.y = self.plate.y
 
@@ -463,7 +459,6 @@ class Scale(displayio.Group):
                 )
                 self._hands_group[1] = pointer_2
         return
-
 
     def display_to_pixel(self, width_factor=0, height_factor=0, size=1.0):
         """Convert normalized display position input (0.0 to 1.0) to display

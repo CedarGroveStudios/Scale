@@ -50,11 +50,11 @@ class MagicEye(displayio.Group):
         if None in display_size:
             import board
 
-            if 'DISPLAY' in dir(board):
+            if "DISPLAY" in dir(board):
                 self.WIDTH = board.DISPLAY.width
                 self.HEIGHT = board.DISPLAY.height
             else:
-                raise ValueError('No integral display. Specify display size.')
+                raise ValueError("No integral display. Specify display size.")
         else:
             self.WIDTH = display_size[0]
             self.HEIGHT = display_size[1]
