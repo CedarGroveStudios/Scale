@@ -308,7 +308,7 @@ class BubbleDisplay(displayio.Group):
     @property
     def display_size(self):
         """Display size in pixels."""
-        return self._display_size
+        return (self.WIDTH, self.HEIGHT)
 
     @property
     def value(self):
