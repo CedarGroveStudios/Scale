@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # magic_eye.py
-# 2021-12-11 v2.2
+# 2021-12-12 v2.3
 
 import displayio
 import vectorio
@@ -50,11 +50,11 @@ class MagicEye(displayio.Group):
         if None in display_size:
             import board
 
-            if 'DISPLAY' in dir(board):
+            if "DISPLAY" in dir(board):
                 self.WIDTH = board.DISPLAY.width
                 self.HEIGHT = board.DISPLAY.height
             else:
-                raise ValueError('No integral display. Specify display size.')
+                raise ValueError("No integral display. Specify display size.")
         else:
             self.WIDTH = display_size[0]
             self.HEIGHT = display_size[1]
@@ -71,7 +71,6 @@ class MagicEye(displayio.Group):
         self._shield_radius = int(0.40 * self._outside_radius)
 
         # Create displayio group layers
-        self._image_group = displayio.Group()  # Primary group for MagicEye class
         self._anode_group = displayio.Group()  # Target anode and wire shadows
         self._eye_group = displayio.Group()  # Dynamic eye + tarsus shadow wedge
         self._bezel_group = displayio.Group()  # Bezel wedges/doughnut and light shield
