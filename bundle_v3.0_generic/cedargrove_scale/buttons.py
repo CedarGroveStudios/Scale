@@ -1,35 +1,40 @@
 # SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
 # SPDX-License-Identifier: MIT
 
-# cedargrove_scale.buttons.py  2022-01-26 v3.0  Cedar Grove Studios
+# cedargrove_scale.buttons.py  2022-01-27 v3.027  Cedar Grove Studios
 
 import board
 import time
 import displayio
 import adafruit_imageload
 from adafruit_button import Button
-import adafruit_touchscreen
 from simpleio import tone
 
-from cedargrove_scale.configuration import Colors, Display
+from cedargrove_scale.configuration import Colors
 from cedargrove_scale.configuration import screen_to_rect
 
 
 class ScaleButtons(displayio.Group):
-    def __init__(self, disp_height=240, disp_width=320, timeout=1.0, debug=False):
-        """Instantiate the Scale on-screen touch buttons for PyPortal devices.
-        Builds the displayio button_group."""
+    def __init__(self, touchscreen=None, timeout=1.0, debug=False):
+        """Instantiate the on-screen touch buttons. Builds the displayio
+        button_group.
+
+        :param class touchscreen: The touchscreen class. Defaults to None.
+        :param float timeout: Button hold timeout in seconds. Defaults to 1.0.
+        :param bool debug: Displays buttons with visible touch outlines.
+        """
 
         self._debug = debug
         self._timeout = timeout
-        self._WIDTH = Display.width
-        self._HEIGHT = Display.height
+
+        if touchscreen:
+            self._ts = touchscreen
+        else:
+            raise RuntimeError("No touchscreen available for on-screen buttons.")
 
         self._outline = Colors.BLACK
         if self._debug:
             self._outline = Colors.GRAY
-
-        self._ts = Display.ts
 
         # Tare and alarm tile grid
         self._sprite_sheet, self._palette = adafruit_imageload.load(

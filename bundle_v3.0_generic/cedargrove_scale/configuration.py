@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
 # SPDX-License-Identifier: MIT
 
-# cedargrove_scale.configuration.py  2022-01-26 v3.0  Cedar Grove Studios
+# cedargrove_scale.configuration.py  2022-01-27 v3.027  Cedar Grove Studios
 
 import board
 import busio
@@ -16,6 +16,7 @@ from simpleio import tone
 import foamyguy_nvm_helper as nvm_helper
 
 class NVM:
+    """Store settings in nonvolatile memory (NVM)."""
     def __init__(self):
         pass
 
@@ -91,6 +92,7 @@ class SDCard:
 
 
 class Config:
+    """Load cell measurement configuration."""
     SAMPLE_AVG = 100  # Number of samples to average per measurement
 
     PGA_GAIN = 128  # Default gain for internal PGA
@@ -108,6 +110,7 @@ class Config:
 
 
 class Display:
+    """Detect display and touchscreen. Appear as built-in display."""
 
     # TEST FOR BUILT-IN DISPLAY AND TOUCHSCREEN VIA BOARD
     # USE DICTIONARY FOR OTHER DISPLAY/TOUCHSCREEN COMBINATIONS

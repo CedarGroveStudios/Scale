@@ -1,6 +1,6 @@
 # Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# scale_code.py  2022-01-26 v3.0  Cedar Grove Studios
+# scale_code.py  2022-01-27 v3.027  Cedar Grove Studios
 
 # uncomment the following import line to run the calibration method
 # (this may eventually become part of a built-in setup process)
@@ -14,7 +14,7 @@ from cedargrove_nau7802 import NAU7802
 from cedargrove_fake_nau7802 import FakeNAU7802
 import cedargrove_scale.graphics
 import cedargrove_scale.buttons
-from cedargrove_scale.configuration import play_tone, dial_to_rect
+from cedargrove_scale.configuration import play_tone
 from cedargrove_scale.configuration import Config, Colors, Display, NVM
 import cedargrove_widgets.scale
 from scale_defaults import Defaults
@@ -28,8 +28,8 @@ display = Display
 scale_group = displayio.Group()
 dial = cedargrove_widgets.scale.Scale(num_hands=2, max_scale=100,
     center=(0.5,0.55), size=0.52, display_size=display.size)
-labels = cedargrove_scale.graphics.Labels()
-panel = cedargrove_scale.buttons.ScaleButtons(timeout=1.0, debug=DEBUG)
+labels = cedargrove_scale.graphics.Labels(display=display)
+panel = cedargrove_scale.buttons.ScaleButtons(touchscreen = display.ts, timeout=1.0, debug=DEBUG)
 
 """display.brightness = Defaults.BRIGHTNESS
 display.rotation = 0)  # CONFIGURATION NEEDS SETTER/GETTER"""
