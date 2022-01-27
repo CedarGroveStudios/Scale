@@ -15,81 +15,6 @@ from adafruit_bitmapsaver import save_pixels
 from simpleio import tone
 import foamyguy_nvm_helper as nvm_helper
 
-class NVM:
-    """Store settings in nonvolatile memory (NVM)."""
-    def __init__(self):
-        pass
-
-    def write_settings(self, list=[None, None, None, None, False, False, False, False]):
-        """Write settings data to NVM.
-        Order of values and enables is alarm_1, alarm_2, tare_1, tare_2."""
-        list.insert(0, '')
-        nvm_helper.save_data(list, test_run=False, verbose=False)
-        return True
-
-    def restore_defaults(self):
-        """Clear NVM settings data."""
-        from scale_defaults import Defaults
-        print("  restore default settings")
-        settings = [
-            Defaults.ALARM_1_MASS_GR,
-            Defaults.ALARM_2_MASS_GR,
-            Defaults.TARE_1_MASS_GR,
-            Defaults.TARE_2_MASS_GR,
-            Defaults.ALARM_1_ENABLE,
-            Defaults.ALARM_2_ENABLE,
-            Defaults.TARE_1_ENABLE,
-            Defaults.TARE_2_ENABLE,
-        ]
-        self.write_settings(list=settings)
-        return True
-
-    def fetch_settings(self):
-        """Fetch alarm and tare settings data from NVM. If empty, provide
-        the scale_defaults values."""
-        try:
-            nvm_data = nvm_helper.read_data()
-        except:
-            print("  NVM not supported on microprocessor")
-            nvm_data = "x"
-
-        if nvm_data[0] == '':  # If settings valid, first entry in list should be ''
-            print("  settings data FOUND")
-            return nvm_data[1:]
-        else:
-            print("  settings data NOT FOUND")
-            self.restore_defaults()
-        return nvm_helper.read_data()[1:]
-
-
-class SDCard:
-    def __init__(self):
-        """Instantiate and test for PyPortal SD card."""
-        self._spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
-        self._sd_cs = digitalio.DigitalInOut(board.SD_CS)
-        self._has_card = False
-        try:
-            self._sdcard = adafruit_sdcard.SDCard(self._spi, self._sd_cs)
-            self._vfs = storage.VfsFat(self._sdcard)
-            storage.mount(self._vfs, "/sd")
-            print("SD card FOUND")
-            self._has_card = True
-        except OSError as error:
-            print("SD card NOT FOUND: ", error)
-
-    @property
-    def has_card(self):
-        """True if SD card inserted."""
-        return self._has_card
-
-    def screenshot(self):
-        if self._has_card:
-            print("* Taking Screenshot...", end="")
-            save_pixels("/sd/scale_screenshot.bmp")
-            print(" STORED")
-        else:
-            print("* SCREENSHOT: NO SD CARD")
-
 
 class Config:
     """Load cell measurement configuration."""
@@ -108,6 +33,71 @@ class Config:
     CALIB_RATIO_1 = _CHAN_1_TEST_MASS_GR / _CHAN_1_RAW_VALUE
     CALIB_RATIO_2 = _CHAN_2_TEST_MASS_GR / _CHAN_2_RAW_VALUE
 
+class TouchScreens:
+    """A parameters dictionary class for a variety of touchscreen displays.
+
+    SCREEN = {
+        Name : (
+            display_bus,
+            instantiation,
+            brightness
+            ),
+        }
+
+        """
+
+    SCREEN = {
+        "TFT FeatherWing - 2.4\" 320x240 Touchscreen" : (
+            "display_bus = displayio.FourWire(board.SPI(), command=board.D10, \
+            chip_select=board.D9, reset=None)",
+            "display = ILI9341(disp_bus, width=320, height=240)",
+            None,
+            ),
+        "TFT FeatherWing - 3.5\" 480x320 Touchscreen" : (
+            "display_bus = displayio.FourWire(board.SPI(), command=board.D10, \
+            chip_select=board.D9, reset=None)",
+            "display = HX8357(disp_bus, width=480, height=320)",
+            None,
+            ),
+        "built-in" : (
+            None, None, 1.0,
+            ),
+        }
+
+    """
+    TOUCH = {
+        Name : (
+            chip_select,
+            instantiation,
+            zero_rotation_calibration,
+            ),
+        }
+    """
+
+    TOUCH = {
+        "TFT FeatherWing - 2.4\" 320x240 Touchscreen" : (
+            "ts_cs = digitalio.DigitalInOut(board.D6)",
+            "ts = adafruit_stmpe610.Adafruit_STMPE610_SPI(board.SPI(), ts_cs, \
+            calibration=_calibration, size=(display.width, display.height), \
+            disp_rotation=display.rotation, touch_flip=(False, False))",
+            ((357, 3812), (390, 3555)),
+            ),
+
+        "TFT FeatherWing - 3.5\" 480x320 Touchscreen" : (
+            "ts_cs = digitalio.DigitalInOut(board.D6)",
+            "ts = adafruit_stmpe610.Adafruit_STMPE610_SPI(board.SPI(), ts_cs, \
+            calibration=_calibration, size=(display.width, display.height), \
+            disp_rotation=display.rotation, touch_flip=(False, True))",
+            ((357, 3812), (390, 3555)),
+            ),
+
+        "built-in" : (
+            None,
+            None,
+            ((0, 65535), (0, 65535)),
+            ),
+
+        }
 
 class Display:
     """Detect display and touchscreen. Appear as built-in display."""
@@ -214,3 +204,78 @@ def dial_to_rect(scale_factor, center=Display.center, radius=0.25):
     x = int(center[0] + (cos(radians) * radius))
     y = int(center[1] - (sin(radians) * radius))
     return x, y
+
+class NVM:
+    """Store settings in nonvolatile memory (NVM)."""
+    def __init__(self):
+        pass
+
+    def write_settings(self, list=[None, None, None, None, False, False, False, False]):
+        """Write settings data to NVM.
+        Order of values and enables is alarm_1, alarm_2, tare_1, tare_2."""
+        list.insert(0, '')
+        nvm_helper.save_data(list, test_run=False, verbose=False)
+        return True
+
+    def restore_defaults(self):
+        """Clear NVM settings data."""
+        from scale_defaults import Defaults
+        print("  restore default settings")
+        settings = [
+            Defaults.ALARM_1_MASS_GR,
+            Defaults.ALARM_2_MASS_GR,
+            Defaults.TARE_1_MASS_GR,
+            Defaults.TARE_2_MASS_GR,
+            Defaults.ALARM_1_ENABLE,
+            Defaults.ALARM_2_ENABLE,
+            Defaults.TARE_1_ENABLE,
+            Defaults.TARE_2_ENABLE,
+        ]
+        self.write_settings(list=settings)
+        return True
+
+    def fetch_settings(self):
+        """Fetch alarm and tare settings data from NVM. If empty, provide
+        the scale_defaults values."""
+        try:
+            nvm_data = nvm_helper.read_data()
+        except:
+            print("  NVM not supported on microprocessor")
+            nvm_data = "x"
+
+        if nvm_data[0] == '':  # If settings valid, first entry in list should be ''
+            print("  settings data FOUND")
+            return nvm_data[1:]
+        else:
+            print("  settings data NOT FOUND")
+            self.restore_defaults()
+        return nvm_helper.read_data()[1:]
+
+
+class SDCard:
+    def __init__(self):
+        """Instantiate and test for PyPortal SD card."""
+        self._spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
+        self._sd_cs = digitalio.DigitalInOut(board.SD_CS)
+        self._has_card = False
+        try:
+            self._sdcard = adafruit_sdcard.SDCard(self._spi, self._sd_cs)
+            self._vfs = storage.VfsFat(self._sdcard)
+            storage.mount(self._vfs, "/sd")
+            print("SD card FOUND")
+            self._has_card = True
+        except OSError as error:
+            print("SD card NOT FOUND: ", error)
+
+    @property
+    def has_card(self):
+        """True if SD card inserted."""
+        return self._has_card
+
+    def screenshot(self):
+        if self._has_card:
+            print("* Taking Screenshot...", end="")
+            save_pixels("/sd/scale_screenshot.bmp")
+            print(" STORED")
+        else:
+            print("* SCREENSHOT: NO SD CARD")
