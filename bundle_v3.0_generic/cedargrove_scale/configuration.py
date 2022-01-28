@@ -38,6 +38,7 @@ class TouchScreens:
 
     SCREEN = {
         Name : (
+            import,
             display_bus,
             instantiation,
             brightness
@@ -48,15 +49,21 @@ class TouchScreens:
 
     SCREEN = {
         "TFT FeatherWing - 2.4\" 320x240 Touchscreen" : (
-            "display_bus = displayio.FourWire(board.SPI(), command=board.D10, \
-            chip_select=board.D9, reset=None)",
-            "display = ILI9341(disp_bus, width=320, height=240)",
+            "adafruit_ili9341",
+            "board.SPI()",
+            "D10",
+            "D9",
+            "None",
+            "display = adafruit_ili9341.ILI9341(display_bus, width=320, height=240)",
             None,
             ),
         "TFT FeatherWing - 3.5\" 480x320 Touchscreen" : (
-            "display_bus = displayio.FourWire(board.SPI(), command=board.D10, \
-            chip_select=board.D9, reset=None)",
-            "display = HX8357(disp_bus, width=480, height=320)",
+            "adafruit_hx8357",
+            "board.SPI()",
+            "D10",
+            "D9",
+            "None",
+            "display = adafruit_hx8357.HX8357(display_bus, width=480, height=320)",
             None,
             ),
         "built-in" : (
@@ -67,8 +74,11 @@ class TouchScreens:
     """
     TOUCH = {
         Name : (
-            chip_select,
-            instantiation,
+            import module,
+            sub_class,
+            interface,
+            chip_select_pin,
+            touch_flip,
             zero_rotation_calibration,
             ),
         }
@@ -76,22 +86,27 @@ class TouchScreens:
 
     TOUCH = {
         "TFT FeatherWing - 2.4\" 320x240 Touchscreen" : (
-            "ts_cs = digitalio.DigitalInOut(board.D6)",
-            "ts = adafruit_stmpe610.Adafruit_STMPE610_SPI(board.SPI(), ts_cs, \
-            calibration=_calibration, size=(display.width, display.height), \
-            disp_rotation=display.rotation, touch_flip=(False, False))",
+            "adafruit_stmpe610",
+            "Adafruit_STMPE610_SPI",
+            "board.SPI()",
+            "D6",
+            "(False, False)",
             ((357, 3812), (390, 3555)),
             ),
 
         "TFT FeatherWing - 3.5\" 480x320 Touchscreen" : (
-            "ts_cs = digitalio.DigitalInOut(board.D6)",
-            "ts = adafruit_stmpe610.Adafruit_STMPE610_SPI(board.SPI(), ts_cs, \
-            calibration=_calibration, size=(display.width, display.height), \
-            disp_rotation=display.rotation, touch_flip=(False, True))",
+            "adafruit_stmpe610",
+            "Adafruit_STMPE610_SPI",
+            "board.SPI()",
+            "D6",
+            "(False, True)",
             ((357, 3812), (390, 3555)),
             ),
 
         "built-in" : (
+            "adafruit_touchscreen",
+            None,
+            None,
             None,
             None,
             ((0, 65535), (0, 65535)),
@@ -102,42 +117,52 @@ class TouchScreens:
 class Display:
     """Detect display and touchscreen. Appear as built-in display."""
 
-    # TEST FOR BUILT-IN DISPLAY AND TOUCHSCREEN VIA BOARD
-    # USE DICTIONARY FOR OTHER DISPLAY/TOUCHSCREEN COMBINATIONS
+    name = "3.5"  # set during class instantiation (TBD)
 
-    from adafruit_hx8357 import HX8357
-    #from adafruit_ili9341 import ILI9341
-    import adafruit_stmpe610
+    if "DISPLAY" and "TOUCH" in dir(board):
+        print("found a built-in DISPLAY and TOUCH")
+        name = "built-in"
 
-    # Previously measured raw zero-rotation touchscreen calibration tuple.
-    CALIBRATION = ((357, 3812), (390, 3555))
+    # check for screen
+    for screen_name in TouchScreens.SCREEN.keys():
+        if name in screen_name:
+            screen = TouchScreens.SCREEN.get(screen_name, None)
+            break
+
+    if screen:
+        print("screen definition found:", screen_name)
+    else:
+        print("no screen definition found -- ERROR")
+
+    touch = TouchScreens.TOUCH.get(screen_name, None)
+    if touch:
+        print("touchscreen definition found:", screen_name)
+    else:
+        print("no touchscreen definition found -- ERROR")
 
     # Release any resources currently in use for the displays
     displayio.release_displays()
 
-    # Define the display's SPI bus connection
-    disp_bus = displayio.FourWire(board.SPI(), command=board.D10,
-        chip_select=board.D9, reset=None)
+    # import the display library
+    print("import " + screen[0])
+    exec("import " + screen[0])
+    # define the display bus connection
+    print("display_bus = displayio.FourWire("+screen[1]+", command=board."+screen[2]+", chip_select=board."+screen[3]+", reset="+screen[4]+")")
+    exec("display_bus = displayio.FourWire("+screen[1]+", command=board."+screen[2]+", chip_select=board."+screen[3]+", reset="+screen[4]+")")
+    # instantiate the display
+    exec(screen[5])
 
-    """# Instantiate the 2.4" 320x240 TFT FeatherWing (#3315).
-    display = ILI9341(disp_bus, width=320, height=240)
-    _touch_flip = (False, False)"""
-
-    # Instantiate the 3.5" 480x320 TFT FeatherWing (#3651).
-    display = HX8357(disp_bus, width=480, height=320)
-    _touch_flip = (False, True)
-
-    # Instantiate touchscreen.
-    ts_cs = digitalio.DigitalInOut(board.D6)
-    # Update the raw calibration tuple with previously measured values.
-    ts = adafruit_stmpe610.Adafruit_STMPE610_SPI(
-        board.SPI(),
-        ts_cs,
-        calibration=CALIBRATION,
-        size=(display.width, display.height),
-        disp_rotation=display.rotation,
-        touch_flip=_touch_flip,
-    )
+    # import the touchscreen library
+    print("import " + touch[0])
+    exec("import " + touch[0])
+    # specify the touchscreen chip select pin
+    print("ts_cs = digitalio.DigitalInOut(board." + touch[3] + ")")
+    exec("ts_cs = digitalio.DigitalInOut(board." + touch[3] + ")")
+    # get the calibration value
+    _calibration = touch[5]
+    # instantiate the touchscreen
+    print("ts = " + touch[0] + "." + touch[1] + "(" + touch[2] + ", ts_cs, calibration=" + str(touch[5]) + ", size=(display.width, display.height), disp_rotation=display.rotation, touch_flip=" + touch[4] + ")")
+    exec("ts = " + touch[0] + "." + touch[1] + "(" + touch[2] + ", ts_cs, calibration=" + str(touch[5]) + ", size=(display.width, display.height), disp_rotation=display.rotation, touch_flip=" + touch[4] + ")")
 
     # Determine display and object sizes
     width = display.width
