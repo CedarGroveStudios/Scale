@@ -18,6 +18,7 @@ import foamyguy_nvm_helper as nvm_helper
 
 class Config:
     """Load cell measurement configuration."""
+
     SAMPLE_AVG = 100  # Number of samples to average per measurement
 
     PGA_GAIN = 128  # Default gain for internal PGA
@@ -33,22 +34,21 @@ class Config:
     CALIB_RATIO_1 = _CHAN_1_TEST_MASS_GR / _CHAN_1_RAW_VALUE
     CALIB_RATIO_2 = _CHAN_2_TEST_MASS_GR / _CHAN_2_RAW_VALUE
 
+
 class TouchScreens:
-    """A parameters dictionary class for a variety of touchscreen displays.
+    """A parameters dictionary class for a variety of touchscreen displays."""
 
     SCREEN = {
-        Name : (
-            import,
-            display_bus,
-            instantiation,
-            brightness
-            ),
-        }
-
-        """
-
-    SCREEN = {
-        "TFT FeatherWing - 2.4\" 320x240 Touchscreen" : (
+        "product_name": (
+            "driver_import",
+            "interface_bus",
+            "command_pin",
+            "chip_select_pin",
+            "reset_pin",
+            "display_instantiation",
+            "brightness_flag",
+        ),
+        'TFT FeatherWing - 2.4" 320x240 Touchscreen': (
             "adafruit_ili9341",
             "board.SPI()",
             "D10",
@@ -56,8 +56,8 @@ class TouchScreens:
             "None",
             "display = adafruit_ili9341.ILI9341(display_bus, width=320, height=240)",
             None,
-            ),
-        "TFT FeatherWing - 3.5\" 480x320 Touchscreen" : (
+        ),
+        'TFT FeatherWing - 3.5" 480x320 Touchscreen': (
             "adafruit_hx8357",
             "board.SPI()",
             "D10",
@@ -65,54 +65,52 @@ class TouchScreens:
             "None",
             "display = adafruit_hx8357.HX8357(display_bus, width=480, height=320)",
             None,
-            ),
-        "built-in" : (
-            None, None, 1.0,
-            ),
-        }
-
-    """
-    TOUCH = {
-        Name : (
-            import module,
-            sub_class,
-            interface,
-            chip_select_pin,
-            touch_flip,
-            zero_rotation_calibration,
-            ),
-        }
-    """
+        ),
+        "built-in": (
+            None,
+            None,
+            None,
+            None,
+            "display = board.DISPLAY",
+            1.0,
+        ),
+    }
 
     TOUCH = {
-        "TFT FeatherWing - 2.4\" 320x240 Touchscreen" : (
+        "product_name": (
+            "driver_import",
+            "sub_class"
+            "interface_bus",
+            "chip_select_pin",
+            "touch_range_flip",
+            "zero_rotation_calibration",
+        ),
+        'TFT FeatherWing - 2.4" 320x240 Touchscreen': (
             "adafruit_stmpe610",
             "Adafruit_STMPE610_SPI",
             "board.SPI()",
             "D6",
             "(False, False)",
             ((357, 3812), (390, 3555)),
-            ),
-
-        "TFT FeatherWing - 3.5\" 480x320 Touchscreen" : (
+        ),
+        'TFT FeatherWing - 3.5" 480x320 Touchscreen': (
             "adafruit_stmpe610",
             "Adafruit_STMPE610_SPI",
             "board.SPI()",
             "D6",
             "(False, True)",
             ((357, 3812), (390, 3555)),
-            ),
-
-        "built-in" : (
+        ),
+        "built-in": (
             "adafruit_touchscreen",
             None,
             None,
             None,
             None,
             ((0, 65535), (0, 65535)),
-            ),
+        ),
+    }
 
-        }
 
 class Display:
     """Detect display and touchscreen. Appear as built-in display."""
@@ -120,7 +118,7 @@ class Display:
     name = "3.5"  # set during class instantiation (TBD)
 
     if "DISPLAY" and "TOUCH" in dir(board):
-        print("found a built-in DISPLAY and TOUCH")
+        print("* found a built-in DISPLAY and TOUCH")
         name = "built-in"
 
     # check for screen
@@ -130,39 +128,69 @@ class Display:
             break
 
     if screen:
-        print("screen definition found:", screen_name)
+        print("* screen definition found:", screen_name)
     else:
-        print("no screen definition found -- ERROR")
+        print("* ERROR: no screen definition found")
 
     touch = TouchScreens.TOUCH.get(screen_name, None)
     if touch:
-        print("touchscreen definition found:", screen_name)
+        print("* touchscreen definition found:", screen_name)
     else:
-        print("no touchscreen definition found -- ERROR")
+        print("* ERROR: no touchscreen definition found")
 
     # Release any resources currently in use for the displays
     displayio.release_displays()
 
     # import the display library
-    print("import " + screen[0])
-    exec("import " + screen[0])
+    print("** instantiate the display")
+    command = ("import " + screen[0])
+    print(command)
+    exec(command)
     # define the display bus connection
-    print("display_bus = displayio.FourWire("+screen[1]+", command=board."+screen[2]+", chip_select=board."+screen[3]+", reset="+screen[4]+")")
-    exec("display_bus = displayio.FourWire("+screen[1]+", command=board."+screen[2]+", chip_select=board."+screen[3]+", reset="+screen[4]+")")
+    command = (
+        "display_bus = displayio.FourWire("
+        + screen[1]
+        + ", command=board."
+        + screen[2]
+        + ", chip_select=board."
+        + screen[3]
+        + ", reset="
+        + screen[4]
+        + ")"
+    )
+    print(command)
+    exec(command)
     # instantiate the display
+    print(screen[5])
     exec(screen[5])
 
     # import the touchscreen library
-    print("import " + touch[0])
-    exec("import " + touch[0])
+    print("** instantiate the touchscreen")
+    command = ("import " + touch[0])
+    print(command)
+    exec(command)
     # specify the touchscreen chip select pin
-    print("ts_cs = digitalio.DigitalInOut(board." + touch[3] + ")")
-    exec("ts_cs = digitalio.DigitalInOut(board." + touch[3] + ")")
+    command = ("ts_cs = digitalio.DigitalInOut(board." + touch[3] + ")")
+    print(command)
+    exec(command)
     # get the calibration value
     _calibration = touch[5]
     # instantiate the touchscreen
-    print("ts = " + touch[0] + "." + touch[1] + "(" + touch[2] + ", ts_cs, calibration=" + str(touch[5]) + ", size=(display.width, display.height), disp_rotation=display.rotation, touch_flip=" + touch[4] + ")")
-    exec("ts = " + touch[0] + "." + touch[1] + "(" + touch[2] + ", ts_cs, calibration=" + str(touch[5]) + ", size=(display.width, display.height), disp_rotation=display.rotation, touch_flip=" + touch[4] + ")")
+    command = (
+        "ts = "
+        + touch[0]
+        + "."
+        + touch[1]
+        + "("
+        + touch[2]
+        + ", ts_cs, calibration="
+        + str(touch[5])
+        + ", size=(display.width, display.height), disp_rotation=display.rotation, touch_flip="
+        + touch[4]
+        + ")"
+    )
+    print(command)
+    exec(command)
 
     # Determine display and object sizes
     width = display.width
@@ -230,21 +258,24 @@ def dial_to_rect(scale_factor, center=Display.center, radius=0.25):
     y = int(center[1] - (sin(radians) * radius))
     return x, y
 
+
 class NVM:
     """Store settings in nonvolatile memory (NVM)."""
+
     def __init__(self):
         pass
 
     def write_settings(self, list=[None, None, None, None, False, False, False, False]):
         """Write settings data to NVM.
         Order of values and enables is alarm_1, alarm_2, tare_1, tare_2."""
-        list.insert(0, '')
+        list.insert(0, "")
         nvm_helper.save_data(list, test_run=False, verbose=False)
         return True
 
     def restore_defaults(self):
         """Clear NVM settings data."""
         from scale_defaults import Defaults
+
         print("  restore default settings")
         settings = [
             Defaults.ALARM_1_MASS_GR,
@@ -268,7 +299,7 @@ class NVM:
             print("  NVM not supported on microprocessor")
             nvm_data = "x"
 
-        if nvm_data[0] == '':  # If settings valid, first entry in list should be ''
+        if nvm_data[0] == "":  # If settings valid, first entry in list should be ''
             print("  settings data FOUND")
             return nvm_data[1:]
         else:
