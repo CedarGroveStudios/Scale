@@ -1,11 +1,21 @@
 # SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
 # SPDX-License-Identifier: MIT
 
-# scale_defaults.py  2022-01-26 v2.0  Cedar Grove Studios
+# scale_defaults.py  2022-01-28 v2.028  Cedar Grove Studios
 
 class Defaults:
 
     NAME = "John's Espresso Bench"
+
+    """
+    DISPLAY -- choose unique descriptor string from:
+      TFT FeatherWing - 2.4" 320x240 Touchscreen
+      TFT FeatherWing - 3.5" 480x320 Touchscreen
+      built-in
+    CALIBRATION -- use touchscreen's zero-degree rotational measurement
+    """
+    DISPLAY = "3.5"
+    CALIBRATION = ((357, 3812), (390, 3555))  # 3.5" FeatherWing touchscreen
 
     BRIGHTNESS = 0.5  # Display brightness, 0 to 1.0; 0.75 typical, 0.1 for photos
 

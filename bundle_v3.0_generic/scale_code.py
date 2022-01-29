@@ -1,6 +1,6 @@
 # Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# scale_code.py  2022-01-27 v3.027  Cedar Grove Studios
+# scale_code.py  2022-01-28 v3.028  Cedar Grove Studios
 
 # uncomment the following import line to run the calibration method
 # (this may eventually become part of a built-in setup process)
@@ -24,10 +24,16 @@ gc.collect()
 DEBUG = False  # True: display button outlines
 
 # Instantiate display groups and graphics
-display = Display
+display = Display()
 scale_group = displayio.Group()
+
+if display.size[0] < 330:
+    dial_size=0.40
+else:
+    dial_size=0.52
 dial = cedargrove_widgets.scale.Scale(num_hands=2, max_scale=100,
-    center=(0.5,0.55), size=0.52, display_size=display.size)
+    center=(0.5,0.55), size=dial_size, display_size=display.size)
+
 labels = cedargrove_scale.graphics.Labels(display=display)
 panel = cedargrove_scale.buttons.ScaleButtons(touchscreen = display.ts, timeout=1.0, debug=DEBUG)
 

@@ -37,84 +37,95 @@ class Config:
 
 
 class Display:
-    """Detect display and touchscreen. Appear as built-in display."""
-    if "DISPLAY" and "TOUCH" in dir(board):
-        display_name = "built-in"
-    else:
-        display_name = Defaults.DISPLAY
+    def __init__(self):
+        """Detect display and touchscreen. Appear as built-in display."""
+        if "DISPLAY" and "TOUCH" in dir(board):
+            display_name = "built-in"
+        else:
+            display_name = Defaults.DISPLAY
 
-    _rotation = 0  # for now, only allow zero-degree rotation; fix built-in
+        self._rotation = 0  # for now, only allow zero-degree rotation; fix built-in
 
-    # Instantiate the screen
-    print(f"* Instantiate the {display_name} display")
-    if display_name in "built-in":
-        display = board.DISPLAY
-        display.rotation = _rotation
+        # Instantiate the screen
+        print(f"* Instantiate the {display_name} display")
+        if display_name in "built-in":
+            self.display = board.DISPLAY
+            self.display.rotation = self._rotation
 
-        # add rotation stuff here
-        _ts = adafruit_touchscreen.Touchscreen(
-            board.TOUCH_XL,
-            board.TOUCH_XR,
-            board.TOUCH_YD,
-            board.TOUCH_YU,
-            calibration=Defaults.CALIBRATION,
-            size=(display.width, display.height),
-        )
+            # add rotation stuff here
+            self._ts = adafruit_touchscreen.Touchscreen(
+                board.TOUCH_XL,
+                board.TOUCH_XR,
+                board.TOUCH_YD,
+                board.TOUCH_YU,
+                calibration=Defaults.CALIBRATION,
+                size=(display.width, display.height),
+            )
 
-    elif display_name in 'TFT FeatherWing - 2.4" 320x240 Touchscreen':
-        import adafruit_ili9341
-        import adafruit_stmpe610
-        displayio.release_displays()  # Release display resources
-        display_bus = displayio.FourWire(board.SPI(), command=board.D10, chip_select=board.D9, reset=None)
-        display = adafruit_ili9341.ILI9341(display_bus, width=320, height=240)
-        display.rotation = _rotation
-        ts_cs = digitalio.DigitalInOut(board.D6)
-        ts = adafruit_stmpe610.Adafruit_STMPE610_SPI(board.SPI(), ts_cs,
-            calibration=Defaults.CALIBRATION, size=(display.width, display.height),
-            disp_rotation=_rotation, touch_flip=(False, False))
+        elif display_name in 'TFT FeatherWing - 2.4" 320x240 Touchscreen':
+            import adafruit_ili9341
+            import adafruit_stmpe610
+            displayio.release_displays()  # Release display resources
+            display_bus = displayio.FourWire(board.SPI(), command=board.D10, chip_select=board.D9, reset=None)
+            self.display = adafruit_ili9341.ILI9341(display_bus, width=320, height=240)
+            self.display.rotation = self._rotation
+            ts_cs = digitalio.DigitalInOut(board.D6)
+            ts = adafruit_stmpe610.Adafruit_STMPE610_SPI(board.SPI(), ts_cs,
+                calibration=Defaults.CALIBRATION, size=(self.display.width, self.display.height),
+                disp_rotation=self._rotation, touch_flip=(False, False))
 
-    elif display_name in 'TFT FeatherWing - 3.5" 480x320 Touchscreen':
-        import adafruit_hx8357
-        import adafruit_stmpe610
-        displayio.release_displays()  # Release display resources
-        display_bus = displayio.FourWire(board.SPI(), command=board.D10, chip_select=board.D9, reset=None)
-        display = adafruit_hx8357.HX8357(display_bus, width=480, height=320)
-        display.rotation = _rotation
-        ts_cs = digitalio.DigitalInOut(board.D6)
-        ts = adafruit_stmpe610.Adafruit_STMPE610_SPI(board.SPI(), ts_cs,
-            calibration=Defaults.CALIBRATION, size=(display.width, display.height),
-            disp_rotation=_rotation, touch_flip=(False, True))
-    else:
-        print(f"** ERROR: display {display_name} not defined")
+        elif display_name in 'TFT FeatherWing - 3.5" 480x320 Touchscreen':
+            import adafruit_hx8357
+            import adafruit_stmpe610
+            displayio.release_displays()  # Release display resources
+            display_bus = displayio.FourWire(board.SPI(), command=board.D10, chip_select=board.D9, reset=None)
+            self.display = adafruit_hx8357.HX8357(display_bus, width=480, height=320)
+            self.display.rotation = self._rotation
+            ts_cs = digitalio.DigitalInOut(board.D6)
+            ts = adafruit_stmpe610.Adafruit_STMPE610_SPI(board.SPI(), ts_cs,
+                calibration=Defaults.CALIBRATION, size=(self.display.width, self.display.height),
+                disp_rotation=self._rotation, touch_flip=(False, True))
+        else:
+            print(f"** ERROR: display {display_name} not defined")
 
-    if display.width < 330:
-        FONT_0 = bitmap_font.load_font("/fonts/Helvetica-Bold-24.bdf")
-        FONT_1 = bitmap_font.load_font("/fonts/OpenSans-9.bdf")
-    else:
-        FONT_0 = bitmap_font.load_font("/fonts/Helvetica-Bold-36.bdf")
-        FONT_1 = bitmap_font.load_font("/fonts/OpenSans-16.bdf")
+        self._width = self.display.width
+        self._height = self.display.height
+        self._center = (self._width // 2, self._height // 2)
+        print("init self._width, self._height", self._width, self._height)
+        print("init self._center", self._center)
 
-    # Determine display and object sizes
-    width = display.width
-    height = display.height
-    center = (width // 2, height // 2)
-    size = (display.width, display.height)
-    try:
-        brightness = display.brightness
-    except:
-        brightness = 1.0
-    rotation = display.rotation
+        if self.display.width < 330:
+            self.FONT_0 = bitmap_font.load_font("/fonts/Helvetica-Bold-24.bdf")
+            self.FONT_1 = bitmap_font.load_font("/fonts/OpenSans-9.bdf")
+        else:
+            self.FONT_0 = bitmap_font.load_font("/fonts/Helvetica-Bold-36.bdf")
+            self.FONT_1 = bitmap_font.load_font("/fonts/OpenSans-16.bdf")
 
-    if display.width < 330:
-        FONT_0 = bitmap_font.load_font("/fonts/Helvetica-Bold-24.bdf")
-        FONT_1 = bitmap_font.load_font("/fonts/OpenSans-9.bdf")
-    else:
-        FONT_0 = bitmap_font.load_font("/fonts/Helvetica-Bold-36.bdf")
-        FONT_1 = bitmap_font.load_font("/fonts/OpenSans-16.bdf")
+    width = self._width
+    height = self._height
+    size = (width, height)
+    center = (width//2, height//2)
 
     def show(self, group):
-        Display.display.show(group)
+        self.display.show(group)
         return
+
+
+def screen_to_rect(self, width_factor=0, height_factor=0):
+    """Convert normalized screen position input (0.0 to 1.0) to the display's
+    rectangular pixel position."""
+    return int(Display.width * width_factor), int(Display.height * height_factor)
+
+
+def dial_to_rect(self, scale_factor, center=(0,0), radius=0.25):
+    """Convert normalized scale_factor input (-1.0 to 1.0) to a rectangular pixel
+    position on the circumference of a circle with center (x,y pixels) and
+    radius (pixels)."""
+    radians = (-2 * pi) * (scale_factor)  # convert scale_factor to radians
+    radians = radians + (pi / 2)  # rotate axis counterclockwise
+    x = int(center[0] + (cos(radians) * radius))
+    y = int(center[1] - (sin(radians) * radius))
+    return x, y
 
 
 class Colors:
@@ -142,23 +153,6 @@ def play_tone(note=None, count=1):
         elif note == "low":
             tone(board.A0, 440, 0.1)
     return
-
-
-def screen_to_rect(width_factor=0, height_factor=0):
-    """Convert normalized screen position input (0.0 to 1.0) to the display's
-    rectangular pixel position."""
-    return int(Display.width * width_factor), int(Display.height * height_factor)
-
-
-def dial_to_rect(scale_factor, center=Display.center, radius=0.25):
-    """Convert normalized scale_factor input (-1.0 to 1.0) to a rectangular pixel
-    position on the circumference of a circle with center (x,y pixels) and
-    radius (pixels)."""
-    radians = (-2 * pi) * (scale_factor)  # convert scale_factor to radians
-    radians = radians + (pi / 2)  # rotate axis counterclockwise
-    x = int(center[0] + (cos(radians) * radius))
-    y = int(center[1] - (sin(radians) * radius))
-    return x, y
 
 
 class NVM:
