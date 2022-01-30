@@ -15,7 +15,9 @@ class Defaults:
     CALIBRATION -- use touchscreen's zero-degree rotational measurement
     """
     DISPLAY_NAME = "built-in"
-    CALIBRATION = ((357, 3812), (390, 3555))  # 3.5" FeatherWing touchscreen
+    CALIBRATION = ((5200, 59000), (5800, 57000))  # "built-in" PyPortal
+    #CALIBRATION = ((357, 3812), (390, 3555))  # 2.4" FeatherWing touchscreen
+    #CALIBRATION = ((357, 3812), (390, 3555))  # 3.5" FeatherWing touchscreen
 
     BRIGHTNESS = 0.5  # Display brightness, 0 to 1.0; 0.75 typical, 0.1 for photos
 
