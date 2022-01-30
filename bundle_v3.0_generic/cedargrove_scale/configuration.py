@@ -1,17 +1,16 @@
 # SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
 # SPDX-License-Identifier: MIT
 
-# cedargrove_scale.configuration.py  2022-01-28 v3.028  Cedar Grove Studios
+# cedargrove_scale.configuration.py  2022-01-29 v3.029  Cedar Grove Studios
 
 import board
 import busio
 import digitalio
 import displayio
-import storage
-from math import cos, sin, pi
-import adafruit_sdcard
+#import storage
+#import adafruit_sdcard
+#from adafruit_bitmapsaver import save_pixels
 from adafruit_bitmap_font import bitmap_font
-from adafruit_bitmapsaver import save_pixels
 from simpleio import tone
 from scale_defaults import Defaults
 import foamyguy_nvm_helper as nvm_helper
@@ -21,7 +20,6 @@ class Config:
     """Load cell measurement configuration."""
 
     SAMPLE_AVG = 100  # Number of samples to average per measurement
-
     PGA_GAIN = 128  # Default gain for internal PGA
 
     # Load cell calibration ratio; ADC_raw_measurement
@@ -37,22 +35,32 @@ class Config:
 
 
 class Display:
-    """Detect display and touchscreen. Appear as built-in display."""
+    """Instantiate the display and touchscreen as specified by the DISPLAY_NAME
+    string and the touchscreen zero-rotation CALIBRATION value in the Defaults
+    class (scale_defaults.py). The Display class permits add-on displays to
+    appear and act the same as built-in displays."""
+    def __init__(self):
+        pass
+
     if "DISPLAY" and "TOUCH" in dir(board):
         display_name = "built-in"
     else:
-        display_name = Defaults.DISPLAY
+        display_name = Defaults.DISPLAY_NAME
 
-    _rotation = 0  # for now, only allow zero-degree rotation; fix built-in
+    # Landscape orientation only for now. Would need to fix built-in
+    # touchscreen instantiation if rotation is needed in the future.
+    rotation = 0
 
     # Instantiate the screen
     print(f"* Instantiate the {display_name} display")
     if display_name in "built-in":
+        import adafruit_touchscreen
         display = board.DISPLAY
-        display.rotation = _rotation
+        display.rotation = rotation
+        display.brightness = Defaults.BRIGHTNESS
 
         # add rotation stuff here
-        _ts = adafruit_touchscreen.Touchscreen(
+        ts = adafruit_touchscreen.Touchscreen(
             board.TOUCH_XL,
             board.TOUCH_XR,
             board.TOUCH_YD,
@@ -67,11 +75,11 @@ class Display:
         displayio.release_displays()  # Release display resources
         display_bus = displayio.FourWire(board.SPI(), command=board.D10, chip_select=board.D9, reset=None)
         display = adafruit_ili9341.ILI9341(display_bus, width=320, height=240)
-        display.rotation = _rotation
+        display.rotation = rotation
         ts_cs = digitalio.DigitalInOut(board.D6)
         ts = adafruit_stmpe610.Adafruit_STMPE610_SPI(board.SPI(), ts_cs,
             calibration=Defaults.CALIBRATION, size=(display.width, display.height),
-            disp_rotation=_rotation, touch_flip=(False, False))
+            disp_rotation=rotation, touch_flip=(False, False))
 
     elif display_name in 'TFT FeatherWing - 3.5" 480x320 Touchscreen':
         import adafruit_hx8357
@@ -79,13 +87,13 @@ class Display:
         displayio.release_displays()  # Release display resources
         display_bus = displayio.FourWire(board.SPI(), command=board.D10, chip_select=board.D9, reset=None)
         display = adafruit_hx8357.HX8357(display_bus, width=480, height=320)
-        display.rotation = _rotation
+        display.rotation = rotation
         ts_cs = digitalio.DigitalInOut(board.D6)
         ts = adafruit_stmpe610.Adafruit_STMPE610_SPI(board.SPI(), ts_cs,
             calibration=Defaults.CALIBRATION, size=(display.width, display.height),
-            disp_rotation=_rotation, touch_flip=(False, True))
+            disp_rotation=rotation, touch_flip=(False, True))
     else:
-        print(f"** ERROR: display {display_name} not defined")
+        print(f"*** ERROR: display {display_name} not defined")
 
     if display.width < 330:
         FONT_0 = bitmap_font.load_font("/fonts/Helvetica-Bold-24.bdf")
@@ -99,22 +107,42 @@ class Display:
     height = display.height
     center = (width // 2, height // 2)
     size = (display.width, display.height)
-    try:
-        brightness = display.brightness
-    except:
-        brightness = 1.0
     rotation = display.rotation
 
-    if display.width < 330:
-        FONT_0 = bitmap_font.load_font("/fonts/Helvetica-Bold-24.bdf")
-        FONT_1 = bitmap_font.load_font("/fonts/OpenSans-9.bdf")
-    else:
-        FONT_0 = bitmap_font.load_font("/fonts/Helvetica-Bold-36.bdf")
-        FONT_1 = bitmap_font.load_font("/fonts/OpenSans-16.bdf")
+    @property
+    def brightness(self):
+        try:
+            level = self.display.brightness
+        except:
+            level = 1.0
+        return level
+
+    @brightness.setter
+    def brightness(self, level):
+        try:
+            self.display.brightness = level
+        except:
+            print("** WARNING: Display brightness not adjustable")
+
 
     def show(self, group):
         Display.display.show(group)
         return
+
+
+    def screen_to_rect(self, width_factor=0, height_factor=0):
+        """Convert normalized screen position input (0.0 to 1.0) to the display's
+        rectangular pixel position."""
+        return int(self.width * width_factor), int(self.height * height_factor)
+
+
+def play_tone(note=None, count=1):
+    for i in range(0, count):
+        if note == "high":
+            tone(board.A0, 880, 0.1)
+        elif note == "low":
+            tone(board.A0, 440, 0.1)
+    return
 
 
 class Colors:
@@ -133,32 +161,6 @@ class Colors:
     YELLOW = 0xFFFF00
     YELLOW_DK = 0x202000
     WHITE = 0xFFFFFF
-
-
-def play_tone(note=None, count=1):
-    for i in range(0, count):
-        if note == "high":
-            tone(board.A0, 880, 0.1)
-        elif note == "low":
-            tone(board.A0, 440, 0.1)
-    return
-
-
-def screen_to_rect(width_factor=0, height_factor=0):
-    """Convert normalized screen position input (0.0 to 1.0) to the display's
-    rectangular pixel position."""
-    return int(Display.width * width_factor), int(Display.height * height_factor)
-
-
-def dial_to_rect(scale_factor, center=Display.center, radius=0.25):
-    """Convert normalized scale_factor input (-1.0 to 1.0) to a rectangular pixel
-    position on the circumference of a circle with center (x,y pixels) and
-    radius (pixels)."""
-    radians = (-2 * pi) * (scale_factor)  # convert scale_factor to radians
-    radians = radians + (pi / 2)  # rotate axis counterclockwise
-    x = int(center[0] + (cos(radians) * radius))
-    y = int(center[1] - (sin(radians) * radius))
-    return x, y
 
 
 class NVM:
@@ -198,21 +200,22 @@ class NVM:
         try:
             nvm_data = nvm_helper.read_data()
         except:
-            print("  NVM not supported on microprocessor")
+            print("** WARNING: NVM not supported on microprocessor")
+            print("   Settings will not be stored")
             nvm_data = "x"
 
         if nvm_data[0] == "":  # If settings valid, first entry in list should be ''
             print("  settings data FOUND")
             return nvm_data[1:]
         else:
-            print("  settings data NOT FOUND")
+            print("** WARNING: settings data NOT FOUND")
             self.restore_defaults()
         return nvm_helper.read_data()[1:]
 
 
-class SDCard:
+"""class SDCard:
     def __init__(self):
-        """Instantiate and test for PyPortal SD card."""
+        "Instantiate and test for PyPortal SD card."
         self._spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
         self._sd_cs = digitalio.DigitalInOut(board.SD_CS)
         self._has_card = False
@@ -220,20 +223,20 @@ class SDCard:
             self._sdcard = adafruit_sdcard.SDCard(self._spi, self._sd_cs)
             self._vfs = storage.VfsFat(self._sdcard)
             storage.mount(self._vfs, "/sd")
-            print("SD card FOUND")
+            print("* SD card FOUND")
             self._has_card = True
         except OSError as error:
-            print("SD card NOT FOUND: ", error)
+            print("** WARNING: SD card NOT FOUND: ", error)
 
     @property
     def has_card(self):
-        """True if SD card inserted."""
+        "True if SD card inserted."
         return self._has_card
 
     def screenshot(self):
         if self._has_card:
             print("* Taking Screenshot...", end="")
             save_pixels("/sd/scale_screenshot.bmp")
-            print(" STORED")
+            print("  Screenshot STORED")
         else:
-            print("* SCREENSHOT: NO SD CARD")
+            print("** WARNING: Screenshot: NO SD CARD")"""

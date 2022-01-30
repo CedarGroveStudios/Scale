@@ -1,9 +1,9 @@
 # Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# scale_code.py  2022-01-28 v3.028  Cedar Grove Studios
+# scale_code.py  2022-01-29 v3.029  Cedar Grove Studios
 
-# uncomment the following import line to run the calibration method
-# (this may eventually become part of a built-in setup process)
+# uncomment the following import line to run the load cell calibration method
+# (this may eventually become part of a setup process)
 # import cedargrove_scale.load_cell_calibrator
 
 import board
@@ -27,7 +27,7 @@ DEBUG = False  # True: display button outlines
 display = Display()
 scale_group = displayio.Group()
 
-if display.size[0] < 330:
+if display.size[0] < 320:
     dial_size=0.40
 else:
     dial_size=0.52
@@ -37,8 +37,7 @@ dial = cedargrove_widgets.scale.Scale(num_hands=2, max_scale=100,
 labels = cedargrove_scale.graphics.Labels(display=display)
 panel = cedargrove_scale.buttons.ScaleButtons(touchscreen = display.ts, timeout=1.0, debug=DEBUG)
 
-"""display.brightness = Defaults.BRIGHTNESS
-display.rotation = 0)  # CONFIGURATION NEEDS SETTER/GETTER"""
+display.brightness = Defaults.BRIGHTNESS
 
 # Instantiate Non-Volatile-Memory
 nvm = NVM()
@@ -48,8 +47,8 @@ try:
     nau7802 = NAU7802(board.I2C(), address=0x2A, active_channels=2)
     print("* NAU7802 FeatherWing FOUND")
 except:
-    nau7802 = FakeNAU7802(board.I2C(), address=0x2A, active_channels=2)
-    print("*** NAU7802 FeatherWing NOT FOUND; random data will be displayed")
+    nau7802 = FakeNAU7802(None, address=0x2A, active_channels=2)
+    print("*** ERROR: NAU7802 FeatherWing NOT FOUND; random data will be displayed")
 
 
 def read_settings():

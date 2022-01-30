@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
 # SPDX-License-Identifier: MIT
 
-# cedargrove_scale.buttons.py  2022-01-27 v3.027  Cedar Grove Studios
+# cedargrove_scale.buttons.py  2022-01-29 v3.029  Cedar Grove Studios
 
 import board
 import time
@@ -9,9 +9,7 @@ import displayio
 import adafruit_imageload
 from adafruit_button import Button
 from simpleio import tone
-
-from cedargrove_scale.configuration import Colors
-from cedargrove_scale.configuration import screen_to_rect
+from cedargrove_scale.configuration import Colors, Display
 
 
 class ScaleButtons(displayio.Group):
@@ -24,13 +22,15 @@ class ScaleButtons(displayio.Group):
         :param bool debug: Displays buttons with visible touch outlines.
         """
 
+        display = Display()
+
         self._debug = debug
         self._timeout = timeout
 
         if touchscreen:
             self._ts = touchscreen
         else:
-            raise RuntimeError("No touchscreen available for on-screen buttons.")
+            raise RuntimeError("*** ERROR: Touchscreen NOT FOUND.")
 
         self._outline = Colors.BLACK
         if self._debug:
@@ -48,8 +48,8 @@ class ScaleButtons(displayio.Group):
         self._buttons = []
         self._button_group = displayio.Group()
 
-        x0, y0 = screen_to_rect(0.25, 0.01)
-        w, h = screen_to_rect(0.50, 0.15)
+        x0, y0 = display.screen_to_rect(0.25, 0.01)
+        w, h = display.screen_to_rect(0.50, 0.15)
         reset_button = Button(
             x=x0,
             y=y0,
@@ -65,8 +65,8 @@ class ScaleButtons(displayio.Group):
         self._button_group.append(reset_button)
         self._buttons.append(reset_button)
 
-        x0, y0 = screen_to_rect(0.01, 0.28)
-        w, h = screen_to_rect(0.30, 0.18)
+        x0, y0 = display.screen_to_rect(0.01, 0.28)
+        w, h = display.screen_to_rect(0.30, 0.18)
         zero_1_button = Button(
             x=x0,
             y=y0,
@@ -82,8 +82,8 @@ class ScaleButtons(displayio.Group):
         self._button_group.append(zero_1_button)
         self._buttons.append(zero_1_button)
 
-        x0, y0 = screen_to_rect(0.70, 0.28)
-        w, h = screen_to_rect(0.30, 0.18)
+        x0, y0 = display.screen_to_rect(0.70, 0.28)
+        w, h = display.screen_to_rect(0.30, 0.18)
         zero_2_button = Button(
             x=x0,
             y=y0,
@@ -99,8 +99,8 @@ class ScaleButtons(displayio.Group):
         self._button_group.append(zero_2_button)
         self._buttons.append(zero_2_button)
 
-        x0, y0 = screen_to_rect(0.01, 0.50)
-        w, h = screen_to_rect(0.30, 0.19)
+        x0, y0 = display.screen_to_rect(0.01, 0.50)
+        w, h = display.screen_to_rect(0.30, 0.19)
         tare_1_button = Button(
             x=x0,
             y=y0,
@@ -116,8 +116,8 @@ class ScaleButtons(displayio.Group):
         self._button_group.append(tare_1_button)
         self._buttons.append(tare_1_button)
 
-        x0, y0 = screen_to_rect(0.70, 0.50)
-        w, h = screen_to_rect(0.30, 0.19)
+        x0, y0 = display.screen_to_rect(0.70, 0.50)
+        w, h = display.screen_to_rect(0.30, 0.19)
         tare_2_button = Button(
             x=x0,
             y=y0,
@@ -133,8 +133,8 @@ class ScaleButtons(displayio.Group):
         self._button_group.append(tare_2_button)
         self._buttons.append(tare_2_button)
 
-        x0, y0 = screen_to_rect(0.01, 0.70)
-        w, h = screen_to_rect(0.30, 0.20)
+        x0, y0 = display.screen_to_rect(0.01, 0.70)
+        w, h = display.screen_to_rect(0.30, 0.20)
         alarm_1_button = Button(
             x=x0,
             y=y0,
@@ -150,8 +150,8 @@ class ScaleButtons(displayio.Group):
         self._button_group.append(alarm_1_button)
         self._buttons.append(alarm_1_button)
 
-        x0, y0 = screen_to_rect(0.70, 0.70)
-        w, h = screen_to_rect(0.30, 0.20)
+        x0, y0 = display.screen_to_rect(0.70, 0.70)
+        w, h = display.screen_to_rect(0.30, 0.20)
         alarm_2_button = Button(
             x=x0,
             y=y0,
@@ -175,7 +175,7 @@ class ScaleButtons(displayio.Group):
             tile_width=32,
             tile_height=48,
         )
-        self.tare_1_icon.x, self.tare_1_icon.y = screen_to_rect(0.08, 0.50)
+        self.tare_1_icon.x, self.tare_1_icon.y = display.screen_to_rect(0.08, 0.50)
         self.tare_1_icon[0] = 3
         self._button_group.append(self.tare_1_icon)
 
@@ -187,7 +187,7 @@ class ScaleButtons(displayio.Group):
             tile_width=32,
             tile_height=48,
         )
-        self.alarm_1_icon.x, self.alarm_1_icon.y = screen_to_rect(0.08, 0.70)
+        self.alarm_1_icon.x, self.alarm_1_icon.y = display.screen_to_rect(0.08, 0.70)
         self.alarm_1_icon[0] = 2
         self._button_group.append(self.alarm_1_icon)
 
@@ -199,7 +199,7 @@ class ScaleButtons(displayio.Group):
             tile_width=32,
             tile_height=48,
         )
-        self.tare_2_icon.x, self.tare_2_icon.y = screen_to_rect(0.85, 0.50)
+        self.tare_2_icon.x, self.tare_2_icon.y = display.screen_to_rect(0.85, 0.50)
         self.tare_2_icon[0] = 7
         self._button_group.append(self.tare_2_icon)
 
@@ -211,7 +211,7 @@ class ScaleButtons(displayio.Group):
             tile_width=32,
             tile_height=48,
         )
-        self.alarm_2_icon.x, self.alarm_2_icon.y = screen_to_rect(0.85, 0.70)
+        self.alarm_2_icon.x, self.alarm_2_icon.y = display.screen_to_rect(0.85, 0.70)
         self.alarm_2_icon[0] = 6
         self._button_group.append(self.alarm_2_icon)
 
