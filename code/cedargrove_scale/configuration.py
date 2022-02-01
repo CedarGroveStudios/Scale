@@ -7,10 +7,6 @@ import board
 import busio
 import digitalio
 import displayio
-
-# import storage
-# import adafruit_sdcard
-# from adafruit_bitmapsaver import save_pixels
 from adafruit_bitmap_font import bitmap_font
 from simpleio import tone
 from scale_defaults import Defaults
@@ -228,32 +224,3 @@ class NVM:
             print("** WARNING: settings data NOT FOUND")
             self.restore_defaults()
         return nvm_helper.read_data()[1:]
-
-
-"""class SDCard:
-    def __init__(self):
-        "Instantiate and test for PyPortal SD card."
-        self._spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
-        self._sd_cs = digitalio.DigitalInOut(board.SD_CS)
-        self._has_card = False
-        try:
-            self._sdcard = adafruit_sdcard.SDCard(self._spi, self._sd_cs)
-            self._vfs = storage.VfsFat(self._sdcard)
-            storage.mount(self._vfs, "/sd")
-            print("* SD card FOUND")
-            self._has_card = True
-        except OSError as error:
-            print("** WARNING: SD card NOT FOUND: ", error)
-
-    @property
-    def has_card(self):
-        "True if SD card inserted."
-        return self._has_card
-
-    def screenshot(self):
-        if self._has_card:
-            print("* Taking Screenshot...", end="")
-            save_pixels("/sd/scale_screenshot.bmp")
-            print("  Screenshot STORED")
-        else:
-            print("** WARNING: Screenshot: NO SD CARD")"""
