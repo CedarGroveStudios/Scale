@@ -3,7 +3,6 @@
 
 # scale_defaults.py  2022-01-29 v2.029  Cedar Grove Studios
 
-
 class Defaults:
 
     NAME = "John's Espresso Bench"
@@ -16,9 +15,11 @@ class Defaults:
     CALIBRATION -- use touchscreen's zero-degree rotational measurement
     """
     DISPLAY_NAME = "built-in"
-    CALIBRATION = ((5200, 59000), (5800, 57000))  # "built-in" PyPortal
-    # CALIBRATION = ((357, 3812), (390, 3555))  # 2.4" FeatherWing touchscreen
-    # CALIBRATION = ((357, 3812), (390, 3555))  # 3.5" FeatherWing touchscreen
+    #CALIBRATION = ((7416, 59127), (9071, 54063))  # "built-in"; PyPortal Pynt
+    CALIBRATION = ((8567, 58264), (9216, 55479))  # "built-in"; PyPortal
+    #CALIBRATION = ((5055, 60599), (7751, 56543))  # "built-in"; PyPortal Titano
+    #CALIBRATION = ((235, 3880), (321, 3759))  # 2.4" FeatherWing touchscreen
+    #CALIBRATION = ((288, 3879), (352, 3843))  # 3.5" FeatherWing touchscreen
 
     BRIGHTNESS = 0.5  # Display brightness, 0 to 1.0; 0.75 typical, 0.1 for photos
 
