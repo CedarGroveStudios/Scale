@@ -2,10 +2,6 @@
 # Cedar Grove NAU7802 FeatherWing
 # scale_code.py  2022-01-29 v3.029  Cedar Grove Studios
 
-# uncomment the following import line to run the load cell calibration method
-# (this may eventually become part of a setup process)
-# import cedargrove_scale.load_cell_calibrator
-
 import board
 import displayio
 import gc
