@@ -3,12 +3,34 @@
 
 # cedargrove_fake_nau7802.py  2022-04-23 v1.5  Cedar Grove Maker Studios
 
-# A fake device driver library that simulates the CedarGrove NAU7802 24-bit
-#   ADC FeatherWing, used for code testing without a connected wing.
+
+"""
+`cedargrove_fake_nau7802`
+================================================================================
+
+A CircuitPython driver class that simulates the NAU7802 24-bit ADC. Used for
+code testing without a connected NAU7802 FeatherWing.
+
+
+* Author(s): JG
+
+Implementation Notes
+--------------------
+
+**Hardware:**
+
+**Software and Dependencies:**
+
+* Adafruit CircuitPython firmware for the supported boards:
+  https://circuitpython.org/downloads
+
+"""
+
+__version__ = "0.0.0-auto.0"
+__repo__ = "https://github.com/CedarGroveStudios/Cedargrove_CircuitPython_NAU7802.git"
 
 import time
 import random
-
 
 class LDOVoltage:
     LDO_3V0 = 0x5  # LDO 3.0 volts; _CTRL1[5:3] = 5
