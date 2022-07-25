@@ -1,6 +1,6 @@
 # Scale -- dual channel version
 # Cedar Grove NAU7802 FeatherWing
-# scale_code.py  2022-01-29 v3.029  Cedar Grove Studios
+# scale_code.py  2022-07-25 v3.3  Cedar Grove Studios
 
 # uncomment the following import line to run the load cell calibration method
 # (this may eventually become part of a setup process)
@@ -89,10 +89,9 @@ def zero_channel():
         % (nau7802.channel, nau7802.calibrate("OFFSET")),
         end="",
     )
-    zero_offset = read(100)  # Average 100 samples to establish zero offset value
     print(" channel zeroed")
     labels.status_label.text = " "
-    return zero_offset
+    return
 
 
 def read(samples=Config.SAMPLE_AVG):
@@ -160,12 +159,11 @@ print("  enable NAU7802 digital and analog power: %5s" % (nau7802.enable(True)))
 
 nau7802.gain = Config.PGA_GAIN  # Use default gain
 nau7802.channel = 1  # Set to second channel
-chan_1_zero = chan_2_zero = 0
 if not DEBUG:
-    chan_1_zero = zero_channel()  # Re-calibrate and get raw zero offset value
+    zero_channel()  # Re-calibrate and zero
 nau7802.channel = 2  # Set to first channel
 if not DEBUG:
-    chan_2_zero = zero_channel()  # Re-calibrate and get raw zero offset value
+    zero_channel()  # Re-calibrate and zero
 
 # Get default or stored alarm and tare values
 print("* Read default or stored alarm and tare settings")
@@ -198,7 +196,7 @@ while True:
         tare = tare_1_mass_gr
     else:
         tare = 0
-    chan_1_mass_gr = round((value - chan_1_zero) * Config.CALIB_RATIO_1, 1) - tare
+    chan_1_mass_gr = round(value * Config.CALIB_RATIO_1, 1) - tare
     chan_1_mass_oz = round(chan_1_mass_gr * 0.03527, 2)
     if str(chan_1_mass_gr) == "-0.0":  # Filter -0.0 value
         chan_1_mass_gr = 0.0
@@ -210,7 +208,7 @@ while True:
         tare = tare_2_mass_gr
     else:
         tare = 0
-    chan_2_mass_gr = round((value - chan_2_zero) * Config.CALIB_RATIO_2, 1) - tare
+    chan_2_mass_gr = round(value * Config.CALIB_RATIO_2, 1) - tare
     chan_2_mass_oz = round(chan_2_mass_gr * 0.03527, 2)
     if str(chan_2_mass_gr) == "-0.0":  # Filter -0.0 value
         chan_2_mass_gr = 0.0
@@ -265,9 +263,9 @@ while True:
         nau7802.channel = channel
 
         if channel == 1:
-            chan_1_zero = zero_channel()
+            zero_channel()
         else:
-            chan_2_zero = zero_channel()
+            zero_channel()
 
     if button_pressed in ("tare_1", "tare_2"):
         channel = int(button_pressed[5])
