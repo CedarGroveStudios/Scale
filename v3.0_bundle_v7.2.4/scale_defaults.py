@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
 # SPDX-License-Identifier: MIT
 
-# scale_defaults.py  2022-01-29 v2.029  Cedar Grove Studios
+# scale_defaults.py  2022-07-26 v2.07  Cedar Grove Maker Studios
 
 class Defaults:
 
@@ -12,6 +12,7 @@ class Defaults:
       TFT FeatherWing - 2.4" 320x240 Touchscreen
       TFT FeatherWing - 3.5" 480x320 Touchscreen
       built-in
+      
     CALIBRATION -- use touchscreen's zero-degree rotational measurement
     """
     DISPLAY_NAME = "built-in"
@@ -28,8 +29,8 @@ class Defaults:
     CHAN_1_NAME = "beans"  # 6 characters maximum
     CHAN_2_NAME = "shots"  # 6 characters maximum
 
-    TARE_1_MASS_GR = 70.0  # Channel 1 startup tare value; zero to disable
-    TARE_2_MASS_GR = 35.0  # Channel 2 startup tare value; zero to disable
+    TARE_1_MASS_GR = 68.0  # Channel 1 startup tare value; zero to disable
+    TARE_2_MASS_GR = 78.0  # Channel 2 startup tare value; zero to disable
     ALARM_1_MASS_GR = 19.4  # Channel 1 startup alarm value; zero to disable
     ALARM_2_MASS_GR = 40.0  # Channel 2 startup alarm value; zero to disable
 
