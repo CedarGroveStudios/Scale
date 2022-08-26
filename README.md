@@ -1,6 +1,6 @@
 # Scale -- _Version 3.0_
 
-### A configurable dual loadcell scale utilizing the CedarGrove NAU7802 FeatherWing. Code is written in CircuitPython and tested with CircuitPython version 7.1.1.
+### A configurable dual loadcell scale utilizing the CedarGrove NAU7802 FeatherWing. Code is written in CircuitPython and tested with CircuitPython version 7.3.2.
 
 Mass measurements from two loadcell sensors are processed by the CedarGrove NAU7802 precision ADC FeatherWing and displayed graphically on an Adafruit PyPortal, PyPortal Pynt, PyPortal Titano, or RP2040 Feather + TFT FeatherWing. Each channel's display mass values within the range of the loadcell are displayed in Grams, including negative values. Tare and alarm levels are user-specified and selectively enabled as needed.
 
