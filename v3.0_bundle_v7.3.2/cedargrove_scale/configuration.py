@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
 # SPDX-License-Identifier: MIT
 
-# cedargrove_scale.configuration.py  2022-01-29 v3.029  Cedar Grove Studios
+# cedargrove_scale.configuration.py  2022-08-25 v3.03  Cedar Grove Studios
 
 import board
 import busio
@@ -19,16 +19,9 @@ class Config:
     SAMPLE_AVG = 100  # Number of samples to average per measurement
     PGA_GAIN = 128  # Default gain for internal PGA
 
-    # Load cell calibration ratio; ADC_raw_measurement
-    # Obtained emperically; individual load cell dependent
-    _CHAN_1_RAW_VALUE = 215300  # 100g at gain x128 for load cell serial#4540-01
-    _CHAN_1_TEST_MASS_GR = 100
-
-    _CHAN_2_RAW_VALUE = 215300  # 100g at gain x128 for load cell serial#4540-02
-    _CHAN_2_TEST_MASS_GR = 100
-
-    CALIB_RATIO_1 = _CHAN_1_TEST_MASS_GR / _CHAN_1_RAW_VALUE
-    CALIB_RATIO_2 = _CHAN_2_TEST_MASS_GR / _CHAN_2_RAW_VALUE
+    # Load cell calibration ratio
+    CALIB_RATIO_1 = Defaults.LOADCELL_1_CALIBRATION
+    CALIB_RATIO_2 = Defaults.LOADCELL_2_CALIBRATION
 
 
 class Display:

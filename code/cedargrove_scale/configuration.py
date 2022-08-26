@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
 # SPDX-License-Identifier: MIT
 
-# cedargrove_scale.configuration.py  2022-01-29 v3.029  Cedar Grove Studios
+# cedargrove_scale.configuration.py  2022-08-25 v3.03  Cedar Grove Studios
 
 import board
 import busio
@@ -19,16 +19,9 @@ class Config:
     SAMPLE_AVG = 100  # Number of samples to average per measurement
     PGA_GAIN = 128  # Default gain for internal PGA
 
-    # Load cell calibration ratio; ADC_raw_measurement
-    # Obtained emperically; individual load cell dependent
-    _CHAN_1_RAW_VALUE = 215300  # 100g at gain x128 for load cell serial#4540-01
-    _CHAN_1_TEST_MASS_GR = 100
-
-    _CHAN_2_RAW_VALUE = 215300  # 100g at gain x128 for load cell serial#4540-02
-    _CHAN_2_TEST_MASS_GR = 100
-
-    CALIB_RATIO_1 = _CHAN_1_TEST_MASS_GR / _CHAN_1_RAW_VALUE
-    CALIB_RATIO_2 = _CHAN_2_TEST_MASS_GR / _CHAN_2_RAW_VALUE
+    # Load cell calibration ratio
+    CALIB_RATIO_1 = Defaults.LOADCELL_1_CALIBRATION
+    CALIB_RATIO_2 = Defaults.LOADCELL_2_CALIBRATION
 
 
 class Display:
@@ -36,7 +29,6 @@ class Display:
     string and the touchscreen zero-rotation CALIBRATION value in the Defaults
     class (scale_defaults.py). The Display class permits add-on displays to
     appear and act the same as built-in displays."""
-
     def __init__(self):
         pass
 
@@ -53,7 +45,6 @@ class Display:
     print(f"* Instantiate the {display_name} display")
     if display_name in "built-in":
         import adafruit_touchscreen
-
         display = board.DISPLAY
         display.rotation = rotation
         display.brightness = Defaults.BRIGHTNESS
@@ -71,42 +62,26 @@ class Display:
     elif display_name in 'TFT FeatherWing - 2.4" 320x240 Touchscreen':
         import adafruit_ili9341
         import adafruit_stmpe610
-
         displayio.release_displays()  # Release display resources
-        display_bus = displayio.FourWire(
-            board.SPI(), command=board.D10, chip_select=board.D9, reset=None
-        )
+        display_bus = displayio.FourWire(board.SPI(), command=board.D10, chip_select=board.D9, reset=None)
         display = adafruit_ili9341.ILI9341(display_bus, width=320, height=240)
         display.rotation = rotation
         ts_cs = digitalio.DigitalInOut(board.D6)
-        ts = adafruit_stmpe610.Adafruit_STMPE610_SPI(
-            board.SPI(),
-            ts_cs,
-            calibration=Defaults.CALIBRATION,
-            size=(display.width, display.height),
-            disp_rotation=rotation,
-            touch_flip=(False, False),
-        )
+        ts = adafruit_stmpe610.Adafruit_STMPE610_SPI(board.SPI(), ts_cs,
+            calibration=Defaults.CALIBRATION, size=(display.width, display.height),
+            disp_rotation=rotation, touch_flip=(False, False))
 
     elif display_name in 'TFT FeatherWing - 3.5" 480x320 Touchscreen':
         import adafruit_hx8357
         import adafruit_stmpe610
-
         displayio.release_displays()  # Release display resources
-        display_bus = displayio.FourWire(
-            board.SPI(), command=board.D10, chip_select=board.D9, reset=None
-        )
+        display_bus = displayio.FourWire(board.SPI(), command=board.D10, chip_select=board.D9, reset=None)
         display = adafruit_hx8357.HX8357(display_bus, width=480, height=320)
         display.rotation = rotation
         ts_cs = digitalio.DigitalInOut(board.D6)
-        ts = adafruit_stmpe610.Adafruit_STMPE610_SPI(
-            board.SPI(),
-            ts_cs,
-            calibration=Defaults.CALIBRATION,
-            size=(display.width, display.height),
-            disp_rotation=rotation,
-            touch_flip=(False, True),
-        )
+        ts = adafruit_stmpe610.Adafruit_STMPE610_SPI(board.SPI(), ts_cs,
+            calibration=Defaults.CALIBRATION, size=(display.width, display.height),
+            disp_rotation=rotation, touch_flip=(False, True))
     else:
         print(f"*** ERROR: display {display_name} not defined")
 
@@ -139,9 +114,11 @@ class Display:
         except:
             print("** WARNING: Display brightness not adjustable")
 
+
     def show(self, group):
         Display.display.show(group)
         return
+
 
     def screen_to_rect(self, width_factor=0, height_factor=0):
         """Convert normalized screen position input (0.0 to 1.0) to the display's
