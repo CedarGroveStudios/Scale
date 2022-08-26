@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: MIT
 
 # scale.py
-# 2021-12-11 v2.5
+# 2022-08-25 v2.51
 
 import displayio
 import vectorio
+import terminalio
 from math import pi, pow, sin, cos, sqrt
 from adafruit_bitmap_font import bitmap_font
 from adafruit_display_shapes.circle import Circle
@@ -82,7 +83,7 @@ class Scale(displayio.Group):
         self._center = self.display_to_pixel(self._center_norm[0], self._center_norm[1])
 
         if self._size < 0.50:
-            self.FONT_0 = bitmap_font.load_font("/fonts/brutalist-6.bdf")
+            self.FONT_0 = terminalio.FONT
         else:
             self.FONT_0 = bitmap_font.load_font("/fonts/OpenSans-9.bdf")
 
