@@ -4,7 +4,7 @@
 """
 touch_calibrator_stmpe610.py  2022-01-20 v1.1
 
-Author(s): CedarGroveMakerStudios
+Author(s): JG for Cedar Grove Maker Studios
 
 On-screen touchscreen calibrator for TFT FeatherWing displays.
 
@@ -35,7 +35,8 @@ import displayio
 import vectorio
 import terminalio
 from adafruit_display_text.label import Label
-#from adafruit_hx8357 import HX8357
+
+# from adafruit_hx8357 import HX8357
 from adafruit_ili9341 import ILI9341
 from simpleio import map_range
 import adafruit_stmpe610

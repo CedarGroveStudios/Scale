@@ -1,7 +1,30 @@
-# SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
+# SPDX-FileCopyrightText: Copyright (c) 2022 Cedar Grove Maker Studios
+#
 # SPDX-License-Identifier: MIT
+"""
+`buttons.py`
+================================================================================
 
-# cedargrove_scale.buttons.py  2022-01-29 v3.029  Cedar Grove Studios
+The ScaleButtons class for the dual-channel Scale project.
+cedargrove_scale.buttons.py  2022-01-29 v3.029  Cedar Grove Studios
+
+A displayio Group class to instantiate and read the Scale's touchscreen buttons.
+
+* Author(s): JG for Cedar Grove Maker Studios
+
+Implementation Notes
+--------------------
+**Hardware:**
+
+**Software and Dependencies:**
+
+* Adafruit CircuitPython firmware for the supported boards:
+  https://github.com/adafruit/circuitpython/releases
+"""
+
+# imports__version__ = "0.0.0-auto.0"
+__repo__ = "https://github.com/CedarGroveStudios/Scale"
+
 
 import board
 import time
@@ -14,7 +37,7 @@ from cedargrove_scale.configuration import Colors, Display
 
 class ScaleButtons(displayio.Group):
     def __init__(self, touchscreen=None, timeout=1.0, debug=False):
-        """Instantiate the on-screen touch buttons. Builds the displayio
+        """Instantiate the scale's touchsccreen buttons. Builds the displayio
         button_group.
 
         :param class touchscreen: The touchscreen class. Defaults to None.
@@ -218,7 +241,6 @@ class ScaleButtons(displayio.Group):
         super().__init__()
         self.append(self._button_group)
         return
-
 
     @property
     def timeout(self):

@@ -43,6 +43,7 @@ class Colors:
     RED = 0xFF0000  # Boundary
     WHITE = 0xFFFFFF  # Text
 
+
 # Instantiate the built-in display.
 display = board.DISPLAY
 
@@ -114,7 +115,10 @@ if not REPL_ONLY:
         color=Colors.WHITE,
     )
     coordinates.anchor_point = (0.5, 0.5)
-    coordinates.anchored_position = (board.DISPLAY.width // 2, board.DISPLAY.height // 4)
+    coordinates.anchored_position = (
+        board.DISPLAY.width // 2,
+        board.DISPLAY.height // 4,
+    )
 
     display_rotation = Label(
         font=font_0,
@@ -122,7 +126,10 @@ if not REPL_ONLY:
         color=Colors.WHITE,
     )
     display_rotation.anchor_point = (0.5, 0.5)
-    display_rotation.anchored_position = (board.DISPLAY.width // 2, board.DISPLAY.height // 4 - 30)
+    display_rotation.anchored_position = (
+        board.DISPLAY.width // 2,
+        board.DISPLAY.height // 4 - 30,
+    )
 
     # Define graphic objects for the screen fill, boundary, and touch pen.
     target_palette = displayio.Palette(1)

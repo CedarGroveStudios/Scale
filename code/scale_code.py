@@ -1,10 +1,49 @@
-# Scale -- dual channel version
-# Cedar Grove NAU7802 FeatherWing
-# scale_code.py  2022-07-25 v3.3  Cedar Grove Studios
+# SPDX-FileCopyrightText: Copyright (c) 2022 Cedar Grove Maker Studios
+#
+# SPDX-License-Identifier: MIT
+"""
+`scale_code.py`
+================================================================================
 
-# uncomment the following import line to run the load cell calibration method
-# (this may eventually become part of a setup process)
-# import cedargrove_scale.load_cell_calibrator
+The primary code.py module for the dual-channel Scale project.
+scale_code.py  2022-07-25 v3.3  Cedar Grove Studios
+
+A configurable dual loadcell scale utilizing the CedarGrove NAU7802 FeatherWing.
+Mass measurements from two loadcell sensors are processed by the CedarGrove
+NAU7802 precision ADC FeatherWing and displayed graphically on an Adafruit
+PyPortal, PyPortal Pynt, PyPortal Titano, or RP2040 Feather + TFT FeatherWing.
+Each channel's display mass values within the range of the loadcell are
+displayed in Grams, including negative values. Tare and alarm levels are
+user-specified and selectively enabled as needed.
+
+Default operational parameters are specified in the scale_defaults.py file in
+the microcontroller's root directory. Scale’s graphics and touchscreen zones
+are display size independent. Built-in board size is automatically detected;
+other displays are user-specified in the scale_defaults.py file. Font sizes do
+not scale proportionally but adjust somewhat to display size. Tare and alarm
+settings are stored in the microcontroller's non-volatile memory (NVM) to be
+recalled upon power-up. To facilitate testing, the code will simulate a missing
+custom loadcell FeatherWing board.
+
+* Author(s): JG for Cedar Grove Maker Studios
+
+Implementation Notes
+--------------------
+**Hardware:**
+* Cedar Grove NAU7802 Feather Wing
+
+**Software and Dependencies:**
+
+* Cedar Grove NAU7802 CircuitPython library:
+  https://github.com/CedarGroveStudios/CircuitPython_NAU7802
+
+* Adafruit CircuitPython firmware for the supported boards:
+  https://github.com/adafruit/circuitpython/releases
+"""
+
+# imports__version__ = "0.0.0-auto.0"
+__repo__ = "https://github.com/CedarGroveStudios/Scale"
+
 
 import board
 import displayio
@@ -15,31 +54,39 @@ from cedargrove_fake_nau7802 import FakeNAU7802
 import cedargrove_scale.graphics
 import cedargrove_scale.buttons
 from cedargrove_scale.configuration import play_tone
-from cedargrove_scale.configuration import Config, Colors, Display, NVM
+from cedargrove_scale.configuration import LoadCellConfig, Colors, Display, NVM
 import cedargrove_widgets.scale
 from scale_defaults import Defaults
 
 gc.collect()
 
-DEBUG = False  # True: display button outlines
+DEBUG = False  # True: button outlines will display
 
 # Instantiate display groups and graphics
 display = Display()
 scale_group = displayio.Group()
 
 if display.size[0] < 320:
-    dial_size=0.40
+    dial_size = 0.40
 else:
-    dial_size=0.52
-dial = cedargrove_widgets.scale.Scale(num_hands=2, max_scale=100,
-    center=(0.5,0.55), size=dial_size, display_size=display.size)
+    dial_size = 0.52
+dial = cedargrove_widgets.scale.Scale(
+    num_hands=2,
+    max_scale=100,
+    center=(0.5, 0.55),
+    size=dial_size,
+    display_size=display.size,
+)
 
+# Incorporate scale labels and buttons classes
 labels = cedargrove_scale.graphics.Labels(display=display)
-panel = cedargrove_scale.buttons.ScaleButtons(touchscreen = display.ts, timeout=1.0, debug=DEBUG)
+panel = cedargrove_scale.buttons.ScaleButtons(
+    touchscreen=display.ts, timeout=1.0, debug=DEBUG
+)
 
 display.brightness = Defaults.BRIGHTNESS
 
-# Instantiate Non-Volatile-Memory
+# Instantiate Non-Volatile-Memory (NVM) for storing tare and alarm parameters
 nvm = NVM()
 
 # Instantiate load cell ADC FeatherWing or fake if FeatherWing not found
@@ -52,6 +99,7 @@ except:
 
 
 def read_settings():
+    """Read settings from NVM."""
     global alarm_1_mass_gr, alarm_2_mass_gr, tare_1_mass_gr, tare_2_mass_gr, alarm_1_enable, alarm_2_enable, tare_1_enable, tare_2_enable
 
     settings = nvm.fetch_settings()
@@ -94,7 +142,7 @@ def zero_channel():
     return
 
 
-def read(samples=Config.SAMPLE_AVG):
+def read(samples=LoadCellConfig.SAMPLE_AVG):
     """Read and average consecutive raw sample values for currently selected
     channel. Returns the average raw value."""
     sum = 0
@@ -105,6 +153,7 @@ def read(samples=Config.SAMPLE_AVG):
 
 
 def plot_tares():
+    """Display the tare graphics."""
     if tare_1_enable:
         labels.tare_1_value.color = Colors.ORANGE
         panel.tare_1_icon[0] = 1
@@ -122,6 +171,7 @@ def plot_tares():
 
 
 def plot_alarms():
+    """Display the alarms graphics."""
     if alarm_1_enable:
         dial.alarm1 = alarm_1_mass_gr / Defaults.MAX_GR
         labels.alarm_1_value.color = Colors.ORANGE
@@ -141,6 +191,7 @@ def plot_alarms():
         panel.alarm_2_icon[0] = 6
     return
 
+
 # Define display background and displayio group elements
 print("* Define display background and displayio group elements")
 
@@ -157,15 +208,15 @@ display.show(scale_group)
 print("* Instantiate and calibrate load cells")
 print("  enable NAU7802 digital and analog power: %5s" % (nau7802.enable(True)))
 
-nau7802.gain = Config.PGA_GAIN  # Use default gain
-nau7802.channel = 1  # Set to second channel
+nau7802.gain = LoadCellConfig.PGA_GAIN  # Use default gain
+nau7802.channel = 1  # Set to first channel
 if not DEBUG:
     zero_channel()  # Re-calibrate and zero
-nau7802.channel = 2  # Set to first channel
+nau7802.channel = 2  # Set to second channel
 if not DEBUG:
     zero_channel()  # Re-calibrate and zero
 
-# Get default or stored alarm and tare values
+# Get default or stored alarm and tare values from NVM
 print("* Read default or stored alarm and tare settings")
 read_settings()
 plot_tares()
@@ -180,8 +231,8 @@ play_tone("low")
 
 # -- Main loop: Read sample, move bubble, and display values
 while True:
-    t0 = time.monotonic()
-    labels.heartbeat(None)  # Blank heartbeat indicator
+    t0 = time.monotonic()  # Initiate the display frame rate clock
+    labels.heartbeat(None)  # Blank the heartbeat indicator
 
     plot_tares()
     plot_alarms()
@@ -190,25 +241,27 @@ while True:
         labels.status_label.text = Defaults.NAME
         labels.status_label.color = Colors.CYAN
 
+    # Read channel 1 and update display
     nau7802.channel = 1
     value = read()
     if tare_1_enable:
         tare = tare_1_mass_gr
     else:
         tare = 0
-    chan_1_mass_gr = round(value * Config.CALIB_RATIO_1, 1) - tare
+    chan_1_mass_gr = round(value * LoadCellConfig.CALIB_RATIO_1, 1) - tare
     chan_1_mass_oz = round(chan_1_mass_gr * 0.03527, 2)
     if str(chan_1_mass_gr) == "-0.0":  # Filter -0.0 value
         chan_1_mass_gr = 0.0
     labels.chan_1_value.text = "%5.1f" % (chan_1_mass_gr)
 
+    # Read channel 2 and update display
     nau7802.channel = 2
     value = read()
     if tare_2_enable:
         tare = tare_2_mass_gr
     else:
         tare = 0
-    chan_2_mass_gr = round(value * Config.CALIB_RATIO_2, 1) - tare
+    chan_2_mass_gr = round(value * LoadCellConfig.CALIB_RATIO_2, 1) - tare
     chan_2_mass_oz = round(chan_2_mass_gr * 0.03527, 2)
     if str(chan_2_mass_gr) == "-0.0":  # Filter -0.0 value
         chan_2_mass_gr = 0.0
@@ -221,8 +274,9 @@ while True:
 
     print("(%+5.1f, %+5.1f)" % (chan_1_mass_gr, chan_2_mass_gr))
 
-    labels.heartbeat(0)  # Maroon heartbeat indicator
+    labels.heartbeat(0)  # Set heartbeat indicator to Maroon
 
+    # Check alarms
     a1 = a2 = False
     if alarm_1_enable and chan_1_mass_gr >= alarm_1_mass_gr:
         a1 = True
@@ -247,6 +301,7 @@ while True:
         # labels.status_label.color = Colors.RED
     alarm = a1 or a2
 
+    # Check touchscreen for button presses
     button_pressed, hold_time = panel.read_buttons()
     if button_pressed == "reset":
         if hold_time > panel.timeout:
@@ -268,6 +323,7 @@ while True:
             zero_channel()
 
     if button_pressed in ("tare_1", "tare_2"):
+        # Enable or disable tares; hold to set new tare value
         channel = int(button_pressed[5])
         play_tone("high")
         if hold_time <= panel.timeout:
@@ -296,6 +352,7 @@ while True:
                 labels.tare_2_value.text = str(tare_2_mass_gr)
             print("* Set tare", channel)
 
+        # Store updated settings in NVM
         settings = [
             alarm_1_mass_gr,
             alarm_2_mass_gr,
@@ -329,6 +386,7 @@ while True:
                 labels.alarm_2_value.text = str(alarm_2_mass_gr)
             print("* Set alarm", channel)
 
+        # Store updated settings in NVM
         settings = [
             alarm_1_mass_gr,
             alarm_2_mass_gr,
@@ -343,6 +401,7 @@ while True:
         play_tone("high")
         labels.flash_status("STORED", 0.5)
 
+    # End of display frame cleanup
     gc.collect()
     free_memory = gc.mem_free()
     frame = time.monotonic() - t0

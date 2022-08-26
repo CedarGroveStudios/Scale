@@ -4,7 +4,7 @@
 """
 touch_calibrator_stmpe610.py  2022-01-20 v1.1
 
-Author(s): CedarGroveMakerStudios
+Author(s): JG for Cedar Grove Maker Studios
 
 On-screen touchscreen calibrator for TFT FeatherWing displays.
 

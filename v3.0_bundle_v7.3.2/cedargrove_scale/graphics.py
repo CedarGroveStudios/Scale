@@ -1,7 +1,31 @@
-# SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
+# SPDX-FileCopyrightText: Copyright (c) 2022 Cedar Grove Maker Studios
+#
 # SPDX-License-Identifier: MIT
+"""
+`graphics.py`
+================================================================================
 
-# cedargrove_scale.graphics.py  2022-01-29 v3.029  Cedar Grove Studios
+The Labels class for the dual-channel Scale project.
+cedargrove_scale.graphics.py  2022-01-29 v3.029  Cedar Grove Studios
+
+A displayio Group class to instantiate the Scale's display labels, status
+message area, and heartbeat indicator.
+
+* Author(s): JG for Cedar Grove Maker Studios
+
+Implementation Notes
+--------------------
+**Hardware:**
+
+**Software and Dependencies:**
+
+* Adafruit CircuitPython firmware for the supported boards:
+  https://github.com/adafruit/circuitpython/releases
+"""
+
+# imports__version__ = "0.0.0-auto.0"
+__repo__ = "https://github.com/CedarGroveStudios/Scale"
+
 
 import time
 import displayio
@@ -29,12 +53,16 @@ class Labels(displayio.Group):
 
         self._labels_group = displayio.Group()
 
-        self.chan_1_name = Label(self._display.FONT_0, text=Defaults.CHAN_1_NAME, color=Colors.ORANGE)
+        self.chan_1_name = Label(
+            self._display.FONT_0, text=Defaults.CHAN_1_NAME, color=Colors.ORANGE
+        )
         self.chan_1_name.anchor_point = (0, 0)
         self.chan_1_name.anchored_position = display.screen_to_rect(0.03, 0.10)
         self._labels_group.append(self.chan_1_name)
 
-        self.chan_2_name = Label(self._display.FONT_0, text=Defaults.CHAN_2_NAME, color=Colors.GREEN)
+        self.chan_2_name = Label(
+            self._display.FONT_0, text=Defaults.CHAN_2_NAME, color=Colors.GREEN
+        )
         self.chan_2_name.anchor_point = (1.0, 0)
         self.chan_2_name.anchored_position = display.screen_to_rect(0.97, 0.10)
         self._labels_group.append(self.chan_2_name)
@@ -98,7 +126,6 @@ class Labels(displayio.Group):
         super().__init__()
         self.append(self._labels_group)
         return
-
 
     def heartbeat(self, color_index=0):
         """Set heartbeat indicator color."""

@@ -1,7 +1,31 @@
-# SPDX-FileCopyrightText: 2021 Cedar Grove Maker Studios
+# SPDX-FileCopyrightText: Copyright (c) 2022 Cedar Grove Maker Studios
+#
 # SPDX-License-Identifier: MIT
+"""
+`graphics.py`
+================================================================================
 
-# cedargrove_scale.graphics.py  2022-01-29 v3.029  Cedar Grove Studios
+The Labels class for the dual-channel Scale project.
+cedargrove_scale.graphics.py  2022-01-29 v3.029  Cedar Grove Studios
+
+A displayio Group class to instantiate the Scale's display labels, status
+message area, and heartbeat indicator.
+
+* Author(s): JG for Cedar Grove Maker Studios
+
+Implementation Notes
+--------------------
+**Hardware:**
+
+**Software and Dependencies:**
+
+* Adafruit CircuitPython firmware for the supported boards:
+  https://github.com/adafruit/circuitpython/releases
+"""
+
+# imports__version__ = "0.0.0-auto.0"
+__repo__ = "https://github.com/CedarGroveStudios/Scale"
+
 
 import time
 import displayio
