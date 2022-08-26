@@ -12,7 +12,7 @@ class Defaults:
       TFT FeatherWing - 2.4" 320x240 Touchscreen
       TFT FeatherWing - 3.5" 480x320 Touchscreen
       built-in
-      
+
     CALIBRATION -- use touchscreen's zero-degree rotational measurement
     """
     DISPLAY_NAME = "built-in"
@@ -22,7 +22,7 @@ class Defaults:
     #CALIBRATION = ((357, 3812), (390, 3555))  # 2.4" FeatherWing touchscreen
     #CALIBRATION = ((357, 3812), (390, 3555))  # 3.5" FeatherWing touchscreen
 
-    BRIGHTNESS = 0.5  # Display brightness, 0 to 1.0; 0.75 typical, 0.1 for photos
+    BRIGHTNESS = 0.75  # Display brightness, 0 to 1.0; 0.75 typical, 0.1 for photos
 
     MAX_GR = 100  # Maximum (full-scale) display range in grams
 
