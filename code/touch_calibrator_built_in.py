@@ -1,4 +1,5 @@
-# SPDX-FileCopyrightText: 2022 Cedar Grove Maker Studios
+# SPDX-FileCopyrightText: Copyright (c) 2022 Cedar Grove Maker Studios
+#
 # SPDX-License-Identifier: MIT
 
 """
