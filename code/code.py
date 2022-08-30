@@ -15,6 +15,10 @@ code.py  2022-08-26 v2.0  Cedar Grove Studios
 __repo__ = "https://github.com/CedarGroveStudios/Scale"
 
 
+"""Set FAILOVER to True to fail to a dimmed display and flashing NeoPixel;
+False to fail normally with error reporting via the REPL."""
+FAILOVER = False
+
 # Uncomment the following to calibrate touch screen for a built-in display
 # import touch_calibrator_built_in
 
@@ -25,7 +29,7 @@ __repo__ = "https://github.com/CedarGroveStudios/Scale"
 # import cedargrove_scale.load_cell_calibrator
 
 
-while True:
+while True and FAILOVER:
     """Attempt to start the primary code module. Upon failure, dim the display
     to keep the board cooler and flash the NeoPixel for attention."""
 
@@ -49,3 +53,5 @@ while True:
                 status[0] = 0x000000  # Flash red on exception
             else:
                 status[0] = 0x040000  # Flash red on exception
+else:
+    import scale_code
