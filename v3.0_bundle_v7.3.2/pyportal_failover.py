@@ -2,19 +2,19 @@
 #
 # SPDX-License-Identifier: MIT
 """
-`scale_failover.py`
+`pyportal_failover.py`
 ================================================================================
 
 Used after a fatal error to dim the display to keep the board cooler and flash
 the NeoPixel for attention.
 
-scale_failover.py  2022-08-31 v1.0  Cedar Grove Studios
+pyportal_failover.py  2022-09-02 v1.0  Cedar Grove Studios
 
 * Author(s): JG for Cedar Grove Maker Studios
 """
 
 # imports__version__ = "0.0.0-auto.0"
-__repo__ = "https://github.com/CedarGroveStudios/Scale"
+__repo__ = "https://github.com/CedarGroveStudios/Failover"
 
 
 import board

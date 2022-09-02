@@ -6,7 +6,7 @@
 ================================================================================
 
 A "jumping-off" code.py for the Scale project.
-code.py  2022-08-31 v2.0  Cedar Grove Studios
+code.py  2022-09-02 v2.0  Cedar Grove Studios
 
 * Author(s): JG for Cedar Grove Maker Studios
 """
@@ -35,7 +35,7 @@ while True and FAILOVER:
         import scale_code
     except Exception as e:
         import time
-        print(f"scale failover: --{e}--  at time.monotonic: {time.monotonic()}")
-        import scale_failover
+        print(f"pyportal failover: --{e}--  at time.monotonic: {time.monotonic()}")
+        import pyportal_failover
 else:
     import scale_code
