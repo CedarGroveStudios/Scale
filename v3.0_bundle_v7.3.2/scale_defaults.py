@@ -24,7 +24,7 @@ Implementation Notes
   https://github.com/adafruit/circuitpython/releases
 """
 
-# imports__version__ = "0.0.0-auto.0"
+# imports__version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/CedarGroveStudios/Scale"
 
 
