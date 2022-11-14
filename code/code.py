@@ -6,7 +6,7 @@
 ================================================================================
 
 A "jumping-off" code.py for the Scale project.
-code.py  2022-09-02 v2.0  Cedar Grove Studios
+code.py  2022-11-13 1.0.0  Cedar Grove Studios
 
 * Author(s): JG for Cedar Grove Maker Studios
 """
@@ -23,19 +23,4 @@ __repo__ = "https://github.com/CedarGroveStudios/Scale"
 # Uncomment the following to run the load cell calibration method
 # import cedargrove_scale.load_cell_calibrator
 
-"""Set FAILOVER to True to fail to a dimmed display and flashing NeoPixel;
-False to fail normally with error reporting via the REPL."""
-FAILOVER = False
-
-while True and FAILOVER:
-    """Attempt to start the primary code module. Upon failure, execute the
-    failover module."""
-
-    try:
-        import scale_code
-    except Exception as e:
-        import time
-        print(f"pyportal failover: --{e}--  at time.monotonic: {time.monotonic()}")
-        import pyportal_failover
-else:
-    import scale_code
+import scale_code
