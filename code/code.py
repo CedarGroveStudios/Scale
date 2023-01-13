@@ -23,4 +23,7 @@ __repo__ = "https://github.com/CedarGroveStudios/Scale"
 # Uncomment the following to run the load cell calibration method
 # import cedargrove_scale.load_cell_calibrator
 
+# Uncomment to run the NAU7802 simple test
+# import nau7802_simpletest
+
 import scale_code

@@ -37,7 +37,7 @@ import foamyguy_nvm_helper as nvm_helper
 class LoadCellConfig:
     """Load cell measurement configuration."""
 
-    SAMPLE_AVG = 100  # Number of samples to average per measurement
+    SAMPLE_AVG = 1  # Number of samples to average per measurement
     PGA_GAIN = 128  # Default gain for internal PGA
 
     # Load cell calibration ratio

@@ -145,11 +145,14 @@ def zero_channel():
 def read(samples=LoadCellConfig.SAMPLE_AVG):
     """Read and average consecutive raw sample values for currently selected
     channel. Returns the average raw value."""
-    sum = 0
-    for i in range(0, samples):
-        if nau7802.available:
-            sum = sum + nau7802.read()
-    return int(sum / samples)
+    sample_sum = 0
+    sample_count = samples
+    while sample_count > 0:
+        while not nau7802.available():
+            pass
+        sample_sum = sample_sum + nau7802.read()
+        sample_count -= 1
+    return int(sample_sum / samples)
 
 
 def plot_tares():
@@ -273,6 +276,8 @@ while True:
     dial.hand2 = chan_2_mass_gr_norm
 
     print("(%+5.1f, %+5.1f)" % (chan_1_mass_gr, chan_2_mass_gr))
+
+    time.sleep(1)
 
     labels.heartbeat(0)  # Set heartbeat indicator to Maroon
 
